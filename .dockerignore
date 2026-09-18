@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dist-ssr/
+build/
+coverage/
+.git/
+.vite/
+*.log
+.env
+.env.*
+.vscode/
+.idea/
+.DS_Store
+specs/
+.specify/
+.claude/

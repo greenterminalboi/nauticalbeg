@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+build/
+
+# Vite
+.vite/
+*.local
+
+# Testing
+coverage/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Local sample save files a developer drops in for manual testing (large,
+# user-provided). Real fixture files that ARE meant to be committed
+# (constitution Principle II) live under tests/fixtures/ and are exempted
+# below regardless of extension, once that extension is known.
+/*.sav
+/*.zip

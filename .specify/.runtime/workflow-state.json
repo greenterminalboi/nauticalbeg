@@ -1,0 +1,55 @@
+{
+  "constitutionPhase": {
+    "phase": "constitution",
+    "status": "awaiting_review",
+    "stale": false
+  },
+  "features": [
+    {
+      "name": "001-save-import-overview",
+      "phases": [
+        {
+          "phase": "specification",
+          "status": "awaiting_review",
+          "stale": false
+        },
+        {
+          "phase": "clarification",
+          "status": "idle",
+          "stale": false
+        },
+        {
+          "phase": "planning",
+          "status": "awaiting_review",
+          "stale": false
+        },
+        {
+          "phase": "checklist",
+          "status": "awaiting_review",
+          "stale": false
+        },
+        {
+          "phase": "analyze",
+          "status": "idle",
+          "stale": false
+        },
+        {
+          "phase": "tasks",
+          "status": "awaiting_review",
+          "stale": false
+        },
+        {
+          "phase": "taskstoissues",
+          "status": "idle",
+          "stale": false
+        },
+        {
+          "phase": "implementation",
+          "status": "idle",
+          "stale": false
+        }
+      ]
+    }
+  ],
+  "activeFeatureName": "001-save-import-overview"
+}
