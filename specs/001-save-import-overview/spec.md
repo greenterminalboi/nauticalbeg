@@ -68,6 +68,10 @@ visualizations (maps, time-series, comparisons).
    summed across provinces) rather than read directly from a single save
    field, **Then** that stat is visually distinguished as derived rather than
    presented identically to directly-read values.
+3. **Given** a save has been successfully loaded, **When** the user selects a
+   different real nation from a nation selector, **Then** the overview
+   re-renders with that nation's stats, without re-uploading or re-parsing
+   the save, and the selector defaults to the player nation on load.
 
 ---
 
@@ -204,6 +208,16 @@ visualization or AI copilot work.
 - **FR-014**: System MUST report clearly if keeping a save would exceed
   available local storage space, without corrupting any existing kept save
   or silently failing.
+- **FR-015**: Once a save is loaded, users MUST be able to select any real
+  nation present in that save (not only the player nation) from a nation
+  selector, and the overview MUST re-render for the selected nation without
+  requiring the save to be re-uploaded or re-parsed. The selector MUST
+  default to the player nation identified per User Story 1. **Added
+  2026-09-17**, superseding the Assumptions bullet below that originally
+  deferred this — the underlying data-access pattern (query a specific
+  entity by index against the already-loaded save) is intended to
+  generalize to future selectable views (e.g., provinces, other data), not
+  just nations.
 
 ### Key Entities
 
@@ -245,9 +259,11 @@ visualization or AI copilot work.
   a browser file picker); the tool does not fetch saves from a remote or
   cloud save-game service in this feature.
 - If a loaded save is a multiplayer save containing more than one
-  human-controlled nation, v1 shows the overview for a single primary nation
-  (e.g., the first human-controlled nation found); selecting among multiple
-  human nations is deferred to a future feature.
+  human-controlled nation, v1 identifies a single primary nation (e.g., the
+  first human-controlled nation found) as the *default* selection. **Update
+  2026-09-17 (FR-015)**: selecting among nations — human-controlled or
+  not — is no longer deferred; the nation selector lets the user view any
+  real nation's overview, defaulting to this primary nation.
 - "Typical" save size for the SC-001 performance target is up to
   approximately 500–600MB uncompressed, reflecting real-world EU5 saves;
   this is the baseline scale the tool must be designed for, not an edge

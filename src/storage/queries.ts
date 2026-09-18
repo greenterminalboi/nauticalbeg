@@ -22,7 +22,8 @@ export interface SaveMeta {
   kept: boolean;
 }
 
-export interface PlayerNationOverview {
+export interface NationOverview {
+  idx: number;
   tag: string;
   name: string;
   treasury: number;
@@ -34,7 +35,14 @@ export interface PlayerNationOverview {
   /** Field names in this object that are computed/aggregated rather than
    * read directly from a single save field (constitution Principle IV /
    * spec FR-007). The UI must visually distinguish these. */
-  derived: Set<keyof PlayerNationOverview>;
+  derived: Set<keyof NationOverview>;
+}
+
+/** One entry in the FR-015 nation selector. */
+export interface NationSummary {
+  idx: number;
+  tag: string;
+  name: string;
 }
 
 export interface KeptSaveSummary {
@@ -62,18 +70,24 @@ export async function getSaveMeta(db: SaveDatabase): Promise<SaveMeta> {
   };
 }
 
-export async function getPlayerNationOverview(
+/**
+ * FR-015: the same overview shape as `getPlayerNationOverview`, but for
+ * any real nation by index — the generalized query the nation selector
+ * (and, per FR-015's note, future selectable views) is built on.
+ * `getPlayerNationOverview` is now a thin wrapper around this.
+ */
+export async function getNationOverview(
   db: SaveDatabase,
-): Promise<PlayerNationOverview> {
+  nationIdx: number,
+): Promise<NationOverview> {
   const nationRows = await queryRows(
     db,
-    "SELECT idx, tag, name, treasury, stability, government_type FROM nations WHERE is_player = 1 LIMIT 1",
+    "SELECT idx, tag, name, treasury, stability, government_type FROM nations WHERE idx = ?1 LIMIT 1",
+    [nationIdx],
   );
   const nation = nationRows[0];
   if (!nation) {
-    throw new Error(
-      "No player nation found in this save (is_player was never set to 1)",
-    );
+    throw new Error(`No nation found with idx ${nationIdx}`);
   }
   const idx = Number(nation.idx);
 
@@ -95,9 +109,11 @@ export async function getPlayerNationOverview(
   const atWar = Number(warRow?.at_war ?? 0) === 1;
 
   return {
+    idx,
     tag: String(nation.tag),
-    // Falls back to the tag if a display name somehow wasn't set (only
-    // possible if metadata.player_country_name itself was missing) —
+    // Falls back to the tag if a display name somehow wasn't set (true
+    // for every non-player nation — see listNations's doc comment, and
+    // for the player if metadata.player_country_name was missing) —
     // better than crashing the overview over a cosmetic gap.
     name: nation.name === null ? String(nation.tag) : String(nation.name),
     treasury: Number(nation.treasury ?? 0),
@@ -108,6 +124,39 @@ export async function getPlayerNationOverview(
     provinceCount,
     derived: new Set(["atWar", "totalDevelopment", "provinceCount"]),
   };
+}
+
+export async function getPlayerNationOverview(db: SaveDatabase): Promise<NationOverview> {
+  const [playerRow] = await queryRows(
+    db,
+    "SELECT idx FROM nations WHERE is_player = 1 LIMIT 1",
+  );
+  if (!playerRow) {
+    throw new Error(
+      "No player nation found in this save (is_player was never set to 1)",
+    );
+  }
+  return getNationOverview(db, Number(playerRow.idx));
+}
+
+/**
+ * FR-015: every real (non-rebel/pirate/mercenary — see
+ * research-save-format.md's `country_type` note) nation in the save, for
+ * the nation selector. Most nations only ever get a `tag` (e.g. "FRA"),
+ * never a display `name` — the save only records a human-readable name
+ * for the player's own nation (see version-adapters/1.3.11.ts) — so this
+ * falls back to the tag the same way `getNationOverview` does.
+ */
+export async function listNations(db: SaveDatabase): Promise<NationSummary[]> {
+  const rows = await queryRows(
+    db,
+    "SELECT idx, tag, name FROM nations WHERE country_type = 'Real' ORDER BY COALESCE(name, tag)",
+  );
+  return rows.map((row) => ({
+    idx: Number(row.idx),
+    tag: String(row.tag),
+    name: row.name === null ? String(row.tag) : String(row.name),
+  }));
 }
 
 // Only one save may be kept at a time (Assumptions). Each save's SQLite

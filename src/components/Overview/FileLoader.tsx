@@ -6,28 +6,41 @@ import type {
   ReadyMessage,
   WorkerToMainMessage,
 } from "../../parser/protocol";
-import { openSaveDatabase, closeSaveDatabase } from "../../storage/db";
+import { closeSaveDatabase, openSaveDatabase, type SaveDatabase } from "../../storage/db";
 import {
   cleanupSaveIfNotKept,
+  getNationOverview,
   getPlayerNationOverview,
   getSaveMeta,
-  type PlayerNationOverview,
+  listNations,
+  type NationOverview,
+  type NationSummary,
 } from "../../storage/queries";
+import { NationSelector } from "./NationSelector";
 import { OverviewCard } from "./OverviewCard";
 
 type Status =
   | { kind: "idle" }
   | { kind: ParsePhase; percent: number | null }
   | { kind: "loading-overview" } // parsing succeeded; fetching the overview to display
-  | { kind: "ready"; overview: PlayerNationOverview; inGameDate: string }
+  | {
+      kind: "ready";
+      nations: NationSummary[];
+      selectedNationIdx: number;
+      overview: NationOverview;
+      inGameDate: string;
+    }
   | { kind: "error"; message: string };
 
 /**
- * File picker + worker orchestration. Once parsing succeeds, this
- * queries `getSaveMeta` + `getPlayerNationOverview` and hands the result
- * to `OverviewCard` (User Story 2) — this component's job stays scoped
- * to "get a save loaded and fetch its overview," per the module
- * boundaries in ARCHITECTURE.md.
+ * File picker + worker orchestration. Once parsing succeeds, this opens a
+ * read-only connection to the save that stays open for the rest of the
+ * "ready" session (see `readDbRef`) — FR-015's nation selector re-queries
+ * that same connection on every selection change rather than reopening
+ * it, since switching the viewed nation must not require re-parsing or
+ * re-uploading the save. `NationSelector` + `getNationOverview` are
+ * intentionally generic (pick an idx, re-render) — the pattern is meant
+ * to extend to future selectable views, not stay nation-specific.
  */
 export function FileLoader() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -35,6 +48,10 @@ export function FileLoader() {
   // Tracks the most recently ready save's id so the beforeunload handler
   // below knows what to clean up — see handleReady and T035.
   const currentSaveIdRef = useRef<string | null>(null);
+  // The read-only connection backing the current "ready" session, kept
+  // open across nation-selector changes and closed only when superseded
+  // by a new load or on unmount (see the two effects below).
+  const readDbRef = useRef<SaveDatabase | null>(null);
 
   useEffect(() => {
     const worker = new Worker(new URL("../../parser/worker.ts", import.meta.url), {
@@ -81,6 +98,18 @@ export function FileLoader() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
+  useEffect(() => {
+    // Close the read-only connection on unmount — it's a separate
+    // lifecycle from the OPFS *file* cleanup above (this only releases
+    // the in-memory connection, it never deletes anything).
+    return () => {
+      if (readDbRef.current) {
+        void closeSaveDatabase(readDbRef.current);
+        readDbRef.current = null;
+      }
+    };
+  }, []);
+
   function handleProgress(message: ProgressMessage): void {
     setStatus({ kind: message.phase, percent: message.percent });
   }
@@ -88,23 +117,35 @@ export function FileLoader() {
   async function handleReady(message: ReadyMessage): Promise<void> {
     currentSaveIdRef.current = message.saveId;
     setStatus({ kind: "loading-overview" });
+
+    // A new load always supersedes the old (FR-010) — close the previous
+    // session's read connection before opening the new one.
+    if (readDbRef.current) {
+      await closeSaveDatabase(readDbRef.current);
+      readDbRef.current = null;
+    }
+
     // readonly: the main thread only ever reads (the worker owns writes)
     // — see openSaveDatabase's doc comment for why this also avoids a
     // real cross-context OPFS crash, not just signaling intent.
     const db = await openSaveDatabase(message.saveId, undefined, { readonly: true });
+    readDbRef.current = db;
     try {
-      // Sequential, not Promise.all: wa-sqlite's async build runs on
+      // Sequential, not concurrent: wa-sqlite's async build runs on
       // Asyncify, which unwinds/rewinds a single WASM call stack per
-      // module instance — issuing two queries concurrently against the
-      // same connection corrupts that shared state (observed in the
-      // browser as a nonsensical "no such table" error, an OPFS
-      // NotFoundError, and a WASM "memory access out of bounds" crash,
-      // depending on how the race landed). Existing tests never caught
-      // this because they always call one query at a time.
+      // module instance — issuing queries concurrently against the same
+      // connection corrupts that shared state (observed in the browser
+      // as a nonsensical "no such table" error, an OPFS NotFoundError,
+      // and a WASM "memory access out of bounds" crash, depending on how
+      // the race landed). Existing tests never caught this because they
+      // always call one query at a time.
       const meta = await getSaveMeta(db);
+      const nations = await listNations(db);
       const overview = await getPlayerNationOverview(db);
       setStatus({
         kind: "ready",
+        nations,
+        selectedNationIdx: overview.idx,
         overview,
         inGameDate: meta.inGameDate ?? message.inGameDate,
       });
@@ -116,8 +157,25 @@ export function FileLoader() {
             ? err.message
             : "Loaded the save but failed to read its overview.",
       });
-    } finally {
+      // Nothing to keep this connection open for — there's no "ready"
+      // state, and thus no nation selector, to query it again from.
       await closeSaveDatabase(db);
+      readDbRef.current = null;
+    }
+  }
+
+  async function handleSelectNation(nationIdx: number): Promise<void> {
+    const db = readDbRef.current;
+    if (!db || status.kind !== "ready") return;
+    try {
+      const overview = await getNationOverview(db, nationIdx);
+      setStatus({ ...status, overview, selectedNationIdx: nationIdx });
+    } catch (err) {
+      setStatus({
+        kind: "error",
+        message:
+          err instanceof Error ? err.message : "Failed to load that nation's overview.",
+      });
     }
   }
 
@@ -143,12 +201,18 @@ export function FileLoader() {
         Select an EU5 save file
         <input type="file" onChange={handleFileSelected} />
       </label>
-      <StatusView status={status} />
+      <StatusView status={status} onSelectNation={(idx) => void handleSelectNation(idx)} />
     </div>
   );
 }
 
-function StatusView({ status }: { status: Status }) {
+function StatusView({
+  status,
+  onSelectNation,
+}: {
+  status: Status;
+  onSelectNation: (idx: number) => void;
+}) {
   switch (status.kind) {
     case "idle":
       return null;
@@ -158,7 +222,16 @@ function StatusView({ status }: { status: Status }) {
     case "loading-overview":
       return <p>{describePhase(status)}</p>;
     case "ready":
-      return <OverviewCard overview={status.overview} inGameDate={status.inGameDate} />;
+      return (
+        <div>
+          <NationSelector
+            nations={status.nations}
+            selectedIdx={status.selectedNationIdx}
+            onSelect={onSelectNation}
+          />
+          <OverviewCard overview={status.overview} inGameDate={status.inGameDate} />
+        </div>
+      );
     case "error":
       return <p role="alert">{status.message}</p>;
   }

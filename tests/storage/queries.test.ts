@@ -8,7 +8,12 @@ import {
   type SaveDatabase,
 } from "../../src/storage/db";
 import { parseAndStore } from "../../src/parser/version-adapters/1.3.11";
-import { getPlayerNationOverview, getSaveMeta } from "../../src/storage/queries";
+import {
+  getNationOverview,
+  getPlayerNationOverview,
+  getSaveMeta,
+  listNations,
+} from "../../src/storage/queries";
 import {
   ensureTestSQLiteConfigured,
   TEST_VFS_NAME,
@@ -79,5 +84,45 @@ describe("storage/queries against a real parsed save", () => {
     await expect(getPlayerNationOverview(db)).rejects.toThrow(
       /no player nation/i,
     );
+  });
+
+  it("listNations returns only real nations (FR-015), falling back to tag when no name is set", async () => {
+    db = await openSaveDatabase("queries-list-nations.db", TEST_VFS_NAME);
+    await applySchema(db);
+    await parseAndStore(db, "save-4", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
+
+    // Fixture also has DUMMY (Pirates) and PIR/MER (no country_type at
+    // all) — only SCA and RUS are country_type=Real.
+    const nations = await listNations(db);
+    expect(nations).toEqual([
+      { idx: 2025, tag: "RUS", name: "Russia" },
+      { idx: 3, tag: "SCA", name: "SCA" },
+    ]);
+  });
+
+  it("getNationOverview returns the same shape for any nation by idx, not just the player", async () => {
+    db = await openSaveDatabase("queries-nation-by-idx.db", TEST_VFS_NAME);
+    await applySchema(db);
+    await parseAndStore(db, "save-5", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
+
+    // SCA (idx 3) is a real nation but never the player in this fixture.
+    const overview = await getNationOverview(db, 3);
+    expect(overview.idx).toBe(3);
+    expect(overview.tag).toBe("SCA");
+    expect(overview.name).toBe("SCA"); // no display name; falls back to tag
+    expect(overview.treasury).toBeCloseTo(6946.21937, 5);
+    expect(overview.stability).toBeCloseTo(52.57844, 5);
+    expect(overview.governmentType).toBe("monarchy");
+    expect(overview.atWar).toBe(false); // only RUS/220 are war_participants
+    expect(overview.totalDevelopment).toBeCloseTo(46.90152, 5);
+    expect(overview.provinceCount).toBe(1);
+  });
+
+  it("getNationOverview throws a clear error for an unknown idx", async () => {
+    db = await openSaveDatabase("queries-nation-unknown.db", TEST_VFS_NAME);
+    await applySchema(db);
+    await parseAndStore(db, "save-6", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
+
+    await expect(getNationOverview(db, 999999)).rejects.toThrow(/no nation found/i);
   });
 });

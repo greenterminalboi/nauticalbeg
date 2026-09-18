@@ -1,13 +1,13 @@
-import type { PlayerNationOverview } from "../../storage/queries";
+import type { NationOverview } from "../../storage/queries";
 import "./OverviewCard.css";
 
 interface OverviewCardProps {
-  overview: PlayerNationOverview;
+  overview: NationOverview;
   inGameDate: string;
 }
 
 interface StatEntry {
-  key: keyof PlayerNationOverview;
+  key: keyof NationOverview;
   label: string;
   value: string;
 }

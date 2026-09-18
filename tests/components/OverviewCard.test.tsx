@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { OverviewCard } from "../../src/components/Overview/OverviewCard";
-import type { PlayerNationOverview } from "../../src/storage/queries";
+import type { NationOverview } from "../../src/storage/queries";
 
-const overview: PlayerNationOverview = {
+const overview: NationOverview = {
+  idx: 2025,
   tag: "RUS",
   name: "Russia",
   treasury: 5493.12008,
