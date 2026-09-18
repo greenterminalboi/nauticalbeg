@@ -88,7 +88,10 @@ export function FileLoader() {
   async function handleReady(message: ReadyMessage): Promise<void> {
     currentSaveIdRef.current = message.saveId;
     setStatus({ kind: "loading-overview" });
-    const db = await openSaveDatabase(message.saveId);
+    // readonly: the main thread only ever reads (the worker owns writes)
+    // — see openSaveDatabase's doc comment for why this also avoids a
+    // real cross-context OPFS crash, not just signaling intent.
+    const db = await openSaveDatabase(message.saveId, undefined, { readonly: true });
     try {
       // Sequential, not Promise.all: wa-sqlite's async build runs on
       // Asyncify, which unwinds/rewinds a single WASM call stack per

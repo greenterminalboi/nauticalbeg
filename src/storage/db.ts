@@ -68,17 +68,28 @@ export interface SaveDatabase {
  * `deleteSaveDatabase` needs to remove it later. `vfsName` defaults to the
  * OPFS VFS used in production; tests pass a different registered VFS name
  * (see `configureSQLiteForTesting`).
+ *
+ * `readonly: true` opens without `SQLITE_OPEN_CREATE`/`READWRITE`. This
+ * matters beyond intent-signaling: a read-write connection must be ready
+ * to escalate to an exclusive lock, which is exactly what makes the OPFS
+ * VFS (`OriginPrivateFileSystemVFS`) call `createSyncAccessHandle()` —
+ * and that call only works from a dedicated Worker in some browsers,
+ * throwing `createSyncAccessHandle is not a function` from the main
+ * thread otherwise (confirmed in Chrome). A read-only connection never
+ * needs more than a shared lock, so it never hits that path. Every
+ * main-thread caller here only ever reads (writes go through the parser
+ * worker), so it should always pass `readonly: true`.
  */
 export async function openSaveDatabase(
   name: string,
   vfsName: string = OPFS_VFS_NAME,
+  options?: { readonly?: boolean },
 ): Promise<SaveDatabase> {
   const sqlite3 = await getSQLite();
-  const handle = await sqlite3.open_v2(
-    name,
-    SQLite.SQLITE_OPEN_CREATE | SQLite.SQLITE_OPEN_READWRITE,
-    vfsName,
-  );
+  const flags = options?.readonly
+    ? SQLite.SQLITE_OPEN_READONLY
+    : SQLite.SQLITE_OPEN_CREATE | SQLite.SQLITE_OPEN_READWRITE;
+  const handle = await sqlite3.open_v2(name, flags, vfsName);
   return { handle, sqlite3 };
 }
 

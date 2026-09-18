@@ -184,7 +184,7 @@ export async function cleanupSaveIfNotKept(
   saveId: string,
   vfsName?: string,
 ): Promise<void> {
-  const db = await openSaveDatabase(saveId, vfsName);
+  const db = await openSaveDatabase(saveId, vfsName, { readonly: true });
   let kept: boolean;
   try {
     kept = (await getSaveMeta(db)).kept;
