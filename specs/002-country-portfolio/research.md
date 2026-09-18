@@ -1,6 +1,82 @@
 # Phase 0 Research: Country Portfolio
 
-## 1. Tab navigation architecture
+Sections 1-3 below cover User Story 1 (the portfolio shell), added to
+this document when `/speckit-plan` was re-run after a `/speckit-clarify`
+session introduced that story. Sections 4-6 are unchanged from the
+original planning pass and cover User Stories 2-9 (the data tabs).
+
+## 1. Shell layout technique
+
+**Decision**: Plain CSS Grid for the 3-region shell (top bar spanning
+full width; side navigation and main content area as two columns below
+it), styled with `src/styles/tokens.css`'s existing custom properties.
+No CSS framework, no layout library.
+
+**Rationale**: A fixed top bar plus a two-column body is exactly what
+CSS Grid's `grid-template-areas` is for, natively, in every evergreen
+browser this project already targets — no polyfill or library needed.
+Matches 001's established pattern of plain CSS files co-located with
+each component (`OverviewCard.css`, `ErrorMessage.css`, etc.) rather
+than introducing a CSS-in-JS or utility-class framework partway through
+the project, which constitution Principle VII would flag as unjustified
+new complexity for a problem three `grid-template-areas` rules solve.
+
+**Alternatives considered**: Flexbox nesting (a flex column containing
+the top bar, then a flex row for nav+content) — workable, but Grid's
+named areas make the shell's structure self-documenting in the CSS
+itself and handle the "top bar always full-width, body splits below it"
+shape more directly than nested flex containers. A component library
+(e.g., a dashboard/admin-shell UI kit) — rejected outright: this project
+has never taken a UI component dependency, and one off-the-shelf shell
+is unlikely to match the "Imperial Illuminator" design system already
+established in `design.md`/`tokens.css`.
+
+## 2. Responsive behavior (FR-017)
+
+**Decision**: Below a single breakpoint (matching `tokens.css`'s
+existing mobile treatment, if any is already implied by the design
+system — otherwise a conventional ~768px), the side navigation collapses
+from an always-visible column into a control that reveals it on demand
+(e.g., a toggle), and the grid drops from two columns to one (main
+content full-width). The top bar stays a single row at every width — it
+already holds a small, bounded set of controls.
+
+**Rationale**: Satisfies FR-017 ("adapt... without overflowing or
+clipping content... e.g., the side navigation collapsing or relocating")
+using the same no-new-dependency posture as the rest of this plan — a
+CSS media query plus a small amount of component state (is the nav
+panel open, on narrow viewports), not a responsive-design library.
+
+**Alternatives considered**: Always-visible side nav at every width,
+shrunk instead of collapsed — rejected, a permanently-narrow nav with
+9-11 items (8 data tabs + Overview + 2 placeholders) becomes illegible
+before it becomes narrow enough to coexist with a usable content area on
+a phone-width screen.
+
+## 3. Where pre-load and loading-state content renders
+
+**Decision**: The main content area is a permanent layout region (part
+of the shell from first render), not something that only mounts once a
+save is loaded. What's *inside* it varies by state: before a save is
+loaded, it holds the file-picker prompt and, if one exists, the kept-save
+resume offer (001's `KeptSaveOffer`); while parsing, it holds progress
+feedback; once ready, it holds the side navigation's active tab content.
+The **side navigation itself**, specifically, only renders once a nation
+is active — its items are meaningless before then.
+
+**Rationale**: FR-018 states the top bar is "the one piece of the shell
+present in every state," which could be misread as implying the main
+content area is not present pre-load — but User Story 1's own Acceptance
+Scenario 1 requires the file-selection control to be visible and usable
+before any save exists, and that control has to render somewhere. Making
+the content area a permanent region (holding different things depending
+on state) rather than conditionally mounting it is simpler and avoids a
+layout reflow the moment a save finishes loading (the region doesn't
+appear/disappear, only its contents swap) — consistent with FR-002/FR-003
+already requiring content swaps without layout disruption for the
+post-load case.
+
+## 4. Tab navigation architecture
 
 **Decision**: Tabs are plain React component state (which category is
 "active" for the currently loaded save), not client-side routing.
@@ -20,7 +96,7 @@ already does, and it would need to somehow interact with the existing
 non-routed `Status` state machine (idle/loading/error/ready) for no
 functional gain.
 
-## 2. Large-list rendering (Provinces/Military/Buildings)
+## 5. Large-list rendering (Provinces/Military/Buildings)
 
 **Decision**: Client-side pagination (a fixed page size, e.g. 50 rows,
 with next/previous controls), implemented in plain React state — no new
@@ -46,7 +122,7 @@ save is found where pagination itself proves insufficient. Rendering
 everything unconditionally — rejected outright, violates Principle V
 directly for a large empire.
 
-## 3. Save-format research: what each new tab's data actually looks like
+## 6. Save-format research: what each new tab's data actually looks like
 
 Per constitution Principle II, schema must be confirmed against a real
 save before being invented. The findings below come from direct
@@ -127,7 +203,7 @@ T014-T018).
 
 ### Not found at all
 
-- **"National value"** (spec's User Story 3, as literally named): no
+- **"National value"** (spec's User Story 4, Government tab, as literally named): no
   occurrence of any `national_value*` key anywhere in the real save.
   EU5 does not appear to have a distinct "national values" mechanic
   under that name. The `implemented_laws`/policy system above is the

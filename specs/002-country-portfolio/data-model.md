@@ -8,6 +8,16 @@ Column choices below come from real inspection of the same 642MB save
 deliberately left unschematized per constitution Principle II until each
 one's own implementation task inspects it directly.
 
+## Portfolio shell (User Story 1): no new schema
+
+The shell added by `/speckit-clarify` (top bar, side navigation, centered
+content area, "AI Agent"/"Map" placeholders) is pure UI restructuring —
+it reads only data 001 already exposes (`getSaveMeta`, `listNations`,
+`getNationOverview`) and introduces no new entity. `activeTab` (which
+category is selected) is transient React component state, not persisted
+data, so it has no column anywhere — same treatment as 001's own
+in-memory `Status` state machine.
+
 ## Provinces tab: no new schema
 
 Reuses 001's existing `provinces` and `locations` tables verbatim —
@@ -49,9 +59,9 @@ top-level manager).
 the real save (see research.md) — this entity has no confirmed backing
 data yet. Deferred: this story's implementation task must either find
 where (if anywhere) EU5 tracks something matching this concept, or the
-spec's User Story 3 must be revisited to drop it / fold it fully into
-the `policies` table above once a real save confirms there's no separate
-mechanic.
+spec's User Story 4 (Government tab) must be revisited to drop it / fold
+it fully into the `policies` table above once a real save confirms
+there's no separate mechanic.
 
 ## `military_units` (Military tab)
 

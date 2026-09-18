@@ -1,5 +1,11 @@
 # Contract: `storage/queries.ts` additions (per-tab read interface)
 
+**User Story 1 (the portfolio shell) adds no functions to this contract
+at all** — it's pure UI restructuring around 001's existing
+`getSaveMeta`/`listNations`/`getNationOverview`, with no new query, no
+new table, no new worker message. Everything below is User Story 2
+onward (the actual data tabs).
+
 Extends 001's existing contract (`specs/001-save-import-overview/contracts/data-access-contract.md`)
 rather than replacing it — `getSaveMeta`/`getNationOverview`/`listNations`
 etc. are unchanged. Every function below follows the same `list*(db,
