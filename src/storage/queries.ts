@@ -7,7 +7,13 @@
 // the contract doc originally sketched — a typical caller needs several
 // of these queries against the same save and shouldn't reopen the
 // connection for each one. The contract doc has been updated to match.
-import { queryRows, type SaveDatabase } from "./db";
+import {
+  closeSaveDatabase,
+  deleteSaveDatabase,
+  openSaveDatabase,
+  queryRows,
+  type SaveDatabase,
+} from "./db";
 
 export interface SaveMeta {
   filename: string;
@@ -104,14 +110,88 @@ export async function getPlayerNationOverview(
   };
 }
 
-export async function keepSave(_db: SaveDatabase, _saveId: string): Promise<void> {
-  throw new Error("Not implemented — see tasks.md T034 (User Story 4)");
+// Only one save may be kept at a time (Assumptions). Each save's SQLite
+// database is its own separate OPFS file named by saveId, so there's no
+// single place to enumerate "which one is kept" without scanning OPFS —
+// this tiny localStorage pointer is that index. The database's own
+// `save_meta.kept` column (set alongside this pointer) remains the
+// source of truth for any code that already has the database open;
+// this pointer only exists so `listKeptSave()` can answer without
+// opening anything.
+const KEPT_SAVE_POINTER_KEY = "nauticalbeg.keptSave";
+
+function readKeptSavePointer(): KeptSaveSummary | null {
+  try {
+    const raw = localStorage.getItem(KEPT_SAVE_POINTER_KEY);
+    return raw === null ? null : (JSON.parse(raw) as KeptSaveSummary);
+  } catch {
+    return null;
+  }
 }
 
-export async function forgetKeptSave(_saveId: string): Promise<void> {
-  throw new Error("Not implemented — see tasks.md T034 (User Story 4)");
+function writeKeptSavePointer(pointer: KeptSaveSummary | null): void {
+  if (pointer === null) {
+    localStorage.removeItem(KEPT_SAVE_POINTER_KEY);
+  } else {
+    localStorage.setItem(KEPT_SAVE_POINTER_KEY, JSON.stringify(pointer));
+  }
 }
 
+/**
+ * Marks `saveId` as kept (FR-011), replacing any previously kept save —
+ * only one may be kept at a time (Assumptions), so the previous kept
+ * save's database is deleted. Storage-quota handling (FR-014) is left to
+ * T036.
+ */
+export async function keepSave(db: SaveDatabase, saveId: string): Promise<void> {
+  const previous = readKeptSavePointer();
+  if (previous && previous.saveId !== saveId) {
+    await deleteSaveDatabase(previous.saveId);
+  }
+  await db.sqlite3.exec(db.handle, "UPDATE save_meta SET kept = 1");
+  const meta = await getSaveMeta(db);
+  writeKeptSavePointer({
+    saveId,
+    filename: meta.filename,
+    inGameDate: meta.inGameDate,
+  });
+}
+
+/** Deletes the OPFS database for a previously kept save (FR-013). */
+export async function forgetKeptSave(saveId: string): Promise<void> {
+  await deleteSaveDatabase(saveId);
+  const current = readKeptSavePointer();
+  if (current?.saveId === saveId) {
+    writeKeptSavePointer(null);
+  }
+}
+
+/** Used on app start to offer resuming a kept save (Acceptance Scenario 2). */
 export async function listKeptSave(): Promise<KeptSaveSummary | null> {
-  throw new Error("Not implemented — see tasks.md T034 (User Story 4)");
+  return readKeptSavePointer();
+}
+
+/**
+ * Deletes `saveId`'s OPFS database unless it has been kept — the
+ * FR-005/FR-012 default that a loaded save is retained only for the
+ * current session, not forever. Called (a) when a new load supersedes a
+ * previous ready one (`worker.ts`) and (b) on session teardown
+ * (`FileLoader.tsx`'s `beforeunload` handler). Opens the database itself
+ * since callers at both sites only have a saveId, not an open handle, by
+ * the time this runs.
+ */
+export async function cleanupSaveIfNotKept(
+  saveId: string,
+  vfsName?: string,
+): Promise<void> {
+  const db = await openSaveDatabase(saveId, vfsName);
+  let kept: boolean;
+  try {
+    kept = (await getSaveMeta(db)).kept;
+  } finally {
+    await closeSaveDatabase(db);
+  }
+  if (!kept) {
+    await deleteSaveDatabase(saveId, vfsName);
+  }
 }

@@ -148,11 +148,12 @@ re-uploading.
 
 ### Implementation for User Story 4
 
-- [ ] T034 [US4] Implement `keepSave`, `forgetKeptSave`, and `listKeptSave` in `src/storage/queries.ts` against OPFS, enforcing the Assumptions rule that only one save may be kept at a time (keeping a new save deletes any previously kept database)
-- [ ] T035 [US4] Implement FR-014 in `src/storage/queries.ts`: catch a storage-quota error during `keepSave` and surface it clearly without corrupting the existing kept save or leaving a partially-written database
-- [ ] T036 [US4] Create `src/components/Overview/KeepSaveToggle.tsx` letting the user keep (FR-011) or forget (FR-013) the current save
-- [ ] T037 [US4] On startup, call `listKeptSave()` from `src/app.tsx` and, if one exists, offer to resume it before requiring a fresh upload (Acceptance Scenario 2)
-- [ ] T038 [P] [US4] Write an integration test in `tests/storage/keep-save.test.ts` covering: keep → simulated reload → resume; forget → no longer offered; and keeping a second save replaces the first
+- [x] T034 [US4] Implement `keepSave`, `forgetKeptSave`, and `listKeptSave` in `src/storage/queries.ts` against OPFS, enforcing the Assumptions rule that only one save may be kept at a time (keeping a new save deletes any previously kept database). Done: `save_meta.kept` is the source of truth for any code with the database already open, plus a small `localStorage` pointer (`nauticalbeg.keptSave`) so `listKeptSave()` can answer without opening OPFS at all — there's no other cheap way to know "which one is kept" across separate per-save database files. Quota handling (FR-014) is left to T036
+- [x] T035 [US4] **Fix FR-005/FR-012 default-retention gap** (found by `/speckit-analyze`): every loaded save currently persists in OPFS forever, kept or not — `openSaveDatabase` (`src/storage/db.ts`) always creates the database on the OPFS VFS, and `closeSaveDatabase` only calls `sqlite3.close()`, never deletes the underlying OPFS file. Implemented actual deletion of a save's OPFS database in two places: (a) when it is replaced by a newly loaded save — `worker.ts` now remembers the previous `ready` saveId and, once the new load finishes, calls the new `cleanupSaveIfNotKept` (`src/storage/queries.ts`) on it — and (b) on session end/app teardown, via a `beforeunload` handler in `FileLoader.tsx` calling the same function on the currently-displayed save. Both skip deletion iff `save_meta.kept = 1`. `deleteSaveDatabase` (`db.ts`) also gained a `vfsName` param so it no-ops for non-OPFS (test) VFSes instead of touching `navigator.storage`. **Known limitation**: `beforeunload` cannot reliably await async work, so (b) is best-effort — the (a) supersede path is the mechanism that's actually guaranteed to run
+- [ ] T036 [US4] Implement FR-014 in `src/storage/queries.ts`: catch a storage-quota error during `keepSave` and surface it clearly without corrupting the existing kept save or leaving a partially-written database
+- [ ] T037 [US4] Create `src/components/Overview/KeepSaveToggle.tsx` letting the user keep (FR-011) or forget (FR-013) the current save
+- [ ] T038 [US4] On startup, call `listKeptSave()` from `src/app.tsx` and, if one exists, offer to resume it before requiring a fresh upload (Acceptance Scenario 2)
+- [x] T039 [P] [US4] Write an integration test in `tests/storage/keep-save.test.ts` covering: keep → simulated reload → resume; forget → no longer offered; keeping a second save replaces the first; **and (per T035) that an unkept save's OPFS database is actually deleted on replace and on session end**. Done at the storage layer (5/5 tests) — `deleteSaveDatabase` is asserted (via spy) to be called for an unkept save and not for a kept one, and the keep/forget/list pointer roundtrip is verified against real SQLite state. **Not covered**: an actual browser-verified check that bytes are gone from real OPFS (no OPFS in Node/jsdom — same documented gap as T025), and the resume-through-UI flow, which needs T037/T038 to exist first
 
 **Checkpoint**: All four user stories are independently functional; quickstart.md scenarios 6 and 7 are satisfied.
 
@@ -162,9 +163,9 @@ re-uploading.
 
 **Purpose**: Improvements that span multiple user stories.
 
-- [ ] T039 [P] Update `ARCHITECTURE.md` to reflect the as-built module boundaries and note any deviations from plan.md/data-model.md
-- [ ] T040 [P] Verify `OverviewCard.tsx` and `ErrorMessage.tsx` against constitution Principle VI (text contrast, no color-only meaning) and note the check per the constitution's Development Workflow section
-- [ ] T041 Run the full quickstart.md validation pass (all 8 scenarios) against a real save file, in both the local dev server and the Docker container (T005/T006)
+- [ ] T040 [P] Update `ARCHITECTURE.md` to reflect the as-built module boundaries and note any deviations from plan.md/data-model.md
+- [ ] T041 [P] Verify `OverviewCard.tsx` and `ErrorMessage.tsx` against constitution Principle VI (text contrast, no color-only meaning) and note the check per the constitution's Development Workflow section
+- [ ] T042 Run the full quickstart.md validation pass (all 8 scenarios) against a real save file, in both the local dev server and the Docker container (T005/T006)
 
 ---
 
@@ -235,4 +236,5 @@ Task: "Implement streaming save-reader in src/parser/save-reader.ts"
 - [Story] labels map every implementation task back to spec.md for traceability.
 - Constitution Principle II is non-negotiable: T015, T016, and T030 must exist and fail before their corresponding implementation tasks are done.
 - Commit after each task or logical group (repo is initialized as of T001; no commits have been made yet — the first commit is left to you/the implementer to time deliberately rather than being bundled into a setup task).
-- Docker (T005/T006) and the architecture guide (T007, refreshed at T039) were added per explicit request, layered onto the standard Setup/Foundational/Polish phases rather than replacing them.
+- Docker (T005/T006) and the architecture guide (T007, refreshed at T040) were added per explicit request, layered onto the standard Setup/Foundational/Polish phases rather than replacing them.
+- T035 was added by `/speckit-analyze` (2026-09-17) after finding that T025's "replace" flow and the absence of any session-teardown cleanup meant every loaded save — kept or not — was silently persisting in OPFS forever, violating FR-005/FR-012's session-only default.

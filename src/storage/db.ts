@@ -145,10 +145,16 @@ export async function queryRows(
 /**
  * Permanently deletes a save's OPFS-backed database, including SQLite's
  * journal/WAL/shm sidecar files if present. Used when forgetting a kept
- * save (FR-013) or discarding a session-only save. Not meaningful for
- * non-OPFS (test) VFSes, which don't persist beyond the process anyway.
+ * save (FR-013), when a new load supersedes a previous session-only save
+ * (FR-005/FR-010), and on session teardown (FR-012). No-ops for non-OPFS
+ * (test) VFSes, which don't persist beyond the process and have no
+ * `navigator.storage` to call.
  */
-export async function deleteSaveDatabase(name: string): Promise<void> {
+export async function deleteSaveDatabase(
+  name: string,
+  vfsName: string = OPFS_VFS_NAME,
+): Promise<void> {
+  if (vfsName !== OPFS_VFS_NAME) return;
   const root = await navigator.storage.getDirectory();
   const candidates = [name, `${name}-journal`, `${name}-wal`, `${name}-shm`];
   for (const filename of candidates) {

@@ -5,16 +5,26 @@
 // unit-testable without a real Worker thread).
 import type { MainToWorkerMessage, WorkerToMainMessage } from "./protocol";
 import { loadSave } from "./load-save";
+import { cleanupSaveIfNotKept } from "../storage/queries";
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 
 let currentAbortController: AbortController | null = null;
+
+// The saveId of the last load that reached `ready`, if its database
+// hasn't been cleaned up yet. Used to enforce FR-005/FR-012 (a
+// session-only save isn't retained forever) when a new `load` supersedes
+// it — see T035.
+let lastReadySaveId: string | null = null;
 
 function post(message: WorkerToMainMessage): void {
   ctx.postMessage(message);
 }
 
 async function handleLoad(file: File): Promise<void> {
+  const supersededSaveId = lastReadySaveId;
+  lastReadySaveId = null;
+
   const abortController = new AbortController();
   currentAbortController = abortController;
 
@@ -22,7 +32,10 @@ async function handleLoad(file: File): Promise<void> {
     file,
     {
       onProgress: (phase, percent) => post({ type: "progress", phase, percent }),
-      onReady: (result) => post({ type: "ready", ...result }),
+      onReady: (result) => {
+        lastReadySaveId = result.saveId;
+        post({ type: "ready", ...result });
+      },
       onError: (kind, message, detectedVersion) =>
         post({ type: "error", kind, message, detectedVersion }),
     },
@@ -31,6 +44,16 @@ async function handleLoad(file: File): Promise<void> {
 
   if (currentAbortController === abortController) {
     currentAbortController = null;
+  }
+
+  if (supersededSaveId) {
+    try {
+      await cleanupSaveIfNotKept(supersededSaveId);
+    } catch (err) {
+      // The new load has already been reported (ready or error); don't
+      // let a cleanup failure surface as though the new load failed.
+      console.error(`Failed to clean up superseded save ${supersededSaveId}`, err);
+    }
   }
 }
 

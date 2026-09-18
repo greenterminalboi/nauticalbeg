@@ -7,7 +7,11 @@ import type {
   WorkerToMainMessage,
 } from "../../parser/protocol";
 import { openSaveDatabase, closeSaveDatabase } from "../../storage/db";
-import { getPlayerNationOverview, getSaveMeta } from "../../storage/queries";
+import {
+  cleanupSaveIfNotKept,
+  getPlayerNationOverview,
+  getSaveMeta,
+} from "../../storage/queries";
 
 type Status =
   | { kind: "idle" }
@@ -28,6 +32,9 @@ type Status =
 export function FileLoader() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const workerRef = useRef<Worker | null>(null);
+  // Tracks the most recently ready save's id so the beforeunload handler
+  // below knows what to clean up — see handleReady and T035.
+  const currentSaveIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const worker = new Worker(new URL("../../parser/worker.ts", import.meta.url), {
@@ -57,11 +64,29 @@ export function FileLoader() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- worker is created once per mount
   }, []);
 
+  useEffect(() => {
+    // Best-effort cleanup for FR-005/FR-012's "not retained unless kept"
+    // default when the user closes the tab without loading a replacement
+    // save (the case worker.ts's supersede-cleanup can't cover). This is
+    // fire-and-forget: beforeunload gives no reliable way to await async
+    // work, so this can't be guaranteed to finish before the page closes.
+    // The supersede path in worker.ts is the reliable mechanism; this is
+    // a backstop for it.
+    function handleBeforeUnload(): void {
+      if (currentSaveIdRef.current) {
+        void cleanupSaveIfNotKept(currentSaveIdRef.current);
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
   function handleProgress(message: ProgressMessage): void {
     setStatus({ kind: message.phase, percent: message.percent });
   }
 
   async function handleReady(message: ReadyMessage): Promise<void> {
+    currentSaveIdRef.current = message.saveId;
     setStatus({ kind: "loading-overview" });
     const db = await openSaveDatabase(message.saveId);
     try {
