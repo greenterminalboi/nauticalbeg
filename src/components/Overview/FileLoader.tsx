@@ -11,23 +11,23 @@ import {
   cleanupSaveIfNotKept,
   getPlayerNationOverview,
   getSaveMeta,
+  type PlayerNationOverview,
 } from "../../storage/queries";
+import { OverviewCard } from "./OverviewCard";
 
 type Status =
   | { kind: "idle" }
   | { kind: ParsePhase; percent: number | null }
-  | { kind: "loading-overview" } // parsing succeeded; fetching name/date to display
-  | { kind: "ready"; nationName: string; inGameDate: string }
+  | { kind: "loading-overview" } // parsing succeeded; fetching the overview to display
+  | { kind: "ready"; overview: PlayerNationOverview; inGameDate: string }
   | { kind: "error"; message: string };
 
 /**
- * File picker + worker orchestration for User Story 1. Once parsing
- * succeeds, this queries just enough (`getSaveMeta` +
- * `getPlayerNationOverview`) to show the player's nation name and
- * in-game date, satisfying US1's Independent Test. The full six-stat
- * overview (User Story 2) replaces this minimal display in
- * `OverviewCard.tsx` (T027) — this component's job stays scoped to
- * "get a save loaded," per the module boundaries in ARCHITECTURE.md.
+ * File picker + worker orchestration. Once parsing succeeds, this
+ * queries `getSaveMeta` + `getPlayerNationOverview` and hands the result
+ * to `OverviewCard` (User Story 2) — this component's job stays scoped
+ * to "get a save loaded and fetch its overview," per the module
+ * boundaries in ARCHITECTURE.md.
  */
 export function FileLoader() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -105,7 +105,7 @@ export function FileLoader() {
       const overview = await getPlayerNationOverview(db);
       setStatus({
         kind: "ready",
-        nationName: overview.name,
+        overview,
         inGameDate: meta.inGameDate ?? message.inGameDate,
       });
     } catch (err) {
@@ -158,11 +158,7 @@ function StatusView({ status }: { status: Status }) {
     case "loading-overview":
       return <p>{describePhase(status)}</p>;
     case "ready":
-      return (
-        <p>
-          {status.nationName} — {status.inGameDate}
-        </p>
-      );
+      return <OverviewCard overview={status.overview} inGameDate={status.inGameDate} />;
     case "error":
       return <p role="alert">{status.message}</p>;
   }

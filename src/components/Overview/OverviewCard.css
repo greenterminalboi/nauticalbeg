@@ -1,0 +1,99 @@
+/* "Illuminated Cards & Folios" (design.md §Components 2): a vellum
+   surface framed by a portolan-style multi-ruled border, sharp `0`
+   corners throughout (design.md §Shapes), header as a lapis wash banner. */
+.overview-card {
+  max-width: 42rem;
+  margin: var(--space-lg) 0;
+  background: var(--color-vellum);
+  border: 3px solid var(--color-on-surface);
+  box-shadow:
+    0 0 0 1px var(--color-tertiary),
+    0 0 0 4px var(--color-vellum),
+    0 0 0 5px var(--color-secondary);
+}
+
+.overview-card__header {
+  background: linear-gradient(180deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-on-primary);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 3px double var(--color-tertiary);
+}
+
+.overview-card__eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-on-tertiary-fixed);
+  margin: 0 0 var(--space-xs);
+}
+
+.overview-card__title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: var(--color-on-primary);
+}
+
+.overview-card__date {
+  font-family: var(--font-body);
+  font-style: italic;
+  margin: var(--space-xs) 0 0;
+  color: var(--color-on-tertiary-fixed);
+}
+
+.overview-card__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  margin: 0;
+}
+
+.overview-card__stat {
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--color-outline-variant);
+  border-left: 1px solid var(--color-outline-variant);
+}
+
+.overview-card__stat-label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  margin: 0 0 var(--space-xs);
+}
+
+.overview-card__stat-value {
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  color: var(--color-on-surface);
+  margin: 0;
+}
+
+/* "Chips, Badges & Seals" (design.md §Components 5): a bracketed
+   manuscript label, not a color swatch — FR-007/derived stats stay
+   legible even without color vision (constitution Principle VI). */
+.overview-card__badge {
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+}
+
+.overview-card__badge::before {
+  content: "[ ";
+}
+
+.overview-card__badge::after {
+  content: " ]";
+}

@@ -1,0 +1,55 @@
+/* Design tokens from design.md ("Imperial Illuminator") — colors,
+   typography, and spacing, kept as CSS custom properties so components
+   reference one source of truth instead of repeating hex/rem literals. */
+@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500;0,600;1,500&family=Literata:ital,opsz,wght@0,18..144,400;1,18..144,400&display=swap");
+
+:root {
+  /* Colors */
+  --color-surface: #fff8f5;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #faf2ee;
+  --color-surface-container: #f4ece8;
+  --color-surface-container-high: #eee7e3;
+  --color-on-surface: #1e1b19;
+  --color-on-surface-variant: #43474d;
+  --color-outline: #74777e;
+  --color-outline-variant: #c4c6ce;
+
+  --color-primary: #0a2540;
+  --color-primary-deep: #0d3b66;
+  --color-on-primary: #ffffff;
+
+  --color-secondary: #b6191a;
+  --color-on-secondary: #ffffff;
+
+  --color-tertiary: #d97706;
+  --color-tertiary-container: #3b1c00;
+  --color-on-tertiary-fixed: #ffdcc3;
+
+  --color-vellum: #faf5ef;
+
+  /* Typography */
+  --font-display: "EB Garamond", Garamond, Georgia, serif;
+  --font-body: "Literata", Georgia, "Times New Roman", serif;
+
+  /* Spacing */
+  --space-xs: 0.375rem;
+  --space-sm: 0.75rem;
+  --space-md: 1.25rem;
+  --space-lg: 2rem;
+  --space-xl: 3.25rem;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
