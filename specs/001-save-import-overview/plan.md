@@ -21,7 +21,9 @@ persists across browser sessions (FR-011–FR-014).
 **Language/Version**: TypeScript 5.x, targeting ES2022, running in evergreen
 browsers (no server-side runtime required for this feature).
 
-**Primary Dependencies**: React 18 (UI), Vite (build/dev tooling),
+**Primary Dependencies**: React 19 (UI) — newer than the React 18 originally
+sketched here; no architectural impact, corrected 2026-09-18 during
+`/speckit-analyze`. Vite (build/dev tooling),
 `wa-sqlite` (SQLite compiled to WASM, OPFS virtual file system) for local
 structured storage, native Web Workers for off-main-thread parsing. No
 existing library parses EU5 saves — the parser itself is custom and is the
@@ -59,7 +61,12 @@ native install (Technical Constraints).
 
 **Scale/Scope**: One active save per session, plus at most one additional
 "kept" (persisted) save per browser profile in v1. Four user stories,
-FR-001 through FR-014.
+FR-001 through FR-015 (FR-015, a nation selector, was added 2026-09-18 —
+see spec.md's Assumptions update; it generalized `getPlayerNationOverview`
+into a `listNations`/`getNationOverview(idx)` pair the UI keeps one
+long-lived read-only connection open against, a pattern meant to extend to
+future selectable views, not stay nation-specific — see
+ARCHITECTURE.md's "pick an entity, view it" section).
 
 ## Constitution Check
 
@@ -105,8 +112,13 @@ src/
 │   ├── db.ts                 # Open/create a per-save SQLite database
 │   ├── schema.sql             # Table definitions (see data-model.md)
 │   └── queries.ts             # Typed read queries used by the UI (and later the agent)
-├── domain/                  # Parsed Game State / Player Nation types & aggregation logic
-│   └── overview.ts
+├── domain/                  # Planned for Parsed Game State / Player Nation types &
+│                            # aggregation logic. As-built (2026-09-18): left empty —
+│                            # every aggregation this feature needed turned out to fit
+│                            # directly in storage/queries.ts's SQL, and nothing else
+│                            # needed a home here (constitution Principle VII: don't
+│                            # build the abstraction before something needs it). See
+│                            # ARCHITECTURE.md's module-boundaries section.
 ├── components/               # React UI
 │   └── Overview/
 ├── app.tsx

@@ -45,3 +45,11 @@
   updated). All items still pass — this already matched the plan/data-model
   (`save_meta.in_game_date` is a single field, no snapshot-history table),
   so no downstream plan changes were needed.
+- Re-validated again after the 2026-09-18 nation-selector addition (FR-015,
+  a new Acceptance Scenario under User Story 2, and superseding the
+  Assumptions bullet that had deferred "selecting among multiple human
+  nations" to a future feature). All items still pass — FR-015 is stated
+  in user-facing terms (select a nation, see its overview) with no
+  implementation detail leaking in; the underlying generalized
+  `listNations`/`getNationOverview(idx)` data-access pattern is a plan/
+  implementation choice, documented in plan.md and ARCHITECTURE.md instead.
