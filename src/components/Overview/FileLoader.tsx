@@ -90,10 +90,16 @@ export function FileLoader() {
     setStatus({ kind: "loading-overview" });
     const db = await openSaveDatabase(message.saveId);
     try {
-      const [meta, overview] = await Promise.all([
-        getSaveMeta(db),
-        getPlayerNationOverview(db),
-      ]);
+      // Sequential, not Promise.all: wa-sqlite's async build runs on
+      // Asyncify, which unwinds/rewinds a single WASM call stack per
+      // module instance — issuing two queries concurrently against the
+      // same connection corrupts that shared state (observed in the
+      // browser as a nonsensical "no such table" error, an OPFS
+      // NotFoundError, and a WASM "memory access out of bounds" crash,
+      // depending on how the race landed). Existing tests never caught
+      // this because they always call one query at a time.
+      const meta = await getSaveMeta(db);
+      const overview = await getPlayerNationOverview(db);
       setStatus({
         kind: "ready",
         nationName: overview.name,
