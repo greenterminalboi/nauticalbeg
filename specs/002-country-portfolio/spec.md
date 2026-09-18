@@ -8,23 +8,87 @@
 
 **Input**: User description: "tabulating the managers in some way or form, for a country, enhanced ui handling. Like a country portfolio page that shows the major information of the country, an expansion of what we have right now, but it also includes side navigation bar, which controls which tabulated data for the country you want to see, like for example provinces, another example is characters, an economy tab, a building registry for the country, a military tab, a trade tab, a diplomacy tab. selecting a country from the dropdown changes what the underlying data will be."
 
+## Clarifications
+
+### Session 2026-09-18
+
+- Q: Should cleaning up the existing UI (top nav bar, centered layout, polished styling) be its own leading user story, built before any tab stories — or a cross-cutting prerequisite folded into Provinces' tasks? → A: New User Story 1 ("Portfolio shell"): top nav + side nav + centered content area, replacing today's layout. Becomes the new P1; Provinces through Characters each shift down one priority.
+- Q: When a placeholder tab (AI Agent, Map) is "greyed out, coming soon," should it be completely unclickable, or clickable but showing a "coming soon" message? → A: Clickable — selecting it switches the main content area to a "Coming soon" placeholder message, same as any other tab's content swap.
+- Q: Should the new top bar be part of the app's permanent shell (visible before any save is loaded), or only appear once a save is loaded? → A: Permanent shell — the top bar (with the file picker) is visible from first load, before any save exists; the side navigation and content area appear once a save is loaded.
+- Q: Does "nice centered table" mean the main content area is page-centered with balanced margins, or that table cell content is center-aligned? → A: Page-level for now — the main content area (including tables) is horizontally centered with a bounded max-width and balanced margins; cell content stays left/right-aligned per column as appropriate, not forced center.
+- Q: Where should the existing nation selector live in the new shell relative to the save/keep controls? → A: Independent of save selection — the nation selector is its own distinct control (not merged into the file/keep controls), living in the top bar; it stays disabled/hidden until a save is loaded, then initializes (populates with that save's nations) once one is.
+
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Browse a nation's data by category (Priority: P1) 🎯 MVP
+### User Story 1 - Portfolio shell (Priority: P1) 🎯 MVP
+
+The current page is a flat stack of controls (file picker, keep toggle,
+nation selector, one overview card) that reads as a work-in-progress, not
+a finished tool. Before any new tab is added, the player needs a proper
+application shell: a persistent top bar holding the save/upload and
+keep/forget controls, a side navigation for data categories, and a
+centered main content area — the structure every tab from User Story 2
+onward will render into.
+
+**Why this priority**: The user explicitly asked for this to happen
+*before* any new tabs are added, not alongside them — it's the container
+every other story renders into, so building it first avoids reworking
+each tab's layout later. This bumps every other story in this spec down
+one priority level from the original draft.
+
+**Independent Test**: Can be fully tested by loading a save and visually
+confirming: a top bar containing the file/keep/kept-save controls, a side
+navigation listing at least "Overview," a centered main content area
+showing the existing overview data, and no leftover unstyled/stacked
+controls from the previous layout.
+
+**Acceptance Scenarios**:
+
+1. **Given** the app is freshly loaded with no save yet, **When** the
+   page renders, **Then** the top bar and its file-selection control are
+   visible and usable without a save being loaded first, and the nation
+   selector is visibly present but disabled/inactive (it is an
+   independent control from the file picker, not merged with it).
+2. **Given** a save has just finished loading, **When** the user looks at
+   the top bar, **Then** the nation selector initializes — becoming
+   enabled and populated with that save's nations — without the page
+   reloading or the top bar's layout changing shape.
+3. **Given** a save is loaded and a nation selected, **When** the user
+   views the page, **Then** the save/keep controls and the (now active)
+   nation selector live in the top bar as distinct controls, the
+   data-category navigation lives in a side panel, and the selected
+   category's content sits in a horizontally centered, bounded-width main
+   area (not stretched full-bleed, not a vertical stack of unstyled
+   elements) — table content within it keeps normal per-column alignment
+   rather than every cell being forced to center.
+4. **Given** the portfolio shell is in place, **When** the user resizes
+   the browser window to a narrower width, **Then** the layout adapts
+   (per FR-017) rather than overflowing or clipping content.
+5. **Given** the side navigation is visible, **When** the user looks at
+   it, **Then** it also lists an "AI Agent" item and a "Map" item, both
+   visually marked as not yet available.
+6. **Given** the "AI Agent" or "Map" nav item, **When** the user selects
+   it, **Then** the main content area shows a "coming soon" placeholder
+   for that category instead of real data, rather than the item being
+   inert/unclickable.
+
+---
+
+### User Story 2 - Browse a nation's data by category (Priority: P2)
 
 A player has loaded a save and is viewing a nation's overview (001's
 existing feature). They want to go beyond the single summary card and dig
 into one specific area of that nation's state — starting with its
-territory — via a persistent side navigation, without losing their place
-or re-selecting the nation.
+territory — via the portfolio shell's side navigation (User Story 1),
+without losing their place or re-selecting the nation.
 
-**Why this priority**: This is the structural foundation every other tab
-depends on (the side navigation itself, and the pattern of "select a
-category, see that nation's data for it"). Provinces is included in this
-story specifically because the underlying data is already fully parsed by
-001 (the `provinces`/`locations` tables) — it requires no new
-save-format research, making it the lowest-risk, fastest path to a real,
-usable second tab and a fully working navigation shell.
+**Why this priority**: The first real tab beyond Overview, and the one
+that proves the navigation pattern works end-to-end (the side navigation
+itself was built in User Story 1; this story is the first thing placed
+inside it). Provinces is included in this story specifically because the
+underlying data is already fully parsed by 001 (the
+`provinces`/`locations` tables) — it requires no new save-format
+research, making it the lowest-risk, fastest path to a real, usable tab.
 
 **Independent Test**: Can be fully tested by loading a save, selecting a
 nation, opening the side navigation, and switching between an "Overview"
@@ -54,7 +118,7 @@ throughout.
 
 ---
 
-### User Story 2 - Military tab (Priority: P2)
+### User Story 3 - Military tab (Priority: P3)
 
 A player wants to see the selected nation's standing military strength —
 how many units it has and what kind — without leaving the portfolio view.
@@ -81,7 +145,7 @@ confirming unit counts/types shown match what's in the source save file.
 
 ---
 
-### User Story 3 - Government tab (Priority: P3)
+### User Story 4 - Government tab (Priority: P4)
 
 A player wants to see how the selected nation is internally organized:
 its estates and their standing, its government type/reforms, active
@@ -118,7 +182,7 @@ source save.
 
 ---
 
-### User Story 4 - Economy tab (Priority: P4)
+### User Story 5 - Economy tab (Priority: P5)
 
 A player wants a deeper economic breakdown of the selected nation than the
 single treasury figure already on the Overview tab — where income comes
@@ -144,7 +208,7 @@ figures shown match the source save.
 
 ---
 
-### User Story 5 - Diplomacy tab (Priority: P5)
+### User Story 6 - Diplomacy tab (Priority: P6)
 
 A player wants to see the selected nation's current relations with other
 nations — active wars, alliances, and membership in any international
@@ -170,7 +234,7 @@ source save.
 
 ---
 
-### User Story 6 - Trade tab (Priority: P6)
+### User Story 7 - Trade tab (Priority: P7)
 
 A player wants to see what trade goods the selected nation produces and
 its participation in trade routes.
@@ -191,7 +255,7 @@ match the source save.
 
 ---
 
-### User Story 7 - Building registry tab (Priority: P7)
+### User Story 8 - Building registry tab (Priority: P8)
 
 A player wants a list of buildings constructed across the selected
 nation's territory, rather than having to check province-by-province.
@@ -213,7 +277,7 @@ each is in) match the source save.
 
 ---
 
-### User Story 8 - Characters tab (Priority: P8)
+### User Story 9 - Characters tab (Priority: P9)
 
 A player wants to see the selected nation's ruler and other notable
 characters (heirs, generals, admirals) tied to it.
@@ -264,7 +328,9 @@ other listed characters match the source save.
 - **FR-001**: System MUST provide a persistent side navigation, visible
   whenever a nation is selected, listing every available data category for
   that nation (at minimum: Overview, Provinces, Military, Government,
-  Economy, Diplomacy, Trade, Building Registry, Characters).
+  Economy, Diplomacy, Trade, Building Registry, Characters, plus the
+  AI Agent/Map placeholders per FR-016). See FR-018 for the top bar this
+  side navigation sits alongside.
 - **FR-002**: Selecting a side navigation item MUST display that
   category's data for the currently selected nation without requiring the
   save to be reloaded or the nation to be re-selected.
@@ -306,6 +372,32 @@ other listed characters match the source save.
 - **FR-015**: The side navigation and its items MUST be operable via
   keyboard, consistent with the existing accessibility principle applied
   to the nation selector and overview controls.
+- **FR-016**: The side navigation MUST include an "AI Agent" item and a
+  "Map" item, both visually marked as not yet available; selecting
+  either MUST show a "coming soon" placeholder in the main content area
+  rather than being unclickable or showing an error — this is distinct
+  from FR-014's "not available for this save" state, since these two
+  are permanently unbuilt features, not something that varies by save.
+- **FR-017**: The portfolio shell's layout MUST adapt to at least a
+  typical mobile viewport width without overflowing or clipping content
+  (e.g., the side navigation collapsing or relocating rather than
+  forcing horizontal scrolling).
+- **FR-018**: System MUST provide a persistent top bar, visible from the
+  very first screen (before any save is loaded), holding the
+  save/upload control and, once a save is loaded, the keep/forget
+  controls. The side navigation (FR-001) and main content area only
+  appear once a save is loaded and a nation is selected — the top bar is
+  the one piece of the shell present in every state.
+- **FR-019**: The main content area MUST be horizontally centered on the
+  page with a bounded maximum width and balanced margins, rather than
+  stretching full-bleed edge to edge; this applies to the content area
+  as a whole (including any table it contains), not to individual table
+  cells, whose content keeps ordinary per-column alignment.
+- **FR-020**: The nation selector MUST be an independent control from
+  the save/upload and keep/forget controls — not merged into them — and
+  MUST remain disabled or hidden until a save is loaded, after which it
+  initializes with that save's list of nations. It lives in the top bar
+  alongside (not combined with) the save-management controls.
 
 ### Key Entities
 
@@ -353,15 +445,19 @@ other listed characters match the source save.
 - **SC-004**: A user can identify a selected nation's ruler, total
   military unit count, government type, and current wars without
   consulting any source outside the tool.
+- **SC-005**: A first-time visitor, before loading any save, sees a
+  fully-styled top bar and file control — not a bare, unstyled HTML
+  input — and can identify how to load a save without instruction.
 
 ## Assumptions
 
-- **Scope is intentionally staged across the eight user stories above.**
-  Shipping User Story 1 alone (side navigation + Provinces) already
-  delivers real value and is a complete, usable increment; later stories
-  (Military through Characters) may be implemented in any subsequent
-  order or deferred, without blocking release of the earlier ones —
-  mirroring how 001's four user stories were each independently valuable.
+- **Scope is intentionally staged across the nine user stories above.**
+  Shipping User Story 1 (portfolio shell) and User Story 2 (Provinces)
+  already delivers real value and is a complete, usable increment; later
+  stories (Military through Characters) may be implemented in any
+  subsequent order or deferred, without blocking release of the earlier
+  ones — mirroring how 001's four user stories were each independently
+  valuable.
 - Every tab beyond Provinces and Diplomacy's war status depends on
   save-format sections this project has only ever seen as unresearched raw
   top-level keys (e.g., `unit_manager`, `building_manager`,
@@ -370,8 +466,9 @@ other listed characters match the source save.
   be confirmed against a real save and captured in a fixture before that
   tab's parser logic is built — this is expected, planned research work
   for each user story beyond US1, not a blocker to writing this spec.
-- **Policies and national values (User Story 3) are a step further out
-  than the other tabs**: every other tab's save section at least has a
+- **Policies and national values (User Story 4, Government tab) are a
+  step further out than the other tabs**: every other tab's save section
+  at least has a
   confirmed top-level key name from prior research (e.g., `estate_manager`
   for estates); "policies" and "national values" do not yet — they may
   live inside `government`'s existing (partially parsed) structure,
@@ -382,9 +479,12 @@ other listed characters match the source save.
 - All tabs are read-only displays of already-parsed save data, consistent
   with constitution Principle I — this feature does not let a user modify
   a nation's military, economy, buildings, or any other state.
-- The Overview tab is today's existing overview card, kept as-is; this
-  feature does not require changing what it shows, only adding sibling
-  tabs alongside it.
+- The Overview tab's *content* is today's existing overview card, kept
+  as-is — this feature does not require changing what it shows. Its
+  surrounding chrome does change: User Story 1 relocates the file/keep
+  controls into the new top bar and moves the card itself into the new
+  centered main content area, alongside a sibling side navigation it
+  didn't previously have.
 - "Nothing to show" (a category genuinely has zero items for this nation)
   and "not available for this save" (the category's save section couldn't
   be parsed at all) are distinct, per FR-012/FR-013, so a user is never

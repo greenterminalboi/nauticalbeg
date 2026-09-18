@@ -43,15 +43,25 @@
   keys (per constitution Principle II, that research has to happen
   against a real save before schema is invented, not before the spec is
   written).
-- Re-validated after adding User Story 3 (Government tab: estates,
-  government type, policies, national values), requested during
-  `/speckit-plan` invocation and folded back into the spec first so it
-  stays the source of truth — same handling as 001's FR-015 addition.
-  Renumbering the remaining stories' priorities (Economy through
-  Characters, each shifted down by one) was clean to do since nothing in
-  this feature is implemented yet. All items still pass; the one
-  genuinely open question (exactly where "policies"/"national values"
-  live in the save format, since even a top-level key name isn't
-  confirmed yet, unlike every other tab's data source) is recorded in the
-  spec's Assumptions as required research for `/speckit-plan`, not left
-  implicit.
+- Re-validated after adding a Government tab (estates, government type,
+  policies, national values), requested during `/speckit-plan` invocation
+  and folded back into the spec first so it stays the source of truth —
+  same handling as 001's FR-015 addition. Renumbering the remaining
+  stories' priorities (Economy through Characters, each shifted down by
+  one) was clean to do since nothing in this feature is implemented yet.
+  All items still pass; the one genuinely open question (exactly where
+  "policies"/"national values" live in the save format, since even a
+  top-level key name isn't confirmed yet, unlike every other tab's data
+  source) is recorded in the spec's Assumptions as required research for
+  `/speckit-plan`, not left implicit.
+- Re-validated after a `/speckit-clarify` session (2026-09-18, 5
+  questions) resolving the UI-cleanup request: a new leading User Story 1
+  ("Portfolio shell" — top bar, side nav, centered content area), the
+  Government tab and everything after it shifted down one more priority
+  level, two "coming soon" placeholder nav items (AI Agent, Map) with
+  FR-016 defining their click-shows-a-message behavior, and the nation
+  selector's independence/initialization behavior (FR-020). All items
+  still pass — every new requirement is stated in observable,
+  user-facing/behavioral terms (e.g., "horizontally centered with a
+  bounded maximum width," FR-019) rather than CSS or component-library
+  specifics, keeping implementation choices deferred to `/speckit-plan`.
