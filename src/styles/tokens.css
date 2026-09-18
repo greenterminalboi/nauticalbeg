@@ -26,6 +26,11 @@
   --color-tertiary-container: #3b1c00;
   --color-on-tertiary-fixed: #ffdcc3;
 
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
   --color-vellum: #faf5ef;
 
   /* Typography */

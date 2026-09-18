@@ -131,13 +131,13 @@ actionable message rather than a crash or silent failure.
 
 ### Tests for User Story 3 (required by constitution Principle II)
 
-- [ ] T030 [P] [US3] Add fixture-based tests in `tests/parser/errors.test.ts` for all three error kinds — a non-save file, a deliberately truncated/corrupted copy of the T014 fixture, and (if available) a save from an unsupported version — asserting the worker emits the correct `error.kind` for each
+- [x] T030 [P] [US3] Add fixture-based tests in `tests/parser/errors.test.ts` for all three error kinds — a non-save file, a deliberately truncated/corrupted copy of the T014 fixture, and (if available) a save from an unsupported version — asserting the worker emits the correct `error.kind` for each. **Already satisfied** by `tests/parser/load-save.test.ts` (written during T020–T022) — it covers all three kinds against real fixture-derived files; no separate `errors.test.ts` was needed since these are just other branches of the same `loadSave` orchestration already under test there (noted in that file now)
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] Implement FR-002 format validation in `src/parser/worker.ts`: reject unrecognized files early with `error` `kind: "not-a-save"`, before attempting a full parse (satisfies part of T030)
-- [ ] T032 [US3] Implement the FR-009 "parse-failed" path in `src/parser/worker.ts`: catch mid-parse failures and send `error` `kind: "parse-failed"` instead of a partial or blank result (satisfies part of T030)
-- [ ] T033 [US3] Create `src/components/Overview/ErrorMessage.tsx` rendering the three distinct FR-009 messages based on `error.kind`, replacing any partial UI state in `src/app.tsx`
+- [x] T031 [US3] Implement FR-002 format validation in `src/parser/worker.ts`: reject unrecognized files early with `error` `kind: "not-a-save"`, before attempting a full parse (satisfies part of T030). **Already implemented** in `load-save.ts` during T020–T022 (`looksLikeSaveFile` check before version detection); confirmed covered by T030's tests
+- [x] T032 [US3] Implement the FR-009 "parse-failed" path in `src/parser/worker.ts`: catch mid-parse failures and send `error` `kind: "parse-failed"` instead of a partial or blank result (satisfies part of T030). **Already implemented** in `load-save.ts` during T020–T022 (the outer `try/catch`); confirmed covered by T030's tests
+- [x] T033 [US3] Create `src/components/Overview/ErrorMessage.tsx` rendering the three distinct FR-009 messages based on `error.kind`, replacing any partial UI state in `src/app.tsx`. Done: a title per `ErrorKind` (`"Not a Recognized Save File"` / `"Unsupported Game Version"` / `"Save Could Not Be Read"`) plus the worker's specific message text, styled as a vermilion "rejected folio" per design.md, distinct from `OverviewCard`'s lapis treatment — text-based distinction (title + bracketed kind label), not color alone, per constitution Principle VI. `FileLoader.tsx`'s `Status` now carries the error's `kind` (or `"unknown"` for a post-parse read failure, which isn't one of FR-009's three categories but still needs a clear message) instead of a flat string. 5 new component tests (45/45 total passing); manually verified all three kinds plus the fallback in Chrome, each showing a distinct title/message with a clean console
 
 **Checkpoint**: All user stories 1–3 are independently functional; quickstart.md scenarios 3, 4, and 5 are satisfied.
 

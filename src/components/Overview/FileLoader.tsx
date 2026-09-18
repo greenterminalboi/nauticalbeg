@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type {
-  ErrorMessage,
+  ErrorKind,
+  ErrorMessage as WorkerErrorMessage,
   ParsePhase,
   ProgressMessage,
   ReadyMessage,
@@ -16,6 +17,7 @@ import {
   type NationOverview,
   type NationSummary,
 } from "../../storage/queries";
+import { ErrorMessage } from "./ErrorMessage";
 import { NationSelector } from "./NationSelector";
 import { OverviewCard } from "./OverviewCard";
 
@@ -30,7 +32,10 @@ type Status =
       overview: NationOverview;
       inGameDate: string;
     }
-  | { kind: "error"; message: string };
+  // errorKind is "unknown" for a failure outside FR-009's three worker
+  // kinds (e.g. the save parsed but reading its overview afterward
+  // failed) — see ErrorMessage.tsx.
+  | { kind: "error"; errorKind: ErrorKind | "unknown"; message: string };
 
 /**
  * File picker + worker orchestration. Once parsing succeeds, this opens a
@@ -152,6 +157,7 @@ export function FileLoader() {
     } catch (err) {
       setStatus({
         kind: "error",
+        errorKind: "unknown",
         message:
           err instanceof Error
             ? err.message
@@ -173,14 +179,15 @@ export function FileLoader() {
     } catch (err) {
       setStatus({
         kind: "error",
+        errorKind: "unknown",
         message:
           err instanceof Error ? err.message : "Failed to load that nation's overview.",
       });
     }
   }
 
-  function handleError(message: ErrorMessage): void {
-    setStatus({ kind: "error", message: message.message });
+  function handleError(message: WorkerErrorMessage): void {
+    setStatus({ kind: "error", errorKind: message.kind, message: message.message });
   }
 
   function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -233,7 +240,7 @@ function StatusView({
         </div>
       );
     case "error":
-      return <p role="alert">{status.message}</p>;
+      return <ErrorMessage kind={status.errorKind} message={status.message} />;
   }
 }
 

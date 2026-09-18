@@ -7,6 +7,12 @@ import {
   TEST_VFS_NAME,
 } from "../helpers/sqlite-test-env";
 
+// This file is also tasks.md's T030 ("fixture-based tests ... for all
+// three error kinds") — it lives here rather than a separate
+// tests/parser/errors.test.ts because these error paths are just other
+// branches of the same loadSave orchestration already under test above,
+// not a separate concern worth a second fixture-loading setup.
+
 const FIXTURE_PATH = path.resolve(
   process.cwd(),
   "tests/fixtures/rus-1628-minimal.eu5",
