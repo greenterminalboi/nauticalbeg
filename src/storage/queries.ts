@@ -187,23 +187,60 @@ function writeKeptSavePointer(pointer: KeptSaveSummary | null): void {
 }
 
 /**
- * Marks `saveId` as kept (FR-011), replacing any previously kept save —
- * only one may be kept at a time (Assumptions), so the previous kept
- * save's database is deleted. Storage-quota handling (FR-014) is left to
- * T036.
+ * The SQL-only half of "keep" (FR-011): sets `save_meta.kept = 1` and
+ * returns enough to record the kept-save pointer afterward. `db` must
+ * be a write-capable connection — see `KeepMessage`'s doc comment in
+ * `parser/protocol.ts` for why that means this can only be called from
+ * within the parser Worker, never the main thread.
+ *
+ * Deliberately does NOT touch the `localStorage` pointer itself:
+ * `localStorage` doesn't exist in a Worker's global scope at all (it's
+ * a `Window`-only API — confirmed by this crashing outright in the
+ * browser the first time `keepSave`, below, tried to do both from
+ * inside the worker). Call `recordKeptSave` next, from the main thread,
+ * once this succeeds.
  */
-export async function keepSave(db: SaveDatabase, saveId: string): Promise<void> {
-  const previous = readKeptSavePointer();
-  if (previous && previous.saveId !== saveId) {
-    await deleteSaveDatabase(previous.saveId);
-  }
+export async function markSaveKept(
+  db: SaveDatabase,
+  saveId: string,
+): Promise<KeptSaveSummary> {
   await db.sqlite3.exec(db.handle, "UPDATE save_meta SET kept = 1");
   const meta = await getSaveMeta(db);
-  writeKeptSavePointer({
-    saveId,
-    filename: meta.filename,
-    inGameDate: meta.inGameDate,
-  });
+  return { saveId, filename: meta.filename, inGameDate: meta.inGameDate };
+}
+
+/**
+ * The `localStorage`-pointer half of "keep" (FR-011) — main-thread
+ * only (see `markSaveKept`'s doc comment). Replaces any previously kept
+ * save, since only one may be kept at a time (Assumptions).
+ *
+ * FR-014: callers must only invoke this *after* `markSaveKept`'s write
+ * has already succeeded — that ordering is what keeps a write failure
+ * (most notably a storage-quota error) from ever corrupting or deleting
+ * an existing valid kept save; this function itself doesn't re-check
+ * that ordering, so keep it that way at the call sites (`worker.ts`'s
+ * `handleKeep` posts an ack only on success; `FileLoader.tsx` calls
+ * this only from that ack's handler).
+ */
+export async function recordKeptSave(summary: KeptSaveSummary): Promise<void> {
+  const previous = readKeptSavePointer();
+  if (previous && previous.saveId !== summary.saveId) {
+    await deleteSaveDatabase(previous.saveId);
+  }
+  writeKeptSavePointer(summary);
+}
+
+/**
+ * Combines `markSaveKept` + `recordKeptSave` for same-thread callers
+ * (tests, mainly) where both a write-capable `db` and `localStorage`
+ * are available together. The real app can never do this in one call —
+ * see `markSaveKept`'s doc comment — `worker.ts` calls `markSaveKept`
+ * alone, and `FileLoader.tsx` calls `recordKeptSave` alone once the
+ * worker's ack arrives.
+ */
+export async function keepSave(db: SaveDatabase, saveId: string): Promise<void> {
+  const summary = await markSaveKept(db, saveId);
+  await recordKeptSave(summary);
 }
 
 /** Deletes the OPFS database for a previously kept save (FR-013). */
@@ -228,12 +265,23 @@ export async function listKeptSave(): Promise<KeptSaveSummary | null> {
  * (`FileLoader.tsx`'s `beforeunload` handler). Opens the database itself
  * since callers at both sites only have a saveId, not an open handle, by
  * the time this runs.
+ *
+ * Idempotent: if `saveId` was already removed (most commonly, the user
+ * explicitly forgot this exact save via `forgetKeptSave` earlier in the
+ * same session — confirmed reachable via `beforeunload` after doing
+ * that), opening it fails and there's nothing left to clean up. That's
+ * not an error case here, just a no-op.
  */
 export async function cleanupSaveIfNotKept(
   saveId: string,
   vfsName?: string,
 ): Promise<void> {
-  const db = await openSaveDatabase(saveId, vfsName, { readonly: true });
+  let db: SaveDatabase;
+  try {
+    db = await openSaveDatabase(saveId, vfsName, { readonly: true });
+  } catch {
+    return;
+  }
   let kept: boolean;
   try {
     kept = (await getSaveMeta(db)).kept;

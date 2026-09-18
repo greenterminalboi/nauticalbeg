@@ -9,6 +9,7 @@ import {
   openSaveDatabase,
   type SaveDatabase,
 } from "../storage/db";
+import { getPlayerNationOverview, getSaveMeta } from "../storage/queries";
 import { readFileAsBytes } from "./save-reader";
 import { detectVersion, looksLikeSaveFile } from "./version-detect";
 import { parseAndStore as parseAndStore_1_3_11 } from "./version-adapters/1.3.11";
@@ -45,11 +46,6 @@ const PROGRESS_INTERVAL_MS = 1000; // FR-008: at least once per second
  * fired, or once `signal` is aborted (in which case neither fires —
  * FR-010's cancel is meant to look like the load never happened, not like
  * a reported failure).
- *
- * Known gap (left for User Story 4, T034/T035): this always opens a new,
- * OPFS-backed database and never cleans it up if the save isn't
- * subsequently "kept" — FR-005's "not retained unless kept" default isn't
- * fully enforced until US4 implements that cleanup.
  *
  * `vfsName` defaults to production's OPFS VFS; tests override it to the
  * in-memory test VFS (see tests/helpers/sqlite-test-env.ts), since Node
@@ -119,6 +115,57 @@ export async function loadSave(
     callbacks.onError(
       "parse-failed",
       err instanceof Error ? err.message : "Failed to parse the save file.",
+    );
+  } finally {
+    if (db) await closeSaveDatabase(db);
+  }
+}
+
+export interface ResumeCallbacks {
+  onReady: LoadCallbacks["onReady"];
+  onError: LoadCallbacks["onError"];
+}
+
+/**
+ * FR-011/Acceptance Scenario 2: resumes a previously kept save by
+ * `saveId` — it's already fully parsed and sitting in OPFS, so this
+ * skips file-reading/version-detection/parsing entirely and just opens
+ * a read-only connection to confirm it's still there and pull the same
+ * `inGameDate`/`playerNationTag` a fresh `loadSave` would have reported.
+ * `readonly: true` because this never writes anything (see
+ * `openSaveDatabase`'s doc comment for why that also matters for
+ * avoiding a main-thread-style OPFS crash, though this runs in the
+ * worker regardless, alongside the `keep`/`load` handlers).
+ */
+export async function resumeSave(
+  saveId: string,
+  callbacks: ResumeCallbacks,
+  vfsName: string = OPFS_VFS_NAME,
+): Promise<void> {
+  let db: SaveDatabase | null = null;
+  try {
+    db = await openSaveDatabase(saveId, vfsName, { readonly: true });
+    const meta = await getSaveMeta(db);
+    if (!meta.inGameDate) {
+      callbacks.onError(
+        "parse-failed",
+        "This kept save's data looks incomplete and can't be resumed.",
+      );
+      return;
+    }
+    // The player nation may no longer resolve to anything meaningful if
+    // is_player was never set (shouldn't happen for a save that reached
+    // "ready" once already, but onReady's playerNationTag is otherwise
+    // unused downstream — see FileLoader.tsx — so fall back rather than
+    // fail the whole resume over a cosmetic field).
+    const playerNationTag = await getPlayerNationOverview(db)
+      .then((overview) => overview.tag)
+      .catch(() => "");
+    callbacks.onReady({ saveId, inGameDate: meta.inGameDate, playerNationTag });
+  } catch (err) {
+    callbacks.onError(
+      "parse-failed",
+      err instanceof Error ? err.message : "Failed to resume this kept save.",
     );
   } finally {
     if (db) await closeSaveDatabase(db);

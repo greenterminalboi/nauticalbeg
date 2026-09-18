@@ -1,0 +1,57 @@
+/* A smaller illuminated folio than OverviewCard's, for a single
+   yes/no decision rather than a data display. */
+.kept-save-offer {
+  max-width: 30rem;
+  margin: var(--space-lg) 0;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-vellum);
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-vellum), 0 0 0 5px var(--color-tertiary);
+}
+
+.kept-save-offer__eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin: 0 0 var(--space-xs);
+}
+
+.kept-save-offer__detail {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--color-on-surface);
+  margin: 0 0 var(--space-md);
+}
+
+.kept-save-offer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.kept-save-offer__resume,
+.kept-save-offer__dismiss {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.kept-save-offer__resume {
+  background: var(--color-tertiary);
+  color: var(--color-on-primary);
+  border: 2px solid var(--color-tertiary-container);
+}
+
+.kept-save-offer__dismiss {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-outline);
+}

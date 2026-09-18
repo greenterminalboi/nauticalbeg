@@ -4,21 +4,45 @@
 // implements, and load-save.ts for the real logic (kept separate so it's
 // unit-testable without a real Worker thread).
 import type { MainToWorkerMessage, WorkerToMainMessage } from "./protocol";
-import { loadSave } from "./load-save";
-import { cleanupSaveIfNotKept } from "../storage/queries";
+import { loadSave, resumeSave } from "./load-save";
+import { closeSaveDatabase, openSaveDatabase } from "../storage/db";
+import { cleanupSaveIfNotKept, markSaveKept } from "../storage/queries";
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 
 let currentAbortController: AbortController | null = null;
 
-// The saveId of the last load that reached `ready`, if its database
-// hasn't been cleaned up yet. Used to enforce FR-005/FR-012 (a
-// session-only save isn't retained forever) when a new `load` supersedes
-// it — see T035.
+// The saveId of the last load/resume that reached `ready`, if its
+// database hasn't been cleaned up yet. Used to enforce FR-005/FR-012 (a
+// session-only save isn't retained forever) when a new `load`/resume
+// supersedes it — see T035.
 let lastReadySaveId: string | null = null;
 
 function post(message: WorkerToMainMessage): void {
   ctx.postMessage(message);
+}
+
+/** Shared by handleLoad/handleResume once either reaches `ready`:
+ * reports it, then cleans up whatever save it superseded (unless kept).
+ * `supersededSaveId` must be captured by the caller *before* starting
+ * the load/resume, not read fresh here — it needs to reflect whatever
+ * was ready when this one started, regardless of how long it took. */
+async function reportReadyAndSupersede(
+  result: { saveId: string; inGameDate: string; playerNationTag: string },
+  supersededSaveId: string | null,
+): Promise<void> {
+  lastReadySaveId = result.saveId;
+  post({ type: "ready", ...result });
+
+  if (supersededSaveId && supersededSaveId !== result.saveId) {
+    try {
+      await cleanupSaveIfNotKept(supersededSaveId);
+    } catch (err) {
+      // The new load/resume has already been reported; don't let a
+      // cleanup failure surface as though that failed too.
+      console.error(`Failed to clean up superseded save ${supersededSaveId}`, err);
+    }
+  }
 }
 
 async function handleLoad(file: File): Promise<void> {
@@ -32,10 +56,7 @@ async function handleLoad(file: File): Promise<void> {
     file,
     {
       onProgress: (phase, percent) => post({ type: "progress", phase, percent }),
-      onReady: (result) => {
-        lastReadySaveId = result.saveId;
-        post({ type: "ready", ...result });
-      },
+      onReady: (result) => void reportReadyAndSupersede(result, supersededSaveId),
       onError: (kind, message, detectedVersion) =>
         post({ type: "error", kind, message, detectedVersion }),
     },
@@ -45,16 +66,53 @@ async function handleLoad(file: File): Promise<void> {
   if (currentAbortController === abortController) {
     currentAbortController = null;
   }
+}
 
-  if (supersededSaveId) {
+async function handleResume(saveId: string): Promise<void> {
+  const supersededSaveId = lastReadySaveId;
+  lastReadySaveId = null;
+
+  await resumeSave(saveId, {
+    onReady: (result) => void reportReadyAndSupersede(result, supersededSaveId),
+    onError: (kind, message, detectedVersion) =>
+      post({ type: "error", kind, message, detectedVersion }),
+  });
+}
+
+/** FR-011/FR-014: mark a save kept, reporting success/failure — see
+ * KeepMessage's doc comment in protocol.ts for why the SQL write must
+ * run here rather than on the main thread. Only does the write
+ * (`markSaveKept`) — the `localStorage` pointer bookkeeping
+ * (`recordKeptSave`) happens on the main thread once `kept` arrives,
+ * since `localStorage` doesn't exist in a Worker at all. */
+async function handleKeep(saveId: string): Promise<void> {
+  try {
+    const db = await openSaveDatabase(saveId);
+    let summary;
     try {
-      await cleanupSaveIfNotKept(supersededSaveId);
-    } catch (err) {
-      // The new load has already been reported (ready or error); don't
-      // let a cleanup failure surface as though the new load failed.
-      console.error(`Failed to clean up superseded save ${supersededSaveId}`, err);
+      summary = await markSaveKept(db, saveId);
+    } finally {
+      await closeSaveDatabase(db);
     }
+    post({ type: "kept", saveId, filename: summary.filename, inGameDate: summary.inGameDate });
+  } catch (err) {
+    const quotaExceeded = isQuotaExceeded(err);
+    post({
+      type: "keep-failed",
+      saveId,
+      message: quotaExceeded
+        ? "Not enough storage space is available to keep this save."
+        : err instanceof Error
+          ? err.message
+          : "Failed to keep this save.",
+      quotaExceeded,
+    });
   }
+}
+
+function isQuotaExceeded(err: unknown): boolean {
+  if (err instanceof DOMException && err.name === "QuotaExceededError") return true;
+  return err instanceof Error && /quota/i.test(err.message);
 }
 
 ctx.onmessage = (event: MessageEvent<MainToWorkerMessage>) => {
@@ -64,10 +122,17 @@ ctx.onmessage = (event: MessageEvent<MainToWorkerMessage>) => {
       // FR-010: a new load always supersedes any in-progress one, so
       // callers don't have to remember to send `cancel` first.
       currentAbortController?.abort();
-      void handleLoad(message.file);
+      if (message.keepAsDefaultSession && message.saveId) {
+        void handleResume(message.saveId);
+      } else if (message.file) {
+        void handleLoad(message.file);
+      }
       break;
     case "cancel":
       currentAbortController?.abort();
+      break;
+    case "keep":
+      void handleKeep(message.saveId);
       break;
   }
 };

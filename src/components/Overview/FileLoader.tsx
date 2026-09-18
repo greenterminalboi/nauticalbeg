@@ -10,28 +10,41 @@ import type {
 import { closeSaveDatabase, openSaveDatabase, type SaveDatabase } from "../../storage/db";
 import {
   cleanupSaveIfNotKept,
+  forgetKeptSave,
   getNationOverview,
   getPlayerNationOverview,
   getSaveMeta,
+  listKeptSave,
   listNations,
+  recordKeptSave,
+  type KeptSaveSummary,
   type NationOverview,
   type NationSummary,
 } from "../../storage/queries";
 import { ErrorMessage } from "./ErrorMessage";
+import { KeepSaveToggle } from "./KeepSaveToggle";
+import { KeptSaveOffer } from "./KeptSaveOffer";
 import { NationSelector } from "./NationSelector";
 import { OverviewCard } from "./OverviewCard";
 
+type ReadyStatus = {
+  kind: "ready";
+  nations: NationSummary[];
+  selectedNationIdx: number;
+  overview: NationOverview;
+  inGameDate: string;
+  kept: boolean;
+  keepPending: boolean;
+  keepError: string | null;
+};
+
 type Status =
   | { kind: "idle" }
+  | { kind: "kept-save-offer"; summary: KeptSaveSummary }
+  | { kind: "resuming" }
   | { kind: ParsePhase; percent: number | null }
   | { kind: "loading-overview" } // parsing succeeded; fetching the overview to display
-  | {
-      kind: "ready";
-      nations: NationSummary[];
-      selectedNationIdx: number;
-      overview: NationOverview;
-      inGameDate: string;
-    }
+  | ReadyStatus
   // errorKind is "unknown" for a failure outside FR-009's three worker
   // kinds (e.g. the save parsed but reading its overview afterward
   // failed) — see ErrorMessage.tsx.
@@ -46,6 +59,15 @@ type Status =
  * re-uploading the save. `NationSelector` + `getNationOverview` are
  * intentionally generic (pick an idx, re-render) — the pattern is meant
  * to extend to future selectable views, not stay nation-specific.
+ *
+ * FR-011/FR-014 ("keep"/quota handling) route through the worker rather
+ * than being called directly against `readDbRef` — see `KeepMessage`'s
+ * doc comment in `parser/protocol.ts`: writing to the save's database
+ * requires a write-capable connection, and that can only be opened from
+ * within a dedicated Worker in this browser, never the main thread.
+ * `forgetKeptSave` is the one exception that's safe to call directly
+ * here — it only touches OPFS directory entries and `localStorage`,
+ * never opens a SQLite connection at all.
  */
 export function FileLoader() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -76,6 +98,42 @@ export function FileLoader() {
         case "error":
           handleError(message);
           break;
+        case "kept":
+          // The worker only did the SQL write (markSaveKept) — the
+          // localStorage pointer bookkeeping runs here, on the main
+          // thread, since localStorage doesn't exist in a Worker.
+          void recordKeptSave({
+            saveId: message.saveId,
+            filename: message.filename,
+            inGameDate: message.inGameDate,
+          })
+            .then(() => {
+              setStatus((prev) =>
+                prev.kind === "ready" ? { ...prev, kept: true, keepPending: false } : prev,
+              );
+            })
+            .catch((err) => {
+              setStatus((prev) =>
+                prev.kind === "ready"
+                  ? {
+                      ...prev,
+                      keepPending: false,
+                      keepError:
+                        err instanceof Error
+                          ? err.message
+                          : "Failed to record this save as kept.",
+                    }
+                  : prev,
+              );
+            });
+          break;
+        case "keep-failed":
+          setStatus((prev) =>
+            prev.kind === "ready"
+              ? { ...prev, keepPending: false, keepError: message.message }
+              : prev,
+          );
+          break;
       }
     };
 
@@ -84,6 +142,22 @@ export function FileLoader() {
       workerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- worker is created once per mount
+  }, []);
+
+  useEffect(() => {
+    // FR-011/Acceptance Scenario 2: offer to resume a kept save instead
+    // of requiring an immediate re-upload. Only offered at startup,
+    // before anything else has happened — a `cancelled` guard covers
+    // React StrictMode's double-invoked effects in dev.
+    let cancelled = false;
+    void listKeptSave().then((summary) => {
+      if (!cancelled && summary) {
+        setStatus({ kind: "kept-save-offer", summary });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -153,6 +227,9 @@ export function FileLoader() {
         selectedNationIdx: overview.idx,
         overview,
         inGameDate: meta.inGameDate ?? message.inGameDate,
+        kept: meta.kept,
+        keepPending: false,
+        keepError: null,
       });
     } catch (err) {
       setStatus({
@@ -186,6 +263,38 @@ export function FileLoader() {
     }
   }
 
+  function handleKeepToggle(): void {
+    if (status.kind !== "ready") return;
+    const saveId = currentSaveIdRef.current;
+    if (!saveId) return;
+
+    setStatus({ ...status, keepPending: true, keepError: null });
+
+    if (status.kept) {
+      // Safe directly on the main thread — see this component's doc
+      // comment for why forget (unlike keep) never needs the worker.
+      forgetKeptSave(saveId)
+        .then(() => {
+          setStatus((prev) =>
+            prev.kind === "ready" ? { ...prev, kept: false, keepPending: false } : prev,
+          );
+        })
+        .catch((err) => {
+          setStatus((prev) =>
+            prev.kind === "ready"
+              ? {
+                  ...prev,
+                  keepPending: false,
+                  keepError: err instanceof Error ? err.message : "Failed to forget this save.",
+                }
+              : prev,
+          );
+        });
+    } else {
+      workerRef.current?.postMessage({ type: "keep", saveId });
+    }
+  }
+
   function handleError(message: WorkerErrorMessage): void {
     setStatus({ kind: "error", errorKind: message.kind, message: message.message });
   }
@@ -202,13 +311,33 @@ export function FileLoader() {
     });
   }
 
+  function handleResumeKeptSave(saveId: string): void {
+    if (!workerRef.current) return;
+    setStatus({ kind: "resuming" });
+    workerRef.current.postMessage({
+      type: "load",
+      keepAsDefaultSession: true,
+      saveId,
+    });
+  }
+
+  function handleDismissKeptSaveOffer(): void {
+    setStatus({ kind: "idle" });
+  }
+
   return (
     <div>
       <label>
         Select an EU5 save file
         <input type="file" onChange={handleFileSelected} />
       </label>
-      <StatusView status={status} onSelectNation={(idx) => void handleSelectNation(idx)} />
+      <StatusView
+        status={status}
+        onSelectNation={(idx) => void handleSelectNation(idx)}
+        onKeepToggle={handleKeepToggle}
+        onResumeKeptSave={handleResumeKeptSave}
+        onDismissKeptSaveOffer={handleDismissKeptSaveOffer}
+      />
     </div>
   );
 }
@@ -216,13 +345,29 @@ export function FileLoader() {
 function StatusView({
   status,
   onSelectNation,
+  onKeepToggle,
+  onResumeKeptSave,
+  onDismissKeptSaveOffer,
 }: {
   status: Status;
   onSelectNation: (idx: number) => void;
+  onKeepToggle: () => void;
+  onResumeKeptSave: (saveId: string) => void;
+  onDismissKeptSaveOffer: () => void;
 }) {
   switch (status.kind) {
     case "idle":
       return null;
+    case "kept-save-offer":
+      return (
+        <KeptSaveOffer
+          summary={status.summary}
+          onResume={() => onResumeKeptSave(status.summary.saveId)}
+          onDismiss={onDismissKeptSaveOffer}
+        />
+      );
+    case "resuming":
+      return <p>Resuming kept save…</p>;
     case "validating":
     case "detecting-version":
     case "parsing":
@@ -235,6 +380,12 @@ function StatusView({
             nations={status.nations}
             selectedIdx={status.selectedNationIdx}
             onSelect={onSelectNation}
+          />
+          <KeepSaveToggle
+            kept={status.kept}
+            pending={status.keepPending}
+            error={status.keepError}
+            onToggle={onKeepToggle}
           />
           <OverviewCard overview={status.overview} inGameDate={status.inGameDate} />
         </div>

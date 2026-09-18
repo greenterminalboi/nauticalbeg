@@ -1,11 +1,14 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { loadSave } from "../../src/parser/load-save";
+import { loadSave, resumeSave } from "../../src/parser/load-save";
+import { applySchema, closeSaveDatabase, openSaveDatabase } from "../../src/storage/db";
+import { parseAndStore } from "../../src/parser/version-adapters/1.3.11";
 import {
   ensureTestSQLiteConfigured,
   TEST_VFS_NAME,
 } from "../helpers/sqlite-test-env";
+import { toBytes } from "../helpers/encode";
 
 // This file is also tasks.md's T030 ("fixture-based tests ... for all
 // three error kinds") — it lives here rather than a separate
@@ -128,5 +131,48 @@ describe("loadSave", () => {
 
     expect(callbacks.onReady).not.toHaveBeenCalled();
     expect(callbacks.onError).not.toHaveBeenCalled();
+  });
+});
+
+// The fixture's own played_country doesn't resolve to a real nation
+// (same issue tests/storage/queries.test.ts works around) — substituted
+// here too so getPlayerNationOverview inside resumeSave has a player to
+// find, rather than silently falling back to an empty tag.
+const textWithRusAsPlayer = fixtureBuffer
+  .toString("utf-8")
+  .replace("country=1576", "country=2025");
+
+describe("resumeSave", () => {
+  beforeAll(() => {
+    ensureTestSQLiteConfigured();
+  });
+
+  it("reopens an already-parsed save by id without re-parsing, reporting the same shape as loadSave", async () => {
+    const db = await openSaveDatabase("resume-1", TEST_VFS_NAME);
+    await applySchema(db);
+    await parseAndStore(db, "resume-1", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
+    await closeSaveDatabase(db);
+
+    const callbacks = { onReady: vi.fn(), onError: vi.fn() };
+    await resumeSave("resume-1", callbacks, TEST_VFS_NAME);
+
+    expect(callbacks.onError).not.toHaveBeenCalled();
+    expect(callbacks.onReady).toHaveBeenCalledWith({
+      saveId: "resume-1",
+      inGameDate: "1628.8.14",
+      playerNationTag: "RUS",
+    });
+  });
+
+  it("reports parse-failed if the save has no data (e.g. parsing never actually ran)", async () => {
+    const db = await openSaveDatabase("resume-empty", TEST_VFS_NAME);
+    await applySchema(db);
+    await closeSaveDatabase(db);
+
+    const callbacks = { onReady: vi.fn(), onError: vi.fn() };
+    await resumeSave("resume-empty", callbacks, TEST_VFS_NAME);
+
+    expect(callbacks.onReady).not.toHaveBeenCalled();
+    expect(callbacks.onError).toHaveBeenCalledWith("parse-failed", expect.any(String));
   });
 });

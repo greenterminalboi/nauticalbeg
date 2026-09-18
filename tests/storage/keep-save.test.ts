@@ -137,4 +137,46 @@ describe("storage/queries: keep/forget/list and cleanup", () => {
 
     expect(deleteSpy).not.toHaveBeenCalled();
   });
+
+  it("cleanupSaveIfNotKept is a no-op if the database can no longer be opened", async () => {
+    // Reproduces a real bug: forgetting the currently-loaded save
+    // deletes its database, but beforeunload still fires
+    // cleanupSaveIfNotKept on that same (now-gone) saveId afterward —
+    // that must not throw. The real OPFS VFS fails fast (NotFoundError)
+    // for a missing file (confirmed manually in Chrome); the in-memory
+    // test VFS instead hangs on an actually-missing file, so the
+    // failure is simulated directly here rather than fighting that.
+    vi.spyOn(db, "openSaveDatabase").mockRejectedValueOnce(
+      new Error("unable to open database file"),
+    );
+
+    await expect(
+      cleanupSaveIfNotKept("never-existed", TEST_VFS_NAME),
+    ).resolves.toBeUndefined();
+  });
+
+  it("a failed keepSave write never touches a previously kept save (FR-014)", async () => {
+    const first = await seedSave("keep-safe-a");
+    openDbs.push(first);
+    await keepSave(first, "keep-safe-a");
+    const before = await listKeptSave();
+
+    const second = await seedSave("keep-safe-b");
+    openDbs.push(second);
+
+    // Simulate a write failure (e.g. storage quota) on the *new* save's
+    // own UPDATE — this must happen before the previous kept save is
+    // ever touched, so a failure here can't corrupt it.
+    vi.spyOn(second.sqlite3, "exec").mockRejectedValueOnce(
+      new Error("simulated write failure"),
+    );
+    const deleteSpy = vi.spyOn(db, "deleteSaveDatabase").mockResolvedValue(undefined);
+
+    await expect(keepSave(second, "keep-safe-b")).rejects.toThrow(
+      "simulated write failure",
+    );
+
+    expect(deleteSpy).not.toHaveBeenCalled();
+    expect(await listKeptSave()).toEqual(before);
+  });
 });
