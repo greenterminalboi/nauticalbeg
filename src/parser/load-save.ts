@@ -5,6 +5,7 @@
 import {
   applySchema,
   closeSaveDatabase,
+  deleteSaveDatabase,
   OPFS_VFS_NAME,
   openSaveDatabase,
   type SaveDatabase,
@@ -47,6 +48,17 @@ const PROGRESS_INTERVAL_MS = 1000; // FR-008: at least once per second
  * FR-010's cancel is meant to look like the load never happened, not like
  * a reported failure).
  *
+ * FR-005/FR-012: if a database was created (parsing got as far as
+ * `openSaveDatabase`) but this exits without ever calling `onReady` —
+ * cancelled mid-parse, or a genuine parse failure — that database is
+ * deleted here. Found by actually exercising quickstart.md's "cancel
+ * mid-parse" scenario: neither the FR-010 supersede-cleanup in
+ * `worker.ts` nor the `beforeunload` cleanup in `FileLoader.tsx` ever
+ * runs for a save that never reached "ready" in the first place (there's
+ * nothing to supersede, and `currentSaveIdRef` is never set for it), so
+ * without this it leaked forever — the same class of bug as T035, just
+ * on a different trigger.
+ *
  * `vfsName` defaults to production's OPFS VFS; tests override it to the
  * in-memory test VFS (see tests/helpers/sqlite-test-env.ts), since Node
  * has no OPFS.
@@ -58,6 +70,8 @@ export async function loadSave(
   vfsName: string = OPFS_VFS_NAME,
 ): Promise<void> {
   let db: SaveDatabase | null = null;
+  let saveId: string | null = null;
+  let reachedReady = false;
   try {
     callbacks.onProgress("validating", null);
 
@@ -100,7 +114,7 @@ export async function loadSave(
     }
 
     callbacks.onProgress("parsing", null);
-    const saveId = crypto.randomUUID();
+    saveId = crypto.randomUUID();
     db = await openSaveDatabase(saveId, vfsName);
     await applySchema(db);
     const summary = await adapter(db, saveId, file.name, data);
@@ -110,6 +124,7 @@ export async function loadSave(
       inGameDate: summary.inGameDate,
       playerNationTag: summary.playerNationTag,
     });
+    reachedReady = true;
   } catch (err) {
     if (signal.aborted) return; // cancelled — not a reportable failure
     callbacks.onError(
@@ -118,6 +133,13 @@ export async function loadSave(
     );
   } finally {
     if (db) await closeSaveDatabase(db);
+    if (saveId && !reachedReady) {
+      try {
+        await deleteSaveDatabase(saveId, vfsName);
+      } catch (cleanupErr) {
+        console.error(`Failed to clean up abandoned save ${saveId}`, cleanupErr);
+      }
+    }
   }
 }
 

@@ -27,7 +27,11 @@
 
 .keep-save-toggle__button--keep {
   background: var(--color-tertiary);
-  color: var(--color-on-primary);
+  /* design.md's "Primary Imperial Clasp" calls for iron-gall ink text
+     on gold leaf, not white — also fixes a real contrast failure
+     (white-on-#d97706 measures 3.19:1, below WCAG AA's 4.5:1 for text
+     this size; on-surface measures 5.38:1 — constitution Principle VI). */
+  color: var(--color-on-surface);
   border: 2px solid var(--color-tertiary-container);
 }
 

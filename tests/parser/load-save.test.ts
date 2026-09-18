@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { loadSave, resumeSave } from "../../src/parser/load-save";
+import * as db from "../../src/storage/db";
 import { applySchema, closeSaveDatabase, openSaveDatabase } from "../../src/storage/db";
 import { parseAndStore } from "../../src/parser/version-adapters/1.3.11";
 import {
@@ -119,6 +120,38 @@ describe("loadSave", () => {
       "parse-failed",
       expect.any(String),
     );
+  });
+
+  it("deletes the abandoned database when parsing fails after it was created (quickstart scenario 8 finding)", async () => {
+    // Found by actually running quickstart.md's scenario 8 (cancel
+    // mid-parse) in a browser: a save that opens a database but never
+    // reaches onReady — cancelled mid-parse, or (as reproduced here)
+    // a genuine failure after that point — previously leaked that
+    // database forever, since neither the FR-010 supersede-cleanup nor
+    // the beforeunload cleanup ever runs for a save that was never
+    // "ready" in the first place. A structurally truncated file (like
+    // the test above) actually fails *before* a database is ever
+    // created — jomini requires the whole document to be well-formed
+    // even for detectVersion's single-field lookup — so this instead
+    // forces the failure squarely after openSaveDatabase, in applySchema.
+    const file = new File([fixtureBuffer], "rus-1628-minimal.eu5");
+    const callbacks = makeCallbacks();
+
+    vi.spyOn(db, "applySchema").mockRejectedValueOnce(
+      new Error("simulated schema failure"),
+    );
+    const deleteSpy = vi.spyOn(db, "deleteSaveDatabase");
+
+    await loadSave(file, callbacks, new AbortController().signal, TEST_VFS_NAME);
+
+    expect(callbacks.onReady).not.toHaveBeenCalled();
+    expect(callbacks.onError).toHaveBeenCalledWith(
+      "parse-failed",
+      expect.stringContaining("simulated schema failure"),
+    );
+    expect(deleteSpy).toHaveBeenCalledWith(expect.any(String), TEST_VFS_NAME);
+
+    vi.restoreAllMocks();
   });
 
   it("calls neither onReady nor onError when cancelled before completion", async () => {

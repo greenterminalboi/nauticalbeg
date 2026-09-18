@@ -46,7 +46,9 @@
 
 .kept-save-offer__resume {
   background: var(--color-tertiary);
-  color: var(--color-on-primary);
+  /* See KeepSaveToggle.css's matching comment: white-on-tertiary fails
+     WCAG AA contrast (3.19:1) — on-surface measures 5.38:1. */
+  color: var(--color-on-surface);
   border: 2px solid var(--color-tertiary-container);
 }
 
