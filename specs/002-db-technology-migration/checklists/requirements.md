@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Country Portfolio
+# Specification Quality Checklist: DB Technology Migration (formerly "Country Portfolio")
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-18

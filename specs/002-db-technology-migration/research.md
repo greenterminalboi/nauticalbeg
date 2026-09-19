@@ -1,4 +1,4 @@
-# Phase 0 Research: Country Portfolio
+# Phase 0 Research: DB Technology Migration (formerly "Country Portfolio")
 
 Sections 1-3 below cover User Story 1 (the portfolio shell), added to
 this document when `/speckit-plan` was re-run after a `/speckit-clarify`
@@ -31,27 +31,18 @@ has never taken a UI component dependency, and one off-the-shelf shell
 is unlikely to match the "Imperial Illuminator" design system already
 established in `design.md`/`tokens.css`.
 
-## 2. Responsive behavior (FR-017)
+## 2. Responsive behavior — REMOVED (2026-09-18)
 
-**Decision**: Below a single breakpoint (matching `tokens.css`'s
-existing mobile treatment, if any is already implied by the design
-system — otherwise a conventional ~768px), the side navigation collapses
-from an always-visible column into a control that reveals it on demand
-(e.g., a toggle), and the grid drops from two columns to one (main
-content full-width). The top bar stays a single row at every width — it
-already holds a small, bounded set of controls.
-
-**Rationale**: Satisfies FR-017 ("adapt... without overflowing or
-clipping content... e.g., the side navigation collapsing or relocating")
-using the same no-new-dependency posture as the rest of this plan — a
-CSS media query plus a small amount of component state (is the nav
-panel open, on narrow viewports), not a responsive-design library.
-
-**Alternatives considered**: Always-visible side nav at every width,
-shrunk instead of collapsed — rejected, a permanently-narrow nav with
-9-11 items (8 data tabs + Overview + 2 placeholders) becomes illegible
-before it becomes narrow enough to coexist with a usable content area on
-a phone-width screen.
+**Superseded**: this section originally specified a mobile breakpoint
+collapse for the side navigation (satisfying a since-removed FR-017).
+Explicit user decision: mobile/narrow-viewport support is out of scope
+for this project — the shell targets desktop/tablet-width browsers only.
+An initial implementation (a CSS media query + an on-demand nav toggle)
+was built, found and fixed a real `grid-template-rows` bug via live
+Chrome testing at a narrow viewport, and was then removed entirely per
+this decision — see spec.md's Assumptions and `SideNav.tsx`/`Shell.css`
+history. The side navigation is now a permanent column with no collapse
+behavior at any width.
 
 ## 3. Where pre-load and loading-state content renders
 
@@ -98,29 +89,56 @@ functional gain.
 
 ## 5. Large-list rendering (Provinces/Military/Buildings)
 
-**Decision**: Client-side pagination (a fixed page size, e.g. 50 rows,
-with next/previous controls), implemented in plain React state — no new
-dependency.
+**Decision (superseded 2026-09-18)**: ~~Client-side pagination (a fixed
+page size, e.g. 50 rows, with next/previous controls), implemented in
+plain React state — no new dependency.~~ Replaced by rendering every
+table tab through Perspective (FINOS/perspective-dev's
+`<perspective-viewer>`), per explicit user instruction to adopt it "from
+the very get go" as this app's standard data-table tooling, rather than
+deciding table tech per tab. Perspective's own datagrid plugin
+virtualizes and paginates rows internally, so `listX(db, nationIdx)`
+queries return every one of a nation's rows for that tab in one Arrow IPC
+buffer (`queryArrowIPC` in `db.ts`) rather than a `LIMIT`/`OFFSET` page —
+Perspective's own virtualization is what satisfies Principle V now, not
+an app-level pagination scheme.
 
-**Rationale**: Constitution Principle V requires large datasets in
-visualizations to use "virtualization, pagination, or level-of-detail
-techniques" rather than rendering every row unconditionally, and SC-003
-specifically calls out a 100+-province nation staying responsive.
-Pagination is the simplest technique that satisfies this without adding a
-virtualization library (react-window, react-virtual, etc.) — Principle
-VII again: don't add a dependency for a problem plain state solves. This
-also composes cleanly with the existing SQL-backed query layer: a page
-change is just a `LIMIT`/`OFFSET` (or `WHERE idx > :cursor`) added to the
-existing `listX(db, nationIdx)`-shaped queries, not a client-side slice of
-an already-fully-loaded array — keeping memory use bounded even for a
-save with thousands of buildings.
+**Why Perspective specifically**: DuckDB's query results are already
+Apache Arrow (the same reasoning that motivated the DuckDB migration —
+see ARCHITECTURE.md's storage-engine decision log); Perspective's
+`worker.table()` consumes Arrow IPC bytes directly, so
+DuckDB → Arrow → Perspective is a native fit with no row-by-row
+conversion layer. It also gives every table tab real interactive
+features (sort/filter/group/pivot) for free — directly relevant to the
+user's separate observation that "military and buildings are not simple
+tables" and will need genuine grid features once built (US3/US8).
 
-**Alternatives considered**: A virtualized/windowed list component —
-rejected for now as more complexity than the problem needs at this scale
-(hundreds, not tens of thousands, of rows per nation); revisit if a real
-save is found where pagination itself proves insufficient. Rendering
-everything unconditionally — rejected outright, violates Principle V
-directly for a large empire.
+**Theming**: Perspective's own "Pro Light" base theme is reskinned to
+the "Imperial Illuminator" design system via `src/perspective/theme.css`
+(palette-bearing CSS custom properties only, not a full theme rewrite) —
+per explicit user instruction that data tables must match the app's
+design theme. A real, confirmed gotcha: Perspective mirrors its
+`theme="..."` attribute onto each plugin custom element
+(`perspective-viewer-datagrid`, etc.), and its own built-in rule for that
+attribute is exactly as specific as a naive override targeting only the
+outer `<perspective-viewer>` — an override has to match that same
+specificity (see `theme.css`'s own comment) or it silently loses despite
+loading later in the stylesheet.
+
+**Real packaging bug found via typechecking**: `@perspective-dev/viewer-datagrid`
+and `@perspective-dev/viewer-charts` (5.4.0 and 5.5.1, likely other
+versions too) ship a broken relative type-declaration import
+(`@perspective-dev/viewer/src/ts/extensions.js`, pointing at
+un-compiled TypeScript source rather than `dist/esm/`) that fails a
+strict `tsc` build. Worked around via `patch-package` (see
+`patches/@perspective-dev+viewer-charts+5.5.1.patch` and the
+`-datagrid` counterpart) rather than relaxing this project's own
+`noUnusedLocals`/strict settings.
+
+**Alternatives considered**: A virtualized/windowed list component
+(react-window, etc.) with plain HTML tables — this was the original
+plan before the user's explicit Perspective instruction; rejected now as
+redundant with what Perspective already provides, and would mean
+building sort/filter/group UI by hand for every future tab.
 
 ## 6. Save-format research: what each new tab's data actually looks like
 

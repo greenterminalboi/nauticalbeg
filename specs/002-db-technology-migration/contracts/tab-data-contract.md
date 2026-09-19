@@ -29,7 +29,7 @@ inventing a different shape per tab.
 
 | Function | Returns | Backing query (see `data-model.md`) |
 |---|---|---|
-| `listProvinces(db, nationIdx, page)` | `{ rows: {idx, name, developmentment}[], hasMore: boolean }` | `SELECT ... FROM locations WHERE owner_idx = :idx LIMIT/OFFSET` — reuses 001's existing table, no new one |
+| `listProvinces(db, nationIdx, page)` | `{ rows: {idx, name, development}[], hasMore: boolean }` | `SELECT locations.idx, provinces.name, locations.development FROM locations LEFT JOIN provinces ON provinces.idx = locations.province_idx WHERE locations.owner_idx = :idx LIMIT/OFFSET` — reuses 001's existing tables, no new one. **Corrected during US2 implementation**: `locations` itself has no `name` column (only `idx`/`owner_idx`/`province_idx`/`development` — see 001's `schema.sql`); the display name comes from `provinces.name` (the adapter's `province_definition` string, e.g. `"mazyr_province"`) via a join on `province_idx`, falling back to `"Location {idx}"` if a location has no matching province row. |
 | `listEstates(db, nationIdx)` | `{ idx, estateType, satisfaction, wealthImpact }[]` | `SELECT ... FROM estates WHERE country_idx = :idx` — always ≤8 rows, no pagination needed |
 | `listPolicies(db, nationIdx)` | `{ id, lawCategory, chosenObject, adoptedDate }[]` | `SELECT ... FROM policies WHERE country_idx = :idx` |
 | `listMilitaryUnits(db, nationIdx, page)` | `{ rows: {idx, unitType, strength, morale, number}[], hasMore: boolean }` | `SELECT ... FROM military_units WHERE owner_idx = :idx LIMIT/OFFSET` |

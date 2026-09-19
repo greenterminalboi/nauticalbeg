@@ -1,4 +1,4 @@
-# Quickstart: Validating Country Portfolio
+# Quickstart: Validating DB Technology Migration (formerly "Country Portfolio")
 
 Manual validation guide for this feature — how to confirm it works
 end-to-end once implemented. See `tasks.md` (from `/speckit-tasks`) for
@@ -42,9 +42,11 @@ is implemented — they only need 001's existing app, restructured.
    centered, bounded-width main area — not a vertical stack of unstyled
    elements, and table content keeps normal per-column alignment (not
    every cell force-centered).
-4. **Responsive layout (User Story 1)**: Narrow the browser window to a
-   typical mobile width. Expect: the layout adapts (e.g., the side
-   navigation collapses/relocates) rather than overflowing or clipping.
+4. ~~**Responsive layout (User Story 1)**~~ — **Removed 2026-09-18**:
+   mobile/narrow-viewport support is explicitly out of scope for this
+   project (spec.md Assumptions, formerly FR-017). This scenario number
+   is retired rather than reused, so later scenario numbers below don't
+   shift.
 5. **Placeholder nav items visible (User Story 1)**: With a nation
    selected, look at the side navigation. Expect: an "AI Agent" item and
    a "Map" item are listed, visually marked as not yet available.

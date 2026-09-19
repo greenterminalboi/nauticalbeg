@@ -4,6 +4,15 @@
 
 **Input**: Feature specification from `/specs/001-save-import-overview/spec.md`
 
+> **Storage engine note (2026-09-18)**: this plan and the rest of this
+> feature's docs (`research.md`, `data-model.md`, `contracts/`, `tasks.md`)
+> describe the storage layer as SQLite/`wa-sqlite`, which is what was
+> actually built and shipped for 001. The engine was later migrated to
+> DuckDB (`@duckdb/duckdb-wasm`) during 002's implementation — see
+> `ARCHITECTURE.md`'s decision log for why and what changed. These 001
+> documents are left as a historical record of the original decision
+> rather than rewritten; the current architecture is `ARCHITECTURE.md`.
+
 ## Summary
 
 Let a player load a local EU5 save file (up to ~500-600MB uncompressed),

@@ -1,12 +1,20 @@
-# Phase 1 Data Model: Country Portfolio
+# Phase 1 Data Model: DB Technology Migration (formerly "Country Portfolio")
 
-Storage engine: SQLite (via `wa-sqlite`/OPFS), same per-save database 001
+Storage engine: DuckDB (via `@duckdb/duckdb-wasm`/OPFS — migrated from
+SQLite/`wa-sqlite` 2026-09-18, see `ARCHITECTURE.md`'s decision log), same per-save database 001
 already creates — this feature adds tables to it, not a new database.
 Column choices below come from real inspection of the same 642MB save
 001's `research-save-format.md` was built from (see this feature's
 `research.md` for exact byte-level findings); tables marked **TBD** are
 deliberately left unschematized per constitution Principle II until each
 one's own implementation task inspects it directly.
+
+**DuckDB dialect note**: every `real`-typed column below means "a
+floating-point value," not literally SQL `REAL` — DuckDB's `REAL` is a
+32-bit float (unlike SQLite's always-64-bit `REAL`), which loses
+precision on values like `27.27` (confirmed by a real failing test
+during the storage-engine migration). Implement these as `DOUBLE`,
+matching `schema.sql`'s existing columns.
 
 ## Portfolio shell (User Story 1): no new schema
 
@@ -49,7 +57,7 @@ top-level manager).
 
 | Column | Type | Notes |
 |---|---|---|
-| `id` | integer (primary key, autoincrement) | Synthetic — `implemented_laws` is a map keyed by law category, not a save-provided numeric index. |
+| `id` | integer (primary key, autoincrement) | Synthetic — `implemented_laws` is a map keyed by law category, not a save-provided numeric index. **DuckDB dialect note**: no `AUTOINCREMENT` keyword — use a `CREATE SEQUENCE` + `DEFAULT nextval(...)`, same pattern as `schema.sql`'s existing `raw_sections.id`. |
 | `country_idx` | integer (FK → `nations.idx`) | The owning country. |
 | `law_category` | text | The map key, e.g. `colonial_policy`, `bureaucracy_law`, `censorship`, `administrative_system`. |
 | `chosen_object` | text | From that entry's `object` field — the actual policy value in effect, e.g. `decentralized_bureaucracy_policy`. This is what FR-006 means by "active policies." |

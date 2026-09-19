@@ -1,8 +1,8 @@
 # Contract: Generated Map Asset Schema
 
 The contract between this feature (producer) and any future feature that
-renders or queries the map (consumer, e.g. the "Map" tab in
-`specs/002-country-portfolio`). See `data-model.md` for the full shape
+renders or queries the map (consumer, e.g. the "Map" section in
+`specs/002-db-technology-migration`). See `data-model.md` for the full shape
 and rationale; this document is the stable, minimal interface a consumer
 can depend on without needing to know how the asset was generated.
 

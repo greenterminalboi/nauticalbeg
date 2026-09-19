@@ -18,8 +18,9 @@ static geometry asset — the accurate shape and position of every
 province in the game world — keyed by the same province identifier the
 save-file parser already uses (`provinces.idx`). The asset is committed
 to the repository so the running web app never has to regenerate it, and
-so a later feature (the "Map" side-nav tab, currently a placeholder per
-`specs/002-country-portfolio`) has something real to render against.
+so a later feature (the "Map" top-level app section, currently a
+placeholder per `specs/002-db-technology-migration`) has something real
+to render against.
 
 **Why this priority**: This is the entire feature. Nothing else in this
 spec exists independently of producing this asset — it is the P1 and
@@ -247,8 +248,8 @@ zoomed in, and zoomed back out.
   validate it (borders + pan/zoom only, per User Story 2). Coloring by
   nation/owner, overlays, click-for-info interactivity, and any styling
   consistent with the app's actual design system are explicitly out of
-  scope and belong to a future feature (the production "Map" tab
-  referenced in `specs/002-country-portfolio`) — the demo page is
+  scope and belong to a future feature (the production "Map" section
+  referenced in `specs/002-db-technology-migration`) — the demo page is
   throwaway validation tooling, not a first draft of that tab.
 - The generation step is a developer/maintainer-facing tool, not an
   end-user-facing feature of the shipped web app — it has no UI of its

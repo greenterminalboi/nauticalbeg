@@ -1,10 +1,21 @@
-# Feature Specification: Country Portfolio
+# Feature Specification: DB Technology Migration
 
-**Feature Branch**: `002-country-portfolio`
+**Feature Branch**: `002-db-technology-migration`
 
 **Created**: 2026-09-18
 
 **Status**: Draft
+
+**Renamed 2026-09-18** (originally "Country Portfolio", directory
+`specs/002-country-portfolio`): the feature's actual delivered scope —
+the SQLite→DuckDB storage-engine migration, the 4-section top-nav
+rework, and adopting Perspective as the app's table tooling — outgrew
+and superseded the country-portfolio tabs the feature was originally
+scoped for (see the Clarifications and Assumptions sections below for
+the full decision record). The directory and every internal reference
+were renamed to match what was actually built; the original request is
+kept verbatim below since it's still what motivated User Story 1 and 2's
+shell/Provinces work.
 
 **Input**: User description: "tabulating the managers in some way or form, for a country, enhanced ui handling. Like a country portfolio page that shows the major information of the country, an expansion of what we have right now, but it also includes side navigation bar, which controls which tabulated data for the country you want to see, like for example provinces, another example is characters, an economy tab, a building registry for the country, a military tab, a trade tab, a diplomacy tab. selecting a country from the dropdown changes what the underlying data will be."
 
@@ -16,7 +27,9 @@
 - Q: When a placeholder tab (AI Agent, Map) is "greyed out, coming soon," should it be completely unclickable, or clickable but showing a "coming soon" message? → A: Clickable — selecting it switches the main content area to a "Coming soon" placeholder message, same as any other tab's content swap.
 - Q: Should the new top bar be part of the app's permanent shell (visible before any save is loaded), or only appear once a save is loaded? → A: Permanent shell — the top bar (with the file picker) is visible from first load, before any save exists; the side navigation and content area appear once a save is loaded.
 - Q: Does "nice centered table" mean the main content area is page-centered with balanced margins, or that table cell content is center-aligned? → A: Page-level for now — the main content area (including tables) is horizontally centered with a bounded max-width and balanced margins; cell content stays left/right-aligned per column as appropriate, not forced center.
-- Q: Where should the existing nation selector live in the new shell relative to the save/keep controls? → A: Independent of save selection — the nation selector is its own distinct control (not merged into the file/keep controls), living in the top bar; it stays disabled/hidden until a save is loaded, then initializes (populates with that save's nations) once one is.
+- Q: Where should the existing nation selector live in the new shell relative to the save/keep controls? → A: Independent of save selection — the nation selector is its own distinct control (not merged into the file/keep controls), living in the top bar; it stays disabled/hidden until a save is loaded, then initializes (populates with that save's nations) once one is. **Superseded 2026-09-18** by the entry below — the nation selector moved out of the top bar entirely.
+- Q: Should AI Agent and Map stay as side-navigation placeholder items, and does the shell need any other top-level sections? → A: No — promoted to top-level app sections. The top bar becomes a permanent 4-section nav (NauticalBot, Map, Country Viewer, Settings) rather than a file/keep-only bar with AI Agent/Map buried in the side nav. "Country Viewer" is exactly the previously-built shell (nation selector + side nav + Overview/Provinces/Military/Government/Economy/Diplomacy/Trade/Building Registry/Characters) relabeled as one of the four sections, not a new build. Save/upload and keep/forget controls are global — visible and functional in every section, not just Country Viewer. The nation selector, by contrast, is scoped to Country Viewer only, since it's meaningless in NauticalBot/Map/Settings.
+- Q: Should this feature keep going through User Story 9 (Characters), or stop once the shell and Provinces are delivered? → A: Stop here. Explicit decision: this feature already absorbed substantially more than its original scope (the SQLite→DuckDB storage-engine migration, the 4-section top-nav rework above, and adopting Perspective as the app's table tooling) on top of the portfolio shell and Provinces tab it was actually scoped for. User Stories 3-9 (Military, Government, Economy, Diplomacy, Trade, Building Registry, Characters) are **deferred to a future feature** rather than continued here — each is marked DEFERRED below rather than deleted, since their "why this priority"/research-dependency notes remain valid input for whichever feature picks them up next. `tasks.md`'s corresponding task blocks (T019-T082) carry the same deferral. This feature's delivered scope is User Story 1 (Portfolio shell, now including the 4-section nav) and User Story 2 (Provinces, now Perspective-based rather than a plain paginated table).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -44,33 +57,58 @@ controls from the previous layout.
 
 **Acceptance Scenarios**:
 
-1. **Given** the app is freshly loaded with no save yet, **When** the
+1. ~~**Given** the app is freshly loaded with no save yet, **When** the
    page renders, **Then** the top bar and its file-selection control are
    visible and usable without a save being loaded first, and the nation
    selector is visibly present but disabled/inactive (it is an
-   independent control from the file picker, not merged with it).
-2. **Given** a save has just finished loading, **When** the user looks at
+   independent control from the file picker, not merged with it).~~ —
+   **Superseded 2026-09-18**: the nation selector no longer lives in the
+   top bar at all (see the Clarifications entry above). Replacement: the
+   app is freshly loaded with no save yet; the top bar's four section
+   buttons (NauticalBot, Map, Country Viewer, Settings) and its
+   file-selection control are visible and usable without a save being
+   loaded first; no nation selector is rendered anywhere on the page yet.
+2. ~~**Given** a save has just finished loading, **When** the user looks at
    the top bar, **Then** the nation selector initializes — becoming
    enabled and populated with that save's nations — without the page
-   reloading or the top bar's layout changing shape.
-3. **Given** a save is loaded and a nation selected, **When** the user
-   views the page, **Then** the save/keep controls and the (now active)
-   nation selector live in the top bar as distinct controls, the
-   data-category navigation lives in a side panel, and the selected
-   category's content sits in a horizontally centered, bounded-width main
+   reloading or the top bar's layout changing shape.~~ — **Superseded
+   2026-09-18**: replacement: a save has just finished loading and
+   Country Viewer is the active section; the nation selector (now
+   rendered in Country Viewer's own side column, not the top bar)
+   initializes — becoming enabled and populated with that save's nations
+   — without the page reloading or the top bar's layout changing shape.
+3. **Given** a save is loaded, Country Viewer is the active section, and a
+   nation is selected, **When** the user views the page, **Then** the top
+   bar (global, showing the section nav plus save/keep controls) sits
+   above a side column (nation selector stacked above the data-category
+   navigation) and a horizontally centered, bounded-width main content
    area (not stretched full-bleed, not a vertical stack of unstyled
    elements) — table content within it keeps normal per-column alignment
    rather than every cell being forced to center.
-4. **Given** the portfolio shell is in place, **When** the user resizes
-   the browser window to a narrower width, **Then** the layout adapts
-   (per FR-017) rather than overflowing or clipping content.
-5. **Given** the side navigation is visible, **When** the user looks at
+4. ~~**Given** the portfolio shell is in place, **When** the user resizes
+   the browser window to a narrower width, **Then** the layout adapts~~ —
+   **Removed 2026-09-18**: mobile/narrow-viewport support is explicitly
+   out of scope for this project (see FR-017 and Assumptions). This
+   scenario number is retired rather than reused, so later scenario
+   numbers in this document don't shift.
+5. ~~**Given** the side navigation is visible, **When** the user looks at
    it, **Then** it also lists an "AI Agent" item and a "Map" item, both
-   visually marked as not yet available.
-6. **Given** the "AI Agent" or "Map" nav item, **When** the user selects
+   visually marked as not yet available.~~ — **Superseded 2026-09-18**:
+   AI Agent and Map are no longer side-navigation items (see FR-016).
+   Replacement: given the app is at any point in its lifecycle (with or
+   without a save loaded), when the user looks at the top bar, then it
+   lists four section buttons — NauticalBot, Map, Country Viewer, and
+   Settings — none of them visually marked as unavailable, since
+   selecting any of them is always a valid, non-error action.
+6. ~~**Given** the "AI Agent" or "Map" nav item, **When** the user selects
    it, **Then** the main content area shows a "coming soon" placeholder
    for that category instead of real data, rather than the item being
-   inert/unclickable.
+   inert/unclickable.~~ — **Superseded 2026-09-18**: replacement: given
+   the top bar's NauticalBot, Map, or Settings section button, when the
+   user selects it, then the main content area shows a "coming soon"
+   placeholder for that section instead of real data or an error, and the
+   top bar itself (including the save/keep controls) remains visible and
+   functional.
 
 ---
 
@@ -118,7 +156,7 @@ throughout.
 
 ---
 
-### User Story 3 - Military tab (Priority: P3)
+### User Story 3 - Military tab (Priority: P3) — DEFERRED (2026-09-18, see Clarifications)
 
 A player wants to see the selected nation's standing military strength —
 how many units it has and what kind — without leaving the portfolio view.
@@ -145,7 +183,7 @@ confirming unit counts/types shown match what's in the source save file.
 
 ---
 
-### User Story 4 - Government tab (Priority: P4)
+### User Story 4 - Government tab (Priority: P4) — DEFERRED (2026-09-18, see Clarifications)
 
 A player wants to see how the selected nation is internally organized:
 its estates and their standing, its government type/reforms, active
@@ -182,7 +220,7 @@ source save.
 
 ---
 
-### User Story 5 - Economy tab (Priority: P5)
+### User Story 5 - Economy tab (Priority: P5) — DEFERRED (2026-09-18, see Clarifications)
 
 A player wants a deeper economic breakdown of the selected nation than the
 single treasury figure already on the Overview tab — where income comes
@@ -208,7 +246,7 @@ figures shown match the source save.
 
 ---
 
-### User Story 6 - Diplomacy tab (Priority: P6)
+### User Story 6 - Diplomacy tab (Priority: P6) — DEFERRED (2026-09-18, see Clarifications)
 
 A player wants to see the selected nation's current relations with other
 nations — active wars, alliances, and membership in any international
@@ -234,7 +272,7 @@ source save.
 
 ---
 
-### User Story 7 - Trade tab (Priority: P7)
+### User Story 7 - Trade tab (Priority: P7) — DEFERRED (2026-09-18, see Clarifications)
 
 A player wants to see what trade goods the selected nation produces and
 its participation in trade routes.
@@ -255,7 +293,7 @@ match the source save.
 
 ---
 
-### User Story 8 - Building registry tab (Priority: P8)
+### User Story 8 - Building registry tab (Priority: P8) — DEFERRED (2026-09-18, see Clarifications)
 
 A player wants a list of buildings constructed across the selected
 nation's territory, rather than having to check province-by-province.
@@ -277,7 +315,7 @@ each is in) match the source save.
 
 ---
 
-### User Story 9 - Characters tab (Priority: P9)
+### User Story 9 - Characters tab (Priority: P9) — DEFERRED (2026-09-18, see Clarifications)
 
 A player wants to see the selected nation's ruler and other notable
 characters (heirs, generals, admirals) tied to it.
@@ -326,11 +364,11 @@ other listed characters match the source save.
 ### Functional Requirements
 
 - **FR-001**: System MUST provide a persistent side navigation, visible
-  whenever a nation is selected, listing every available data category for
-  that nation (at minimum: Overview, Provinces, Military, Government,
-  Economy, Diplomacy, Trade, Building Registry, Characters, plus the
-  AI Agent/Map placeholders per FR-016). See FR-018 for the top bar this
-  side navigation sits alongside.
+  whenever a nation is selected within the Country Viewer section (see
+  FR-018), listing every available data category for that nation (at
+  minimum: Overview, Provinces, Military, Government, Economy, Diplomacy,
+  Trade, Building Registry, Characters). AI Agent and Map are top-level
+  app sections, not side-navigation items — see FR-016.
 - **FR-002**: Selecting a side navigation item MUST display that
   category's data for the currently selected nation without requiring the
   save to be reloaded or the nation to be re-selected.
@@ -372,22 +410,40 @@ other listed characters match the source save.
 - **FR-015**: The side navigation and its items MUST be operable via
   keyboard, consistent with the existing accessibility principle applied
   to the nation selector and overview controls.
-- **FR-016**: The side navigation MUST include an "AI Agent" item and a
-  "Map" item, both visually marked as not yet available; selecting
-  either MUST show a "coming soon" placeholder in the main content area
-  rather than being unclickable or showing an error — this is distinct
-  from FR-014's "not available for this save" state, since these two
-  are permanently unbuilt features, not something that varies by save.
-- **FR-017**: The portfolio shell's layout MUST adapt to at least a
-  typical mobile viewport width without overflowing or clipping content
-  (e.g., the side navigation collapsing or relocating rather than
-  forcing horizontal scrolling).
+- **FR-016**: System MUST provide four top-level app sections — NauticalBot,
+  Map, Country Viewer, and Settings — presented as a permanent section nav
+  in the top bar (see FR-018), not as side-navigation items. "Country
+  Viewer" is the section containing the nation selector, side navigation
+  (FR-001), and all data-category tabs; NauticalBot, Map, and Settings are
+  not yet built. Selecting NauticalBot, Map, or Settings MUST show a
+  "coming soon" placeholder in the main content area rather than being
+  unclickable or showing an error — this is distinct from FR-014's "not
+  available for this save" state, since these are permanently unbuilt
+  sections, not something that varies by save. **Superseded 2026-09-18**:
+  this requirement previously described "AI Agent" and "Map" as
+  side-navigation items; they are now top-level sections (renaming
+  "AI Agent" to "NauticalBot"), and a fourth section ("Settings") was
+  added — see the Clarifications entry above.
+- ~~**FR-017**: The portfolio shell's layout MUST adapt to at least a
+  typical mobile viewport width...~~ **Removed 2026-09-18**: explicit
+  user decision — this project does not target mobile or narrow-viewport
+  browsers. The shell is desktop/tablet-width only; no responsive
+  collapse behavior is required or built. This requirement number is
+  retired rather than reused or renumbered, so FR-018 through FR-020
+  keep their existing numbers.
 - **FR-018**: System MUST provide a persistent top bar, visible from the
-  very first screen (before any save is loaded), holding the
-  save/upload control and, once a save is loaded, the keep/forget
-  controls. The side navigation (FR-001) and main content area only
-  appear once a save is loaded and a nation is selected — the top bar is
-  the one piece of the shell present in every state.
+  very first screen (before any save is loaded) and in every app section
+  (FR-016), holding: the four-section nav (NauticalBot, Map, Country
+  Viewer, Settings), the save/upload control, and, once a save is loaded,
+  the keep/forget controls. These save/keep controls remain visible and
+  functional regardless of which section is active — a loaded save is
+  global app state, not scoped to Country Viewer. The side navigation
+  (FR-001), nation selector (FR-020), and data-category content only
+  appear within the Country Viewer section, and only once a save is
+  loaded and a nation is selected. **Superseded 2026-09-18**: this
+  requirement previously described the top bar as holding only the
+  save/keep controls; it now also carries the section nav, per the
+  Clarifications entry above.
 - **FR-019**: The main content area MUST be horizontally centered on the
   page with a bounded maximum width and balanced margins, rather than
   stretching full-bleed edge to edge; this applies to the content area
@@ -395,9 +451,14 @@ other listed characters match the source save.
   cells, whose content keeps ordinary per-column alignment.
 - **FR-020**: The nation selector MUST be an independent control from
   the save/upload and keep/forget controls — not merged into them — and
-  MUST remain disabled or hidden until a save is loaded, after which it
-  initializes with that save's list of nations. It lives in the top bar
-  alongside (not combined with) the save-management controls.
+  MUST remain absent from the page until a save is loaded AND the Country
+  Viewer section (FR-016) is active, at which point it initializes with
+  that save's list of nations. It lives in Country Viewer's own side
+  column (stacked above the data-category navigation, FR-001), not in the
+  global top bar. **Superseded 2026-09-18**: this requirement previously
+  placed the nation selector in the top bar, disabled/hidden rather than
+  absent before a save loaded; it is now scoped to Country Viewer only —
+  see the Clarifications entry above.
 
 ### Key Entities
 
@@ -451,13 +512,17 @@ other listed characters match the source save.
 
 ## Assumptions
 
-- **Scope is intentionally staged across the nine user stories above.**
-  Shipping User Story 1 (portfolio shell) and User Story 2 (Provinces)
-  already delivers real value and is a complete, usable increment; later
-  stories (Military through Characters) may be implemented in any
-  subsequent order or deferred, without blocking release of the earlier
-  ones — mirroring how 001's four user stories were each independently
-  valuable.
+- **Scope is intentionally staged across the nine user stories above, and
+  this feature stopped at User Story 2 (2026-09-18 decision — see
+  Clarifications).** Shipping User Story 1 (portfolio shell) and User
+  Story 2 (Provinces) already delivers real value and is a complete,
+  usable increment on its own — mirroring how 001's four user stories
+  were each independently valuable. User Stories 3-9 (Military through
+  Characters) are deferred to a future feature rather than continued
+  here, since this feature already grew beyond its original scope (the
+  DuckDB storage-engine migration and the Perspective adoption, both
+  documented in ARCHITECTURE.md, happened inside this feature's
+  timeline rather than as prerequisites to it).
 - Every tab beyond Provinces and Diplomacy's war status depends on
   save-format sections this project has only ever seen as unresearched raw
   top-level keys (e.g., `unit_manager`, `building_manager`,
@@ -500,3 +565,7 @@ other listed characters match the source save.
 - This feature builds directly on 001's nation selector and read-only
   query-connection pattern (`storage/queries.ts`'s `list*`/`get*ByIdx`
   shape) rather than introducing a new data-access approach.
+- **Mobile/narrow-viewport support is explicitly out of scope** (decision
+  2026-09-18, superseding FR-017/Acceptance Scenario 4 above): this
+  project targets desktop/tablet-width browsers only. The shell has no
+  responsive collapse behavior.

@@ -1,8 +1,8 @@
-# Implementation Plan: Country Portfolio
+# Implementation Plan: DB Technology Migration (formerly "Country Portfolio")
 
-**Branch**: `002-country-portfolio` | **Date**: 2026-09-18 | **Spec**: [spec.md](./spec.md)
+**Branch**: `002-db-technology-migration` | **Date**: 2026-09-18 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `/specs/002-country-portfolio/spec.md`
+**Input**: Feature specification from `/specs/002-db-technology-migration/spec.md`
 
 ## Summary
 
@@ -30,7 +30,9 @@ restructuring of already-available data and controls.
 **Language/Version**: TypeScript 5.x, targeting ES2022, running in evergreen
 browsers — unchanged from 001.
 
-**Primary Dependencies**: React 19, Vite, `wa-sqlite` (existing). No new
+**Primary Dependencies**: React 19, Vite, `@duckdb/duckdb-wasm` (existing
+as of the 2026-09-18 storage-engine migration from `wa-sqlite` — see
+ARCHITECTURE.md's decision log). No new
 runtime dependency for tab navigation itself — tabs are local component
 state (which category is active), not client-side routing; there is
 nothing here that needs URL-addressable routes (no stated requirement for
@@ -59,7 +61,7 @@ no new table, no new query, no adapter work. It restructures existing
 UI and existing data (the overview, the nation list) into the new
 layout; nothing about *what* data exists changes, only *how* it's
 arranged on screen. From User Story 2 onward, this extends 001's
-per-save SQLite schema with new tables, one family per tab (see
+per-save DuckDB schema with new tables, one family per tab (see
 data-model.md) — `estates`, `policies`, `national_values`,
 `military_units`, `loans`, `alliances` (extending the existing
 `war_participants` for the Diplomacy tab), `trade_goods`, `buildings`,
@@ -75,9 +77,9 @@ tables are exactly the kind of queryable surface that principle expects
 this project to keep building toward.
 
 **Testing**: Vitest, extending 001's approach. For the shell (User
-Story 1): React Testing Library component tests for `TopBar`, `SideNav`,
-and the layout's responsive behavior (FR-017) — no fixture/parser tests
-needed, since nothing here touches save data. From User Story 2 onward:
+Story 1): React Testing Library component tests for `TopBar` and
+`SideNav` — no fixture/parser tests needed, since nothing here touches
+save data. From User Story 2 onward:
 every new table needs its own fixture-based regression test
 (constitution Principle II, NON-NEGOTIABLE) before its adapter logic
 merges. `tests/fixtures/rus-1628-minimal.eu5` will likely need extending
@@ -99,9 +101,11 @@ not a re-parse). SC-003 — the Provinces tab stays responsive for a
 
 **Constraints**: Must run entirely client-side (Principle I); large
 per-tab lists MUST use pagination or an equivalent technique rather than
-rendering unboundedly (Principle V) — see Constitution Check. The shell
-MUST remain usable at a typical mobile viewport width (FR-017) — see
-research.md for the chosen breakpoint/collapse technique.
+rendering unboundedly (Principle V) — see Constitution Check.
+~~The shell MUST remain usable at a typical mobile viewport width
+(FR-017)~~ — **removed 2026-09-18**: mobile/narrow-viewport support is
+explicitly out of scope (spec.md Assumptions); the shell targets
+desktop/tablet-width browsers only, no responsive collapse behavior.
 
 **Scale/Scope**: Nine user stories. User Story 1 (the portfolio shell —
 top bar, side navigation, centered content area, plus the "AI Agent"/
@@ -155,7 +159,7 @@ beyond what's already noted.
 ### Documentation (this feature)
 
 ```text
-specs/002-country-portfolio/
+specs/002-db-technology-migration/
 ├── plan.md              # This file (/speckit-plan command output)
 ├── research.md          # Phase 0 output (/speckit-plan command)
 ├── data-model.md        # Phase 1 output (/speckit-plan command)
