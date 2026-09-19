@@ -43,6 +43,48 @@ copilot) depends on — the same `storage/queries.ts` interface that powers
 the overview UI today is meant to be the interface the AI agent's
 tools call later, unchanged.
 
+## Province map generation (separate from the save-viewing app)
+
+`tools/map-generation/` (see `specs/003-province-map-generation/`) is a
+standalone Node CLI, not part of the `src/` module boundary above and
+never bundled into the browser app. It reads a local EU5 game
+installation's own map files (`locations.png`, `named_locations/*.txt`,
+`definitions.txt`) and generates two TopoJSON assets: `public/map/
+provinces.topojson` (both a `provinces` layer — one geometry per
+province, keyed by the same name string the save parser stores as
+`provinces.name` — and a `locations` layer, sharing arcs with the
+provinces layer where borders coincide) and `public/map/
+locations.topojson` (the `locations` layer alone, for a consumer that
+doesn't need province geometry). A province's shape is a union of its
+member locations' shapes, not separately sourced. **Locations have no
+save-schema join key yet** — `schema.sql`'s `locations` table has only a
+numeric `idx`, no `name` column, so the generated location geometry
+(keyed by name, like provinces) can be rendered but not joined against
+save data until a future feature adds one. Run the generator via
+`npm run generate:map -- --install <path> [--game-version <string>]
+[--out <path>] [--out-locations <path>]` whenever the game's map data
+changes; the committed outputs are the actual deliverable, regenerated
+on demand, never at app runtime.
+
+A dev-only demo viewer at `tools/map-generation/demo/` (open
+`tools/map-generation/demo/index.html` via `npm run dev`, never part of
+the production build) renders both layers with pan/zoom — location
+borders thin/light, province borders bolder/dark — useful for visually
+sanity-checking a regeneration, not a preview of the eventual "Map" tab
+(which still needs real design/coloring/interaction work this demo
+deliberately skips).
+
+Two real parsing bugs worth remembering if this pipeline is ever touched
+again (both confirmed against the real ~30k-line `definitions.txt` and
+`named_locations/00_default.txt`, not fixable by guessing from a sample):
+`definitions.txt` mixes `name = {`, `name= {`, and `name={` (inconsistent
+spacing around `=`) and contains `#`-prefixed comments that can carry
+stray unbalanced braces — both must be handled by the tokenizer, not
+assumed away. See `specs/003-province-map-generation/research.md` for the
+full account, including why boundary tracing walks graph *edges* (not
+vertices) to correctly separate provinces that touch at exactly one pixel
+corner.
+
 ## Data flow
 
 ```text

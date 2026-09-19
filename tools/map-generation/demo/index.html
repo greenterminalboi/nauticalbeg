@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Province Map Generation — Demo Viewer (dev only)</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #fff;
+        overflow: hidden;
+      }
+      #status {
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        color: #111;
+        font: 13px monospace;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+      svg {
+        width: 100vw;
+        height: 100vh;
+        cursor: grab;
+        display: block;
+      }
+      svg:active {
+        cursor: grabbing;
+      }
+      #locations-layer path {
+        fill: none;
+        stroke: #bbb;
+        stroke-width: 0.08;
+        vector-effect: non-scaling-stroke;
+      }
+      #provinces-layer path {
+        fill: none;
+        stroke: #111;
+        stroke-width: 0.15;
+        vector-effect: non-scaling-stroke;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status">loading...</div>
+    <svg id="map" viewBox="0 0 360 180">
+      <g id="layers">
+        <g id="locations-layer"></g>
+        <g id="provinces-layer"></g>
+      </g>
+    </svg>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

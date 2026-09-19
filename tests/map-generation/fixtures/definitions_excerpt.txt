@@ -1,0 +1,6 @@
+test_region = {
+	test_area = {
+		solum_province = { alpha beta }
+		insula_province = { gamma }
+	}
+}

@@ -1,0 +1,3 @@
+alpha = ff0000
+beta = 00ff00
+gamma = 0000ff
