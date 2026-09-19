@@ -1,0 +1,75 @@
+/* Reskins <perspective-viewer> to the "Imperial Illuminator" design
+ * system (tokens.css) — decision 2026-09-18 ("make sure our data tables
+ * are stylized according to our design theme"). Layers on top of
+ * @perspective-dev/viewer's built-in "Pro Light" theme (imported first
+ * in setup.ts) rather than redefining its entire variable surface —
+ * only the palette-bearing custom properties are overridden here; every
+ * structural/layout variable and icon Pro Light defines is kept as-is.
+ */
+/* Perspective sets an explicit `theme="..."` attribute (defaults to "Pro
+ * Light") on `<perspective-viewer>` AND mirrors it onto each of its
+ * plugin custom elements (`perspective-viewer-datagrid`,
+ * `-datagrid-toolbar`, chart plugin elements, …) — confirmed via a real
+ * Chrome shadow-DOM inspection: a variable like
+ * `--psp-datagrid--pos-cell--color` is re-declared directly on the
+ * `perspective-viewer-datagrid` element itself, via Pro Light's own
+ * `perspective-viewer [theme=Pro\ Light]` descendant-combinator rule —
+ * which blocks inheritance from an override placed only on the outer
+ * `<perspective-viewer>` (a property set directly on an element always
+ * wins over one merely inherited from an ancestor). Matching that
+ * rule's specificity (one type selector + one attribute selector) is
+ * what actually matters here — a bare `[theme]` selector alone is
+ * LOWER specificity and silently loses even loading later, which is
+ * exactly what happened on the first attempt at this fix. */
+perspective-viewer,
+perspective-viewer[theme],
+perspective-viewer [theme] {
+  --psp--color: var(--color-on-surface);
+  --psp--background-color: var(--color-surface-container-lowest);
+  --psp-inactive--color: var(--color-outline);
+  --psp-inactive--border-color: var(--color-outline-variant);
+  --psp-active--color: var(--color-tertiary);
+  --psp-active--background: color-mix(in srgb, var(--color-tertiary) 18%, transparent);
+  --psp-error--color: var(--color-error);
+  --psp-select--background-color: var(--color-surface-container);
+  --psp-dropdown--box-shadow: 3px 3px 0 rgb(0 0 0 / 15%);
+
+  --psp-datagrid--border-color: var(--color-outline-variant);
+  --psp-datagrid--hover--border-color: var(--color-tertiary);
+  --psp-datagrid--pos-cell--color: #2f6b3a;
+  --psp-datagrid--neg-cell--color: var(--color-secondary);
+
+  /* An "illuminated manuscript" extended palette for chart/series data,
+   * standing in for tokens.css's small UI palette (which only defines a
+   * handful of brand colors, not ten distinct data-series hues). */
+  --psp-charts--series-1--color: var(--color-primary);
+  --psp-charts--series-2--color: var(--color-secondary);
+  --psp-charts--series-3--color: var(--color-tertiary);
+  --psp-charts--series-4--color: #2f6b3a;
+  --psp-charts--series-5--color: #5b3a29;
+  --psp-charts--series-6--color: #4a5a6a;
+  --psp-charts--series-7--color: #7a3b69;
+  --psp-charts--series-8--color: #1f6f6f;
+  --psp-charts--series-9--color: #8a5a1e;
+  --psp-charts--series-10--color: #43474d;
+  --psp-datagrid--series-1--color: var(--psp-charts--series-1--color);
+  --psp-datagrid--series-2--color: var(--psp-charts--series-2--color);
+  --psp-datagrid--series-3--color: var(--psp-charts--series-3--color);
+  --psp-datagrid--series-4--color: var(--psp-charts--series-4--color);
+  --psp-datagrid--series-5--color: var(--psp-charts--series-5--color);
+  --psp-datagrid--series-6--color: var(--psp-charts--series-6--color);
+  --psp-datagrid--series-7--color: var(--psp-charts--series-7--color);
+  --psp-datagrid--series-8--color: var(--psp-charts--series-8--color);
+  --psp-datagrid--series-9--color: var(--psp-charts--series-9--color);
+  --psp-datagrid--series-10--color: var(--psp-charts--series-10--color);
+
+  --psp-charts--tooltip--background: var(--color-surface-container-lowest);
+  --psp-charts--tooltip--color: var(--color-on-surface);
+  --psp-charts--tooltip--border-color: var(--color-outline);
+  --psp-charts--gridline--color: var(--color-outline-variant);
+  --psp-charts--axis-ticks--color: var(--color-on-surface);
+  --psp-charts--axis-lines--color: var(--color-outline);
+  --psp-charts--legend--color: var(--color-on-surface);
+
+  font-family: var(--font-body);
+}

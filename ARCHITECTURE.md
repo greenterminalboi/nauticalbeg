@@ -8,18 +8,70 @@ browser. There is no backend for this feature (see
 This document is a living summary; update it whenever the as-built design
 diverges from what's described here.
 
+## Storage engine: DuckDB, not SQLite (decision log)
+
+001 and the first two user stories of 002 were originally built on
+`wa-sqlite`/OPFS. On 2026-09-18, the storage engine was migrated to
+**DuckDB-Wasm**, for two reasons:
+
+1. **Visualization direction.** The project's planned visualization layer
+   (J.P. Morgan/FINOS's [Perspective](https://perspective.finos.org))
+   works natively with Apache Arrow. DuckDB speaks Arrow as its native
+   result format; SQLite would need a manual row→Arrow conversion layer
+   at every query boundary.
+2. **Query shape.** Later user stories (cross-country aggregation,
+   drilling into location-level comparisons) are OLAP-shaped — DuckDB's
+   columnar engine fits that better than SQLite's row store.
+
+The rest of this document describes the DuckDB architecture as built. The
+migration itself surfaced several real, only-discoverable-in-a-real-
+browser findings, called out inline below and summarized here:
+
+- DuckDB-Wasm allows only **one open handle per OPFS file at a time** —
+  unlike SQLite, there's no way to have a writer and a reader connection
+  open on the same file simultaneously from different contexts.
+- DuckDB has **no SQLite-style restriction requiring writes to originate
+  from a dedicated Worker** — confirmed by writing successfully from a
+  plain browser tab context in a real Chrome session. This let "keep"
+  drop its entire worker-round-trip protocol.
+- A real-browser spike found DuckDB-Wasm tolerates **concurrent queries
+  on one connection** without the Asyncify-style corruption SQLite had —
+  but `db.ts` keeps a defensive per-connection queue anyway (see
+  "Concurrent queries" below), since that spike didn't specifically cover
+  concurrent *prepared statements*.
+- OPFS persistence is **not durable without an explicit `CHECKPOINT`** —
+  found via two real failures during this migration (see "OPFS
+  persistence requires an explicit CHECKPOINT" below).
+- DuckDB's `REAL` type is 32-bit float, unlike SQLite's always-64-bit
+  `REAL` — found via a real failing test (`27.27` round-tripped as
+  `27.270000457763672`). `schema.sql` uses `DOUBLE` for every stat
+  column instead.
+- The DuckDB-Wasm WASM engine is much larger than wa-sqlite's: the
+  one-time runtime download (fetched lazily when a save is first loaded,
+  then cached) is roughly 7-9MB gzipped depending on which bundle the
+  browser needs, versus wa-sqlite's ~422KB. This is a real, accepted
+  tradeoff for the Arrow/OLAP fit above, worth knowing if load time on
+  slow connections ever becomes a concern.
+- **A row-by-row prepared-statement insert loop (ported verbatim from
+  the SQLite version) crashed on a real ~650MB save** with a WASM
+  `RuntimeError: memory access out of bounds`, reported live by an
+  actual user — see "Bulk inserts: Arrow, not a row-by-row
+  prepared-statement loop" below for the fix and the two real
+  `insertArrowTable` API gotchas found getting it working.
+
 ## Module boundaries
 
 ```text
 src/
 ├── parser/       Reads a raw save file and turns it into rows in the
-│                 per-save SQLite database. Runs inside a Web Worker so
-│                 it never blocks the UI thread. Also owns the "keep"/
-│                 "resume" worker-protocol handlers — see below for why
-│                 those live here too, not just parsing.
-├── storage/      The only code allowed to touch the SQLite database
-│                 (via wa-sqlite/OPFS). Exposes a narrow, typed,
-│                 read-mostly query API — see contracts/data-access-contract.md.
+│                 per-save DuckDB database. Runs inside a Web Worker so
+│                 it never blocks the UI thread — the parsing Worker owns
+│                 its own connection only for the duration of ingestion,
+│                 fully closing it (see below) before signaling ready.
+├── storage/      The only code allowed to touch the DuckDB database
+│                 (via @duckdb/duckdb-wasm/OPFS). Exposes a narrow,
+│                 typed, read-mostly query API — see
+│                 contracts/data-access-contract.md.
 ├── domain/       Currently empty. Reserved for pure logic that would sit
 │                 between storage and the UI, but nothing needed it yet —
 │                 every aggregation this feature needs lives directly in
@@ -92,107 +144,260 @@ File (user's disk)
   │  File.slice() → raw bytes (Uint8Array), in the worker (never the main thread)
   ▼
 parser/save-reader.ts → parser/version-detect.ts → parser/version-adapters/*
-  │  jomini (WASM) parses the bytes; writes rows as it goes
+  │  jomini (WASM) parses the bytes; writes rows as it goes, via the
+  │  Worker's own DuckDB connection (open only for this ingestion step)
   ▼
-storage/db.ts (wa-sqlite, OPFS-backed SQLite database, one per save)
+storage/db.ts (@duckdb/duckdb-wasm, OPFS-backed, one database per save)
   │
-  ├─ write-capable connection ── stays in the Worker (parsing, keepSave)
+  ├─ ingestion connection ── opened by the Worker, does applySchema +
+  │                          every insert, then CHECKPOINTs and fully
+  │                          closes *before* the Worker signals ready —
+  │                          required because DuckDB allows only one
+  │                          open handle per OPFS file at a time
   │
-  └─ read-only connection ────── opened by the main thread once per
-                                  "ready" session, kept open across
-                                  nation-selector changes (FileLoader.tsx's
-                                  readDbRef), closed on supersede/unmount
+  └─ session connection ──── opened by the main thread once "ready"
+                              fires, used for every read AND for the
+                              keep-toggle write (no worker round-trip —
+                              see below), kept open across nation-
+                              selector/tab changes (FileLoader.tsx's
+                              readDbRef), closed on supersede/unmount
   ▼
 storage/queries.ts  ──►  components/ (React UI)
 ```
 
 See `specs/001-save-import-overview/contracts/worker-protocol.md` for the
-exact main-thread ↔ worker message shapes (now covering `load`, `cancel`,
-`keep`, and a `load` variant that resumes a kept save instead of parsing),
-and `specs/001-save-import-overview/data-model.md` for the database
-schema.
+main-thread ↔ worker message shapes (`load`, `cancel` — `keep`/`kept`/
+`keep-failed` were removed in the DuckDB migration, see below) and
+`specs/001-save-import-overview/data-model.md` for the database schema.
 
-## Why SQLite instead of plain JS objects
+## Cross-origin isolation headers
 
-EU5 saves run 500-600MB uncompressed. Holding that as one big in-memory
-object graph risks exhausting browser memory, and doesn't give a query
-interface. `wa-sqlite` over OPFS avoids both problems — see
-`specs/001-save-import-overview/research.md` §2 for the full tradeoff
-analysis and `plan.md`'s Complexity Tracking for why this is justified now
-rather than deferred.
+`vite.config.ts` still sets `Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp` — these were originally
+required for wa-sqlite's `SharedArrayBuffer` usage. DuckDB-Wasm's `eh`
+bundle (the one actually selected in testing, per `selectBundle`'s
+feature detection) does not appear to need cross-origin isolation, but
+this hasn't been specifically confirmed by removing the headers and
+retesting — left in place as a known-working configuration rather than
+an unverified simplification. Revisit if choosing a static host that
+makes setting these headers awkward.
 
-## Cross-origin isolation requirement
+## DuckDB-Wasm allows only one open handle per OPFS file
 
-`wa-sqlite`'s OPFS-backed VFS needs `SharedArrayBuffer`, which browsers
-only expose in a cross-origin-isolated context. `vite.config.ts` sets the
-`Cross-Origin-Opener-Policy: same-origin` and
-`Cross-Origin-Embedder-Policy: require-corp` headers for the dev server;
-any production static host must set the same two headers, or the storage
-layer will fail to initialize. This was discovered during T010
-implementation and is worth remembering when choosing a hosting provider
-later — not every static host lets you set custom response headers.
+A real constraint (not a browser quirk to work around, an actual DuckDB-
+Wasm limitation): two separate `AsyncDuckDB` instances cannot both hold
+the same `opfs://name` path open at once — attempting it throws "file
+already locked exclusively." This shaped two design decisions:
 
-## Writes to the database MUST happen inside the Worker
+- **The parsing Worker's ingestion connection is short-lived.**
+  `parser/load-save.ts`'s `loadSave`/`resumeSave` both open a connection,
+  do their work, `CHECKPOINT` and fully close it, and only *then* call
+  `onReady` — never signal ready while still holding the file open. If
+  `onReady` fired first, the main thread's `FileLoader.tsx` (which opens
+  its own connection the moment `ready` arrives) could race the Worker's
+  own close and hit the same "already locked" error in production.
+- **There is exactly one long-lived connection per session**, owned by
+  the main thread once a save is ready, used for every read and for the
+  keep-toggle write. No separate "write connection" exists anymore.
 
-This is the single most important constraint discovered after building
-the initial parser (confirmed by reproducing the exact crash in Chrome,
-twice, in different forms — see below): **a write-capable SQLite
-connection to an OPFS-backed database can only be opened from within a
-dedicated Worker in this browser.** A plain `openSaveDatabase()` call
-(read-write, no special flags) from the main thread fails outright —
-`fileEntry.fileHandle.createSyncAccessHandle is not a function` — before
-any actual write statement even runs, because SQLite's locking protocol
-requires briefly acquiring an exclusive lock even to *open* a read-write
-connection, and `createSyncAccessHandle()` (which the OPFS VFS needs for
-that) isn't available outside a Worker here.
+## "Keep" no longer needs a Worker round-trip
 
-Two concrete consequences baked into the code as a result:
+Under SQLite, opening a write-capable OPFS connection from the main
+thread crashed outright (`createSyncAccessHandle is not a function`),
+which forced "keep" into a `keep`/`kept`/`keep-failed` worker-protocol
+round-trip, itself complicated by `localStorage` not existing inside a
+Worker's global scope at all. Neither restriction exists for DuckDB —
+confirmed by writing directly from a plain browser tab context in a real
+Chrome session. `KeepSaveToggle.tsx`'s handler now calls
+`queries.ts`'s `keepSave(db, saveId)` directly against the main thread's
+own session connection; `protocol.ts` no longer has `keep`/`kept`/
+`keep-failed` message types at all.
 
-- **`storage/db.ts`'s `openSaveDatabase` takes a `readonly` option.**
-  Every main-thread caller (`FileLoader.tsx`'s post-parse/post-resume read,
-  `cleanupSaveIfNotKept`'s kept-flag check) passes `readonly: true`. A
-  read-only connection never needs more than a shared lock, so it never
-  hits the exclusive-lock path. Reads that genuinely never write are safe
-  from either context; anything that writes is not.
-- **"Keep a save" is a worker-protocol round trip, not a direct function
-  call.** `KeepSaveToggle.tsx` can't just call a `keepSave(db, saveId)`
-  function against its own connection — it posts a `keep` message to the
-  existing parser Worker, which opens its own (write-capable) connection,
-  runs the write, and reports back `kept`/`keep-failed`. `forgetKeptSave`
-  is the one exception that *is* safe to call directly from the main
-  thread: it never opens SQLite at all, only OPFS directory entries via
-  `navigator.storage`.
+## OPFS persistence requires an explicit CHECKPOINT
 
-## `localStorage` doesn't exist inside a Worker
+DuckDB's own documentation says to `CHECKPOINT` after writes you can't
+afford to lose, since a browser tab can terminate unpredictably. This
+project ran into it as two separate real failures, not a theoretical
+concern:
 
-A second, unrelated surprise found while wiring up "keep": `localStorage`
-is a `Window`-only API. It doesn't exist in a dedicated Worker's global
-scope at all — code that assumes otherwise doesn't fail to compile, it
-throws `localStorage is not defined` the first time it actually runs
-there. `storage/queries.ts`'s original combined `keepSave(db, saveId)`
-did exactly this once its SQL-writing half was moved into the worker (per
-the constraint above). It's now split: `markSaveKept(db, saveId)` (the SQL
-write, worker-safe) and `recordKeptSave(summary)` (the `localStorage`
-"which save is kept" pointer, main-thread-only, called from
-`FileLoader.tsx` once the worker's `kept` ack arrives). `keepSave` itself
-still exists, composing both, purely for same-thread test callers where
-the split doesn't matter.
+1. **Ingestion**: reloading the page and resuming a freshly-kept save
+   reported `Catalog Error: Table with name save_meta does not exist!` —
+   the parsing Worker's connection had written and closed correctly
+   *within the same tab*, but that write wasn't durable across a full
+   page reload (a new WASM heap, not just a new connection) without an
+   explicit checkpoint first. Fixed by having `storage/db.ts`'s
+   `closeSaveDatabase` always `CHECKPOINT` before closing — applies to
+   every close, not just the ones a developer remembers to add it to.
+2. **Keep**: even after the fix above, clicking "Keep This Save," then
+   reloading and resuming, silently reverted to "not kept" — no error,
+   just wrong state. Root cause: the main thread's session connection
+   (where the keep-toggle's `UPDATE` runs) stays open for the rest of
+   the session and is never explicitly closed until supersede/unmount,
+   so the close-time checkpoint above never ran soon enough. Fixed by
+   having `queries.ts`'s `markSaveKept` `CHECKPOINT` immediately after
+   its own write, rather than relying on an eventual close.
 
-## Concurrent queries on one connection corrupt it
+Rule of thumb going forward: **any write whose caller doesn't immediately
+close the connection needs its own explicit `CHECKPOINT`** — don't assume
+`closeSaveDatabase`'s checkpoint will cover it.
 
-wa-sqlite's async build runs on Asyncify, which unwinds/rewinds a single
-WASM call stack per module instance — it does not support two
-in-flight async SQLite calls against the same connection at once.
-`FileLoader.tsx` originally fetched `getSaveMeta` and
-`getPlayerNationOverview` via `Promise.all`, which corrupted that shared
-state; the exact symptom varied by run (a nonsensical "no such table"
-error, an OPFS `NotFoundError`, or an outright WASM "memory access out of
-bounds" crash) depending on how the race landed. No unit test caught this
-— every existing test calls one query at a time — it only showed up
-running the real Worker/UI flow in a browser. **Rule going forward: never
-run more than one query concurrently against the same open
-`SaveDatabase`.** Sequential `await`s, even against the same connection,
-are fine and is what every call site does now.
+(A Node-only wrinkle found while building the test harness: the
+`@duckdb/duckdb-wasm/blocking` Node bindings' file-backed persistence did
+not survive a genuine close + fresh-instance reopen in this version, even
+with `CHECKPOINT`/`flushFiles()` — see `tests/helpers/duckdb-test-env.ts`
+for the workaround. This is a test-environment-only issue; the browser
+OPFS behavior above is separately confirmed correct via real Chrome
+sessions.)
+
+## Bulk inserts: Arrow, not a row-by-row prepared-statement loop
+
+`storage/db.ts`'s `insertRows` originally ported wa-sqlite's row-by-row
+prepared-statement loop verbatim (prepare once, `.query(...)` per row).
+This worked fine against the tiny hand-crafted test fixture but was a
+**real production crash** against an actual save: a user's real ~650MB
+save threw `RuntimeError: memory access out of bounds` deep inside
+DuckDB's `runPrepared`, reported live. Row-by-row was also independently
+confirmed impractically slow regardless of the crash (~1.2ms/row in a
+real Chrome session — minutes for a real save's `locations` table alone).
+
+Fixed by bulk-loading via `conn.insertArrowTable` (an Apache Arrow table
+built with `apache-arrow`'s `tableFromArrays`) whenever `sql` is a plain
+`INSERT INTO table (cols...) VALUES (...)` where every row supplies every
+listed column — 300,000 synthetic rows inserted in ~500ms in the same
+real-browser test where row-by-row was still crawling and had already
+been shown to crash at real-save scale. Statements that don't fit that
+shape (the single-row `is_player` UPDATE; `save_meta`'s insert, which
+mixes bound parameters with literal values) fall back to the original
+row-by-row loop — fine, since both are always exactly one row.
+
+Two real `insertArrowTable` constraints, neither obvious from its types,
+both found by live testing rather than documentation:
+- **`create` must be explicitly `false`** to insert into an existing
+  table. Omitting it does not default to "insert" — it defaults to
+  attempting `CREATE TABLE` and throws `ENTRY_ALREADY_EXISTS` against a
+  table that already exists.
+- **No partial-column inserts** — every column of the target table must
+  be supplied, positionally (confirmed via a real "table X has N columns
+  but M values were supplied" error). `raw_sections.id` (normally
+  `schema.sql`'s `DEFAULT nextval(...)`) is generated in JS instead
+  (sequential integers, starting at 0) rather than left to the database
+  default — see the comment at that call site in
+  `version-adapters/1.3.11.ts`.
+
+**A second, separate bug surfaced while writing the regression tests for
+this fix, entirely confined to the Node/Vitest test environment**:
+`insertArrowTable` completed without error but inserted zero rows, in
+every table, reproducible with trivially simple data — but *only* when
+going through Vitest (both `jsdom` and plain `node` test environments
+alike; not jsdom-specific). The same exact logic, run as a plain Node
+script outside Vitest, worked correctly every time. Root cause: a dual-
+module-instance hazard — this file's static `import { tableFromArrays }
+from "apache-arrow"` resolves through Vite's SSR/Node transform pipeline
+to a *different* module instance than the one `@duckdb/duckdb-wasm`'s
+internal Node bindings natively `require()` at runtime, so the `Table`
+object built by one `apache-arrow` copy isn't recognized by
+`insertArrowTable`'s internal handling of the other copy — it silently
+no-ops instead of throwing. Fixed with a second test-only seam
+(`configureArrowForTesting`, alongside `configureDuckDBForTesting`):
+`tests/helpers/duckdb-test-env.ts` uses Node's `createRequire` to
+natively `require("apache-arrow")` — bypassing Vite's transform entirely
+for this one import — and hands that exact instance to `db.ts`. This is
+a test-environment-only issue; the browser AsyncDuckDB path is
+unaffected (Vite's browser bundling naturally converges on one instance)
+and was separately confirmed correct via real Chrome sessions both
+before and after this fix.
+
+## Data tables: Perspective, not plain HTML tables with app-level pagination
+
+Every table-shaped tab (starting with Provinces, the first built) renders
+through `@perspective-dev/*`'s `<perspective-viewer>` web component
+rather than a plain HTML `<table>` with hand-rolled pagination —
+explicit user decision (2026-09-18, "I would like it if we used
+perspective from the very get go"), not deferred to whichever tab needed
+real grid features first. `specs/002-db-technology-migration/research.md`'s
+§5 has the full decision record; the real, non-obvious findings from
+integrating it are below.
+
+**Arrow end to end**: DuckDB's `conn.query()` already returns an Apache
+Arrow `Table` (the same reasoning that motivated the DuckDB migration
+above); `storage/db.ts`'s `queryArrowIPC` serializes that result to an
+Arrow IPC buffer via `apache-arrow`'s `tableToIPC`, and
+`worker.table(buffer)` (Perspective's own `Client`) consumes it directly
+— no row-by-row JS conversion between DuckDB and the viewer. `queryRows`
+(plain-object rows, with BigInt coercion) is kept as a separate function
+for everything that isn't feeding a table tab.
+
+**`@finos/perspective*` is deprecated** — the maintained packages are
+`@perspective-dev/client`, `@perspective-dev/viewer`,
+`@perspective-dev/viewer-datagrid`, `@perspective-dev/viewer-charts`, and
+`@perspective-dev/react` (installed here, pinned to `5.5.1`). `npm view
+@finos/perspective-viewer deprecated` confirms this directly; don't
+follow older tutorials/examples that still reference the `@finos` scope.
+
+**Vite needs `build.target: "esnext"`** — `@perspective-dev/*` ships ESM
+with top-level await (its WASM bootstrap) un-transpiled; Vite's default
+target predates TLA support and fails to bundle it
+(`No matching export ... for import 'default'` against a `*.worker.ts`
+source file) without this. This is a documented upstream issue
+(finos/perspective#2795), not specific to this app.
+
+**A real packaging bug, found via this project's own strict `tsc` build**:
+`@perspective-dev/viewer-datagrid` and `@perspective-dev/viewer-charts`
+5.5.1 (and 5.4.0 — checked directly) ship a declaration file
+(`dist/esm/types.d.ts` / `event-detail.d.ts`) that re-exports a type via
+`@perspective-dev/viewer/src/ts/extensions.js` — a path into that
+package's *uncompiled TypeScript source* (`src/ts/`), not its compiled
+`dist/esm/` output. Under this project's `noUnusedLocals`/strict
+settings, that pulls a real `.ts` source file (with its own,
+unrelated-to-us `noUnusedLocals` violation) into the program and fails
+the build. `skipLibCheck` doesn't help — it only exempts `.d.ts` files,
+and the file actually erroring is a `.ts` file transitively resolved
+through those `.d.ts`s. Fixed via `patch-package`
+(`patches/@perspective-dev+viewer-{charts,datagrid}+5.5.1.patch`,
+redirecting both broken imports to `dist/esm/extensions.js`) rather than
+loosening this project's own strictness — `postinstall: patch-package`
+in `package.json` reapplies it on every install.
+
+**Theming requires matching Perspective's own selector specificity, not
+just loading after it**: `src/perspective/theme.css` reskins Perspective's
+built-in "Pro Light" theme to the "Imperial Illuminator" design system
+(palette-bearing CSS custom properties only — every structural/icon
+variable Pro Light defines is left alone). A real, confirmed gotcha
+found via live Chrome computed-style inspection: Perspective sets a
+`theme="Pro Light"` attribute on `<perspective-viewer>` *and mirrors it
+onto each plugin custom element* (`perspective-viewer-datagrid`, etc.),
+and Pro Light's own CSS re-declares some variables (e.g.
+`--psp-datagrid--pos-cell--color`) directly on those inner elements via a
+`perspective-viewer [theme=Pro\ Light]` descendant-combinator rule. A
+naive override on just the bare `perspective-viewer` selector loses
+silently — not because of load order, but because a custom property set
+directly on an element always wins over one merely inherited from an
+ancestor. The fix has to match Pro Light's own selector shape
+(`perspective-viewer, perspective-viewer[theme], perspective-viewer
+[theme]`) to reach the inner plugin elements at all.
+
+## Concurrent queries on one connection
+
+wa-sqlite's async build ran on Asyncify, which unwinds/rewinds a single
+WASM call stack per module instance — it did not support two in-flight
+async SQLite calls against the same connection at once. This bit the
+project twice under SQLite (an explicit `Promise.all` in `FileLoader.tsx`,
+and later a React StrictMode double-invoke of a tab component's
+data-fetching effect that froze the tab completely with no explicit
+`Promise.all` anywhere in application code).
+
+A real-browser spike during the DuckDB migration confirmed DuckDB-Wasm's
+`eh` bundle tolerates concurrent plain `query()` calls fine. That spike
+didn't specifically test concurrent *prepared statements* on one
+connection (this app's `insertRows`/parameterized `queryRows` both
+prepare-then-close per call), so `src/storage/db.ts` keeps the same
+per-connection queue (`withConnectionQueue`, a
+`WeakMap<SaveDatabase, Promise<unknown>>`) serializing every
+`db.conn`-touching call as cheap insurance — costs nothing when nothing
+overlaps, removes a whole category of doubt when something does (e.g. a
+StrictMode double-mount). See `tests/storage/connection-queue.test.ts` for
+the regression test and `.specify/memory/architecture_constitution.md`'s
+Async and Integration Rules for the project-wide rule this enforces.
 
 ## Save format parsing: jomini, not a hand-rolled tokenizer
 
@@ -263,13 +468,13 @@ general-purpose pair; `getPlayerNationOverview` is now a thin wrapper that
 just looks up the player's `idx` and delegates. `NationSelector.tsx` is
 deliberately generic (`{ items, selectedIdx, onSelect }`-shaped, not
 nation-specific in spirit) for the same reason: this `list*` +
-`get*ByIdx` pattern, backed by the one long-lived read-only connection
+`get*ByIdx` pattern, backed by the one long-lived session connection
 described above, is meant to generalize to future selectable views (e.g.
 provinces), not stay a one-off nation dropdown.
 
 ## Persistence model
 
-A save is session-only by default: the worker writes into a new
+A save is session-only by default: the parsing Worker writes into a new
 OPFS-backed database on every load, and it's deleted — via
 `cleanupSaveIfNotKept` — either when a new load supersedes it or on tab
 close (`beforeunload`, best-effort only; see that function's own doc
@@ -277,17 +482,18 @@ comment for why it can't be guaranteed). If the user chooses to "keep" a
 save, that deletion is skipped and the database persists in OPFS across
 browser sessions instead.
 
-"Keep" itself is two steps split across two JS contexts (see the Worker
-constraints above): `markSaveKept` (in the worker) sets
-`save_meta.kept = 1`, and `recordKeptSave` (on the main thread, once the
-worker acks) writes a small `localStorage` pointer
-(`nauticalbeg.keptSave`) recording which save that is — there's no other
-cheap way to answer "which save is kept" across separate per-save
-database files without scanning OPFS. Only one save may be kept at a time
-in v1 (Assumptions) — keeping a new one deletes the previous kept
-database, but only *after* the new save's own write succeeds, so a
-failure (most notably hitting a storage quota, FR-014) never destroys a
-still-valid previous kept save.
+"Keep" runs entirely on the main thread now (see above): `markSaveKept`
+sets `save_meta.kept = 1` and immediately `CHECKPOINT`s (see "OPFS
+persistence requires an explicit CHECKPOINT"), then `recordKeptSave`
+writes a small `localStorage` pointer (`nauticalbeg.keptSave`) recording
+which save that is — there's no other cheap way to answer "which save is
+kept" across separate per-save database files without scanning OPFS. Both
+steps are kept as separate functions (not because of any thread
+restriction anymore, just to preserve FR-014's ordering guarantee) — only
+one save may be kept at a time in v1 (Assumptions), and keeping a new one
+deletes the previous kept database only *after* the new save's own write
+succeeds, so a failure (most notably hitting a storage quota, FR-014)
+never destroys a still-valid previous kept save.
 
 On startup, `FileLoader.tsx` checks `listKeptSave()` and, if one exists,
 offers to resume it (`KeptSaveOffer.tsx`) instead of requiring a fresh
@@ -296,7 +502,10 @@ already-parsed database directly by id and skips file-reading/version-
 detection/parsing entirely — it reuses the exact same `ready`/`error`
 worker-protocol messages a fresh load produces, so the UI code that
 handles "a save became ready" needed no special-casing for "was this
-parsed just now, or resumed from a previous session."
+parsed just now, or resumed from a previous session." Like `loadSave`,
+it closes (and checkpoints, though nothing new was written) its
+connection before signaling ready, for the one-handle-per-file reason
+above.
 
 See `specs/001-save-import-overview/data-model.md`'s state-transition
 diagram for the full picture.

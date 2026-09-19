@@ -5,13 +5,11 @@ import {
   applySchema,
   closeSaveDatabase,
   openSaveDatabase,
+  queryRows,
   type SaveDatabase,
 } from "../../src/storage/db";
 import { parseAndStore } from "../../src/parser/version-adapters/1.3.11";
-import {
-  ensureTestSQLiteConfigured,
-  TEST_VFS_NAME,
-} from "../helpers/sqlite-test-env";
+import { ensureTestDuckDBConfigured } from "../helpers/duckdb-test-env";
 import { toBytes } from "../helpers/encode";
 
 const FIXTURE_PATH = path.resolve(
@@ -24,22 +22,14 @@ async function queryAll(
   db: SaveDatabase,
   sql: string,
 ): Promise<Array<Record<string, unknown>>> {
-  const rows: Array<Record<string, unknown>> = [];
-  await db.sqlite3.exec(db.handle, sql, (row, columns) => {
-    const record: Record<string, unknown> = {};
-    columns.forEach((col, i) => {
-      record[col] = row[i];
-    });
-    rows.push(record);
-  });
-  return rows;
+  return queryRows(db, sql);
 }
 
 describe("version-adapters/1.3.11 parseAndStore", () => {
   let db: SaveDatabase;
 
   beforeAll(() => {
-    ensureTestSQLiteConfigured();
+    ensureTestDuckDBConfigured();
   });
 
   afterEach(async () => {
@@ -47,7 +37,7 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
   });
 
   async function freshDb(name: string): Promise<SaveDatabase> {
-    db = await openSaveDatabase(name, TEST_VFS_NAME);
+    db = await openSaveDatabase(name);
     await applySchema(db);
     return db;
   }
@@ -198,16 +188,20 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     const database = await freshDb("adapter-war.db");
     await parseAndStore(database, "save-7", "rus-1628-minimal.eu5", toBytes(fixtureText));
 
+    // DuckDB's EXISTS(...) returns a real boolean, not SQLite's 1/0
+    // integer — production code (`getNationOverview`) already coerces
+    // via `Number(...)`, which handles both correctly; this raw query
+    // asserts DuckDB's actual return type directly.
     const rusAtWar = await queryAll(
       database,
       "SELECT EXISTS(SELECT 1 FROM war_participants WHERE nation_idx = 2025 AND status = 'Active') as at_war",
     );
-    expect(rusAtWar[0].at_war).toBe(1);
+    expect(rusAtWar[0].at_war).toBe(true);
 
     const declinedNotAtWar = await queryAll(
       database,
       "SELECT EXISTS(SELECT 1 FROM war_participants WHERE nation_idx = 220 AND status = 'Active') as at_war",
     );
-    expect(declinedNotAtWar[0].at_war).toBe(0);
+    expect(declinedNotAtWar[0].at_war).toBe(false);
   });
 });

@@ -1,0 +1,26 @@
+/* FR-016: "permanently unbuilt feature" — deliberately distinct wording
+   and styling from NotAvailableState (FR-014's "couldn't parse this save
+   section"), since these two states mean different things: this one
+   never varies by save. */
+.coming-soon-placeholder {
+  max-width: 34rem;
+  margin: var(--space-lg) 0;
+  padding: var(--space-lg);
+  text-align: center;
+  background: var(--color-surface-container-low);
+  border: 1px dashed var(--color-outline);
+}
+
+.coming-soon-placeholder__title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  margin: 0 0 var(--space-xs);
+}
+
+.coming-soon-placeholder__body {
+  font-family: var(--font-body);
+  color: var(--color-on-surface-variant);
+  margin: 0;
+}

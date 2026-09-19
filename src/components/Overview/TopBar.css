@@ -1,0 +1,70 @@
+/* The shell's permanent top row — present in every state and every
+   app section (research.md §2), holding the section nav and the
+   save/keep controls as distinct groups. */
+.top-bar {
+  grid-area: topbar;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-primary);
+  border-bottom: 3px double var(--color-tertiary);
+}
+
+.top-bar__sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.top-bar__section {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--color-on-primary);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: var(--space-xs) var(--space-sm);
+  cursor: pointer;
+}
+
+.top-bar__section:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
+.top-bar__section:focus-visible {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: -2px;
+}
+
+.top-bar__section--active {
+  border-bottom-color: var(--color-tertiary);
+}
+
+.top-bar__save-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.top-bar__file-picker {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-on-primary);
+}
+
+.top-bar__file-picker input[type="file"] {
+  font-family: var(--font-body);
+  color: var(--color-on-primary);
+  font-size: 0.85rem;
+}

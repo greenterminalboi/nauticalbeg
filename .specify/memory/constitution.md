@@ -1,6 +1,27 @@
 <!--
 Sync Impact Report
 ==================
+Version change: 1.1.1 → 1.1.2
+Rationale: PATCH — the Technical Constraints cross-reference to
+architecture_constitution.md named `wa-sqlite` specifically; genericized to
+"database calls" now that the storage engine has moved to DuckDB (see
+ARCHITECTURE.md's decision log), so this pointer doesn't go stale again on a
+future engine change. No principle content changed.
+
+Modified sections: Technical Constraints (removed a stale engine name from
+the cross-reference bullet).
+
+--- Prior report (v1.1.1) ---
+Version change: 1.1.0 → 1.1.1
+Rationale: PATCH — added a cross-reference (Technical Constraints) to the two
+new Architecture Guard-generated documents, `.specify/memory/architecture_constitution.md`
+and `.specify/memory/security_constitution.md`, so concrete layer/data-access/
+async and security rules live there instead of being duplicated here. No
+principle content changed.
+
+Modified sections: Technical Constraints (added cross-reference bullet).
+
+--- Prior report (v1.1.0) ---
 Version change: 1.0.0 → 1.1.0
 Rationale: MINOR bump — one new principle added (VIII), no existing principle
 redefined or removed, no backward-incompatible governance change.
@@ -176,6 +197,11 @@ promise of accurate representation.
   exposed as a stable internal representation) so that new visualizations can be
   added without touching parsing logic, and parser fixes don't require
   visualization changes.
+- Concrete layer/module boundaries, data-access rules, and async/concurrency
+  constraints (e.g., which connections may write, sequencing rules for
+  database calls) are enforced in `.specify/memory/architecture_constitution.md`,
+  not restated here. Security-specific rules (trust boundaries, data isolation,
+  secrets) live in `.specify/memory/security_constitution.md`.
 
 ## Development Workflow
 
@@ -216,4 +242,4 @@ Repeated or systemic violations should prompt a constitution amendment
 (if the rule is wrong) rather than repeated ad-hoc exceptions (if the rule is
 right but frequently ignored).
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-17 | **Last Amended**: 2026-09-17
+**Version**: 1.1.2 | **Ratified**: 2026-09-17 | **Last Amended**: 2026-09-18

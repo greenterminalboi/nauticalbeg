@@ -14,18 +14,22 @@ import {
   getNationOverview,
   getPlayerNationOverview,
   getSaveMeta,
+  keepSave,
   listKeptSave,
   listNations,
-  recordKeptSave,
   type KeptSaveSummary,
   type NationOverview,
   type NationSummary,
 } from "../../storage/queries";
+import { ComingSoonPlaceholder } from "./ComingSoonPlaceholder";
+import { CountryViewerNav } from "./CountryViewerNav";
 import { ErrorMessage } from "./ErrorMessage";
-import { KeepSaveToggle } from "./KeepSaveToggle";
 import { KeptSaveOffer } from "./KeptSaveOffer";
-import { NationSelector } from "./NationSelector";
 import { OverviewCard } from "./OverviewCard";
+import { ProvincesTab } from "./ProvincesTab";
+import type { AppSection, TabId } from "./tabs";
+import { TopBar } from "./TopBar";
+import "./Shell.css";
 
 type ReadyStatus = {
   kind: "ready";
@@ -36,6 +40,24 @@ type ReadyStatus = {
   kept: boolean;
   keepPending: boolean;
   keepError: string | null;
+  /** plan.md Technical Context — which side-nav category is displayed
+   * within Country Viewer; component state, not routing (research.md
+   * §4). Defaults to "overview" and is never reset by a nation change
+   * (FR-003). Meaningless outside Country Viewer, but kept here (not on
+   * `AppSection` state) since it's really "the save session's current
+   * view," which persists across section switches (e.g. checking Map
+   * then coming back to Country Viewer shouldn't reset it). */
+  activeTab: TabId;
+};
+
+const UNBUILT_TAB_LABELS: Partial<Record<TabId, string>> = {
+  military: "Military",
+  government: "Government",
+  economy: "Economy",
+  diplomacy: "Diplomacy",
+  trade: "Trade",
+  buildings: "Building Registry",
+  characters: "Characters",
 };
 
 type Status =
@@ -51,25 +73,29 @@ type Status =
   | { kind: "error"; errorKind: ErrorKind | "unknown"; message: string };
 
 /**
- * File picker + worker orchestration. Once parsing succeeds, this opens a
- * read-only connection to the save that stays open for the rest of the
- * "ready" session (see `readDbRef`) — FR-015's nation selector re-queries
- * that same connection on every selection change rather than reopening
- * it, since switching the viewed nation must not require re-parsing or
- * re-uploading the save. `NationSelector` + `getNationOverview` are
- * intentionally generic (pick an idx, re-render) — the pattern is meant
- * to extend to future selectable views, not stay nation-specific.
+ * File picker + worker orchestration, plus the app-level section switch
+ * (NauticalBot / Map / Country Viewer / Settings — decision 2026-09-18).
+ * The save/keep controls (TopBar) are global — a loaded save stays
+ * loaded regardless of which section is active. The nation
+ * selector/category tabs (CountryViewerNav) only render within Country
+ * Viewer, since they're meaningless anywhere else.
  *
- * FR-011/FR-014 ("keep"/quota handling) route through the worker rather
- * than being called directly against `readDbRef` — see `KeepMessage`'s
- * doc comment in `parser/protocol.ts`: writing to the save's database
- * requires a write-capable connection, and that can only be opened from
- * within a dedicated Worker in this browser, never the main thread.
- * `forgetKeptSave` is the one exception that's safe to call directly
- * here — it only touches OPFS directory entries and `localStorage`,
- * never opens a SQLite connection at all.
+ * Once parsing succeeds, this opens the one connection to the save that
+ * stays open for the rest of the "ready" session (see `readDbRef`) —
+ * FR-015's nation selector re-queries that same connection on every
+ * selection change rather than reopening it, since switching the viewed
+ * nation must not require re-parsing or re-uploading the save.
+ * `NationSelector` + `getNationOverview` are intentionally generic (pick
+ * an idx, re-render) — the pattern is meant to extend to future
+ * selectable views, not stay nation-specific.
+ *
+ * FR-011/FR-014 ("keep"/quota handling) run directly against `readDbRef`
+ * on the main thread — DuckDB has no SQLite-style restriction requiring
+ * writes to originate from a dedicated Worker (see queries.ts's
+ * `keepSave` doc comment), so there's no worker round-trip for this.
  */
 export function FileLoader() {
+  const [activeSection, setActiveSection] = useState<AppSection>("country-viewer");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const workerRef = useRef<Worker | null>(null);
   // Tracks the most recently ready save's id so the beforeunload handler
@@ -97,42 +123,6 @@ export function FileLoader() {
           break;
         case "error":
           handleError(message);
-          break;
-        case "kept":
-          // The worker only did the SQL write (markSaveKept) — the
-          // localStorage pointer bookkeeping runs here, on the main
-          // thread, since localStorage doesn't exist in a Worker.
-          void recordKeptSave({
-            saveId: message.saveId,
-            filename: message.filename,
-            inGameDate: message.inGameDate,
-          })
-            .then(() => {
-              setStatus((prev) =>
-                prev.kind === "ready" ? { ...prev, kept: true, keepPending: false } : prev,
-              );
-            })
-            .catch((err) => {
-              setStatus((prev) =>
-                prev.kind === "ready"
-                  ? {
-                      ...prev,
-                      keepPending: false,
-                      keepError:
-                        err instanceof Error
-                          ? err.message
-                          : "Failed to record this save as kept.",
-                    }
-                  : prev,
-              );
-            });
-          break;
-        case "keep-failed":
-          setStatus((prev) =>
-            prev.kind === "ready"
-              ? { ...prev, keepPending: false, keepError: message.message }
-              : prev,
-          );
           break;
       }
     };
@@ -204,20 +194,15 @@ export function FileLoader() {
       readDbRef.current = null;
     }
 
-    // readonly: the main thread only ever reads (the worker owns writes)
-    // — see openSaveDatabase's doc comment for why this also avoids a
-    // real cross-context OPFS crash, not just signaling intent.
-    const db = await openSaveDatabase(message.saveId, undefined, { readonly: true });
+    // The worker that parsed this save already closed its own connection
+    // before signaling ready (see load-save.ts) — DuckDB allows only one
+    // open handle per OPFS file at a time, so this is the first (and,
+    // for the rest of this session, only) connection to it. It's used
+    // for every read AND for the keep-toggle write below; `db.ts`'s
+    // per-connection queue serializes concurrent calls defensively.
+    const db = await openSaveDatabase(message.saveId);
     readDbRef.current = db;
     try {
-      // Sequential, not concurrent: wa-sqlite's async build runs on
-      // Asyncify, which unwinds/rewinds a single WASM call stack per
-      // module instance — issuing queries concurrently against the same
-      // connection corrupts that shared state (observed in the browser
-      // as a nonsensical "no such table" error, an OPFS NotFoundError,
-      // and a WASM "memory access out of bounds" crash, depending on how
-      // the race landed). Existing tests never caught this because they
-      // always call one query at a time.
       const meta = await getSaveMeta(db);
       const nations = await listNations(db);
       const overview = await getPlayerNationOverview(db);
@@ -230,6 +215,7 @@ export function FileLoader() {
         kept: meta.kept,
         keepPending: false,
         keepError: null,
+        activeTab: "overview",
       });
     } catch (err) {
       setStatus({
@@ -266,43 +252,43 @@ export function FileLoader() {
   function handleKeepToggle(): void {
     if (status.kind !== "ready") return;
     const saveId = currentSaveIdRef.current;
-    if (!saveId) return;
+    const db = readDbRef.current;
+    if (!saveId || !db) return;
 
     setStatus({ ...status, keepPending: true, keepError: null });
 
-    if (status.kept) {
-      // Safe directly on the main thread — see this component's doc
-      // comment for why forget (unlike keep) never needs the worker.
-      forgetKeptSave(saveId)
-        .then(() => {
-          setStatus((prev) =>
-            prev.kind === "ready" ? { ...prev, kept: false, keepPending: false } : prev,
-          );
-        })
-        .catch((err) => {
-          setStatus((prev) =>
-            prev.kind === "ready"
-              ? {
-                  ...prev,
-                  keepPending: false,
-                  keepError: err instanceof Error ? err.message : "Failed to forget this save.",
-                }
-              : prev,
-          );
-        });
-    } else {
-      workerRef.current?.postMessage({ type: "keep", saveId });
-    }
+    // Both keep and forget run directly on the main thread now — DuckDB
+    // has no SQLite-style restriction requiring writes to originate from
+    // a dedicated Worker (see queries.ts's keepSave doc comment).
+    const action = status.kept ? forgetKeptSave(saveId) : keepSave(db, saveId);
+    action
+      .then(() => {
+        setStatus((prev) =>
+          prev.kind === "ready" ? { ...prev, kept: !status.kept, keepPending: false } : prev,
+        );
+      })
+      .catch((err) => {
+        setStatus((prev) =>
+          prev.kind === "ready"
+            ? {
+                ...prev,
+                keepPending: false,
+                keepError:
+                  err instanceof Error
+                    ? err.message
+                    : `Failed to ${status.kept ? "forget" : "keep"} this save.`,
+              }
+            : prev,
+        );
+      });
   }
 
   function handleError(message: WorkerErrorMessage): void {
     setStatus({ kind: "error", errorKind: message.kind, message: message.message });
   }
 
-  function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>): void {
-    const file = event.target.files?.[0];
-    event.target.value = ""; // allow re-selecting the same file later
-    if (!file || !workerRef.current) return;
+  function handleFileSelected(file: File): void {
+    if (!workerRef.current) return;
     setStatus({ kind: "validating", percent: null });
     workerRef.current.postMessage({
       type: "load",
@@ -325,39 +311,64 @@ export function FileLoader() {
     setStatus({ kind: "idle" });
   }
 
+  function handleSelectTab(tab: TabId): void {
+    setStatus((prev) => (prev.kind === "ready" ? { ...prev, activeTab: tab } : prev));
+  }
+
+  const isReady = status.kind === "ready";
+  const showCountryViewerNav = activeSection === "country-viewer" && isReady;
+
   return (
-    <div>
-      <label>
-        Select an EU5 save file
-        <input type="file" onChange={handleFileSelected} />
-      </label>
-      <StatusView
-        status={status}
-        onSelectNation={(idx) => void handleSelectNation(idx)}
+    <div className={showCountryViewerNav ? "shell shell--with-nav" : "shell"}>
+      <TopBar
+        activeSection={activeSection}
+        onSelectSection={setActiveSection}
+        onFileSelected={handleFileSelected}
+        keepState={isReady ? { kept: status.kept, pending: status.keepPending, error: status.keepError } : null}
         onKeepToggle={handleKeepToggle}
-        onResumeKeptSave={handleResumeKeptSave}
-        onDismissKeptSaveOffer={handleDismissKeptSaveOffer}
       />
+      {showCountryViewerNav && (
+        <CountryViewerNav
+          nations={status.nations}
+          selectedNationIdx={status.selectedNationIdx}
+          onSelectNation={(idx) => void handleSelectNation(idx)}
+          activeTab={status.activeTab}
+          onSelectTab={handleSelectTab}
+        />
+      )}
+      <main className="shell__main">
+        <div className="shell__main-inner">
+          {activeSection === "nauticalbot" && <ComingSoonPlaceholder feature="NauticalBot" />}
+          {activeSection === "map" && <ComingSoonPlaceholder feature="Map" />}
+          {activeSection === "settings" && <ComingSoonPlaceholder feature="Settings" />}
+          {activeSection === "country-viewer" && (
+            <StatusView
+              status={status}
+              db={readDbRef.current}
+              onResumeKeptSave={handleResumeKeptSave}
+              onDismissKeptSaveOffer={handleDismissKeptSaveOffer}
+            />
+          )}
+        </div>
+      </main>
     </div>
   );
 }
 
 function StatusView({
   status,
-  onSelectNation,
-  onKeepToggle,
+  db,
   onResumeKeptSave,
   onDismissKeptSaveOffer,
 }: {
   status: Status;
-  onSelectNation: (idx: number) => void;
-  onKeepToggle: () => void;
+  db: SaveDatabase | null;
   onResumeKeptSave: (saveId: string) => void;
   onDismissKeptSaveOffer: () => void;
 }) {
   switch (status.kind) {
     case "idle":
-      return null;
+      return <p>Select a save file above to get started.</p>;
     case "kept-save-offer":
       return (
         <KeptSaveOffer
@@ -374,24 +385,28 @@ function StatusView({
     case "loading-overview":
       return <p>{describePhase(status)}</p>;
     case "ready":
-      return (
-        <div>
-          <NationSelector
-            nations={status.nations}
-            selectedIdx={status.selectedNationIdx}
-            onSelect={onSelectNation}
-          />
-          <KeepSaveToggle
-            kept={status.kept}
-            pending={status.keepPending}
-            error={status.keepError}
-            onToggle={onKeepToggle}
-          />
-          <OverviewCard overview={status.overview} inGameDate={status.inGameDate} />
-        </div>
-      );
+      return db ? <ActiveTabContent status={status} db={db} /> : null;
     case "error":
       return <ErrorMessage kind={status.errorKind} message={status.message} />;
+  }
+}
+
+function ActiveTabContent({ status, db }: { status: ReadyStatus; db: SaveDatabase }) {
+  switch (status.activeTab) {
+    case "overview":
+      return <OverviewCard overview={status.overview} inGameDate={status.inGameDate} />;
+    case "provinces":
+      return <ProvincesTab db={db} nationIdx={status.selectedNationIdx} />;
+    default: {
+      // Military through Characters: each gets its own real tab component
+      // in a later user story (US3-US9). Until then this is a bare,
+      // deliberately temporary placeholder — not the app-level
+      // ComingSoonPlaceholder (that's for NauticalBot/Map/Settings, whole
+      // sections that are permanently unbuilt); these tabs vary by save
+      // and will be filled in soon.
+      const label = UNBUILT_TAB_LABELS[status.activeTab] ?? status.activeTab;
+      return <p>{label} hasn't been implemented yet.</p>;
+    }
   }
 }
 

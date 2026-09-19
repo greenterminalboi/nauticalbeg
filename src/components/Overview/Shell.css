@@ -1,0 +1,33 @@
+/* research.md §1: plain CSS Grid for the 3-region shell — a full-width
+   top bar, with side nav + main content as two columns below it once a
+   save is loaded (research.md §3: pre-load, there's no side nav column
+   at all, just the top bar and a single main-content row). */
+.shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "topbar" "main";
+  min-height: 100vh;
+}
+
+.shell--with-nav {
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "topbar topbar"
+    "sidenav main";
+}
+
+/* FR-019: the main content area (including any table it contains) is
+   horizontally centered with a bounded max-width and balanced margins —
+   this applies at the region level, not to individual table cells, which
+   keep ordinary per-column alignment. */
+.shell__main {
+  grid-area: main;
+  padding: var(--space-lg);
+  box-sizing: border-box;
+}
+
+.shell__main-inner {
+  max-width: 64rem;
+  margin: 0 auto;
+}

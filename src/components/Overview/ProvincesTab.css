@@ -1,0 +1,17 @@
+/* "Illuminated Cards & Folios" framing (design.md §Components 2, echoing
+ * OverviewCard.css) applied to the Perspective datagrid's container — a
+ * portolan-style multi-ruled border around the table itself. Internal
+ * cell/header colors are themed separately, in perspective/theme.css. */
+.provinces-tab {
+  border: 3px solid var(--color-on-surface);
+  box-shadow:
+    0 0 0 1px var(--color-tertiary),
+    0 0 0 4px var(--color-vellum),
+    0 0 0 5px var(--color-secondary);
+  margin: var(--space-lg) 0;
+}
+
+.provinces-tab__viewer {
+  display: block;
+  height: 32rem;
+}

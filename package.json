@@ -9,17 +9,24 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "generate:map": "tsx tools/map-generation/generate.ts"
+    "generate:map": "tsx tools/map-generation/generate.ts",
+    "postinstall": "patch-package"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@duckdb/duckdb-wasm": "^1.32.0",
+    "@perspective-dev/client": "^5.5.1",
+    "@perspective-dev/react": "^5.5.1",
+    "@perspective-dev/viewer": "^5.5.1",
+    "@perspective-dev/viewer-charts": "^5.5.1",
+    "@perspective-dev/viewer-datagrid": "^5.5.1",
+    "apache-arrow": "^17.0.0",
     "jomini": "^0.10.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "topojson-client": "^3.1.0",
-    "wa-sqlite": "^1.0.0"
+    "topojson-client": "^3.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
@@ -35,6 +42,7 @@
     "@types/topojson-specification": "^1.0.5",
     "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^29.1.1",
+    "patch-package": "^8.0.1",
     "pngjs": "^7.0.0",
     "topojson-server": "^3.0.1",
     "topojson-simplify": "^3.0.3",

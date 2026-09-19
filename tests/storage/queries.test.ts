@@ -14,10 +14,7 @@ import {
   getSaveMeta,
   listNations,
 } from "../../src/storage/queries";
-import {
-  ensureTestSQLiteConfigured,
-  TEST_VFS_NAME,
-} from "../helpers/sqlite-test-env";
+import { ensureTestDuckDBConfigured } from "../helpers/duckdb-test-env";
 import { toBytes } from "../helpers/encode";
 
 const FIXTURE_PATH = path.resolve(
@@ -35,7 +32,7 @@ describe("storage/queries against a real parsed save", () => {
   let db: SaveDatabase;
 
   beforeAll(() => {
-    ensureTestSQLiteConfigured();
+    ensureTestDuckDBConfigured();
   });
 
   afterEach(async () => {
@@ -43,7 +40,7 @@ describe("storage/queries against a real parsed save", () => {
   });
 
   it("getSaveMeta returns the parsed date/version/filename", async () => {
-    db = await openSaveDatabase("queries-save-meta.db", TEST_VFS_NAME);
+    db = await openSaveDatabase("queries-save-meta.db");
     await applySchema(db);
     await parseAndStore(db, "save-1", "rus-1628-minimal.eu5", toBytes(fixtureText));
 
@@ -57,7 +54,7 @@ describe("storage/queries against a real parsed save", () => {
   });
 
   it("getPlayerNationOverview returns RUS's real stats with the right fields marked derived", async () => {
-    db = await openSaveDatabase("queries-overview.db", TEST_VFS_NAME);
+    db = await openSaveDatabase("queries-overview.db");
     await applySchema(db);
     await parseAndStore(db, "save-2", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
 
@@ -76,7 +73,7 @@ describe("storage/queries against a real parsed save", () => {
   });
 
   it("getPlayerNationOverview throws a clear error when no nation is flagged as the player", async () => {
-    db = await openSaveDatabase("queries-no-player.db", TEST_VFS_NAME);
+    db = await openSaveDatabase("queries-no-player.db");
     await applySchema(db);
     // The unmodified fixture's played_country doesn't match any nation.
     await parseAndStore(db, "save-3", "rus-1628-minimal.eu5", toBytes(fixtureText));
@@ -87,7 +84,7 @@ describe("storage/queries against a real parsed save", () => {
   });
 
   it("listNations returns only real nations (FR-015), falling back to tag when no name is set", async () => {
-    db = await openSaveDatabase("queries-list-nations.db", TEST_VFS_NAME);
+    db = await openSaveDatabase("queries-list-nations.db");
     await applySchema(db);
     await parseAndStore(db, "save-4", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
 
@@ -101,7 +98,7 @@ describe("storage/queries against a real parsed save", () => {
   });
 
   it("getNationOverview returns the same shape for any nation by idx, not just the player", async () => {
-    db = await openSaveDatabase("queries-nation-by-idx.db", TEST_VFS_NAME);
+    db = await openSaveDatabase("queries-nation-by-idx.db");
     await applySchema(db);
     await parseAndStore(db, "save-5", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
 
@@ -119,7 +116,7 @@ describe("storage/queries against a real parsed save", () => {
   });
 
   it("getNationOverview throws a clear error for an unknown idx", async () => {
-    db = await openSaveDatabase("queries-nation-unknown.db", TEST_VFS_NAME);
+    db = await openSaveDatabase("queries-nation-unknown.db");
     await applySchema(db);
     await parseAndStore(db, "save-6", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
 

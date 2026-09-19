@@ -10,7 +10,9 @@
 import {
   closeSaveDatabase,
   deleteSaveDatabase,
+  execSql,
   openSaveDatabase,
+  queryArrowIPC,
   queryRows,
   type SaveDatabase,
 } from "./db";
@@ -188,39 +190,45 @@ function writeKeptSavePointer(pointer: KeptSaveSummary | null): void {
 
 /**
  * The SQL-only half of "keep" (FR-011): sets `save_meta.kept = 1` and
- * returns enough to record the kept-save pointer afterward. `db` must
- * be a write-capable connection — see `KeepMessage`'s doc comment in
- * `parser/protocol.ts` for why that means this can only be called from
- * within the parser Worker, never the main thread.
+ * returns enough to record the kept-save pointer afterward.
  *
- * Deliberately does NOT touch the `localStorage` pointer itself:
- * `localStorage` doesn't exist in a Worker's global scope at all (it's
- * a `Window`-only API — confirmed by this crashing outright in the
- * browser the first time `keepSave`, below, tried to do both from
- * inside the worker). Call `recordKeptSave` next, from the main thread,
- * once this succeeds.
+ * Kept separate from `recordKeptSave` (rather than combined directly
+ * into `keepSave`) purely to preserve FR-014's ordering guarantee — see
+ * that function's doc comment — not because of any thread restriction:
+ * as of the 2026-09-18 DuckDB migration, both halves run on the main
+ * thread (DuckDB has no SQLite-style "writes must come from a dedicated
+ * Worker" restriction), so `keepSave` below is the real production path,
+ * not just a same-thread test convenience.
  */
 export async function markSaveKept(
   db: SaveDatabase,
   saveId: string,
 ): Promise<KeptSaveSummary> {
-  await db.sqlite3.exec(db.handle, "UPDATE save_meta SET kept = 1");
+  await execSql(db, "UPDATE save_meta SET kept = 1");
+  // `db.ts`'s `closeSaveDatabase` also checkpoints, but this connection
+  // stays open for the rest of the session (FileLoader.tsx's
+  // `readDbRef`) — confirmed by a real failure: without checkpointing
+  // here too, "kept" silently reverted to false after a page reload,
+  // even though the save's actual data (checkpointed by the parsing
+  // Worker's close) survived correctly. A write the app cares about
+  // surviving a reload must checkpoint right after itself, not wait for
+  // a close that may not happen until much later, if ever.
+  await execSql(db, "CHECKPOINT");
   const meta = await getSaveMeta(db);
   return { saveId, filename: meta.filename, inGameDate: meta.inGameDate };
 }
 
 /**
- * The `localStorage`-pointer half of "keep" (FR-011) — main-thread
- * only (see `markSaveKept`'s doc comment). Replaces any previously kept
- * save, since only one may be kept at a time (Assumptions).
+ * The `localStorage`-pointer half of "keep" (FR-011). Replaces any
+ * previously kept save, since only one may be kept at a time
+ * (Assumptions).
  *
  * FR-014: callers must only invoke this *after* `markSaveKept`'s write
  * has already succeeded — that ordering is what keeps a write failure
  * (most notably a storage-quota error) from ever corrupting or deleting
  * an existing valid kept save; this function itself doesn't re-check
- * that ordering, so keep it that way at the call sites (`worker.ts`'s
- * `handleKeep` posts an ack only on success; `FileLoader.tsx` calls
- * this only from that ack's handler).
+ * that ordering, so keep it that way at the call sites (`keepSave` below
+ * is the only production caller, and already does this correctly).
  */
 export async function recordKeptSave(summary: KeptSaveSummary): Promise<void> {
   const previous = readKeptSavePointer();
@@ -231,16 +239,26 @@ export async function recordKeptSave(summary: KeptSaveSummary): Promise<void> {
 }
 
 /**
- * Combines `markSaveKept` + `recordKeptSave` for same-thread callers
- * (tests, mainly) where both a write-capable `db` and `localStorage`
- * are available together. The real app can never do this in one call —
- * see `markSaveKept`'s doc comment — `worker.ts` calls `markSaveKept`
- * alone, and `FileLoader.tsx` calls `recordKeptSave` alone once the
- * worker's ack arrives.
+ * FR-011/FR-014: marks `saveId` kept, surfacing a clear, storage-quota-
+ * aware error rather than a raw exception. Called directly by
+ * `FileLoader.tsx`'s `KeepSaveToggle` handler on the main thread — no
+ * worker round-trip needed (see `markSaveKept`'s doc comment).
  */
 export async function keepSave(db: SaveDatabase, saveId: string): Promise<void> {
-  const summary = await markSaveKept(db, saveId);
-  await recordKeptSave(summary);
+  try {
+    const summary = await markSaveKept(db, saveId);
+    await recordKeptSave(summary);
+  } catch (err) {
+    if (isQuotaExceeded(err)) {
+      throw new Error("Not enough storage space is available to keep this save.");
+    }
+    throw err;
+  }
+}
+
+function isQuotaExceeded(err: unknown): boolean {
+  if (err instanceof DOMException && err.name === "QuotaExceededError") return true;
+  return err instanceof Error && /quota/i.test(err.message);
 }
 
 /** Deletes the OPFS database for a previously kept save (FR-013). */
@@ -250,6 +268,37 @@ export async function forgetKeptSave(saveId: string): Promise<void> {
   if (current?.saveId === saveId) {
     writeKeptSavePointer(null);
   }
+}
+
+/**
+ * FR-004 (Provinces tab): reuses 001's existing `locations`/`provinces`
+ * tables verbatim — no new schema (data-model.md's "Provinces tab: no
+ * new schema" section). `locations` itself has no `name` column (see
+ * `schema.sql`), so the display name comes from `provinces.name` (the
+ * adapter's `province_definition` string) via a join on `province_idx`,
+ * falling back to a synthetic label if a location has no matching
+ * province row (the `COALESCE`) — corrected against the real schema
+ * during US2 implementation (contracts/tab-data-contract.md has the
+ * note).
+ *
+ * Returns every one of the nation's provinces as a single Arrow IPC
+ * buffer (decision 2026-09-18: table tabs render via Perspective, whose
+ * `<perspective-viewer>` virtualizes and paginates rows itself — no
+ * `LIMIT`/`OFFSET` needed here, unlike the plain-HTML-table version this
+ * replaced).
+ */
+export async function listProvincesArrow(db: SaveDatabase, nationIdx: number): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `SELECT locations.idx as idx,
+            COALESCE(provinces.name, 'Location ' || locations.idx) as name,
+            locations.development as development
+     FROM locations
+     LEFT JOIN provinces ON provinces.idx = locations.province_idx
+     WHERE locations.owner_idx = ?1
+     ORDER BY locations.idx`,
+    [nationIdx],
+  );
 }
 
 /** Used on app start to offer resuming a kept save (Acceptance Scenario 2). */
@@ -272,13 +321,10 @@ export async function listKeptSave(): Promise<KeptSaveSummary | null> {
  * that), opening it fails and there's nothing left to clean up. That's
  * not an error case here, just a no-op.
  */
-export async function cleanupSaveIfNotKept(
-  saveId: string,
-  vfsName?: string,
-): Promise<void> {
+export async function cleanupSaveIfNotKept(saveId: string): Promise<void> {
   let db: SaveDatabase;
   try {
-    db = await openSaveDatabase(saveId, vfsName, { readonly: true });
+    db = await openSaveDatabase(saveId);
   } catch {
     return;
   }
@@ -289,6 +335,6 @@ export async function cleanupSaveIfNotKept(
     await closeSaveDatabase(db);
   }
   if (!kept) {
-    await deleteSaveDatabase(saveId, vfsName);
+    await deleteSaveDatabase(saveId);
   }
 }

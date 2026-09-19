@@ -197,15 +197,24 @@ export async function parseAndStore(
   // Every other top-level section: no real schema yet, so capture as
   // opaque JSON rather than guess at columns for structure nobody has
   // inspected (constitution Principle II).
-  const rawRows: Array<[string, string]> = [];
+  //
+  // `id` is generated here (not left to schema.sql's DEFAULT nextval)
+  // because insertRows' Arrow-bulk-insert path requires every row to
+  // supply every column of the target table positionally — confirmed via
+  // a real browser test that a column-subset insert throws "table
+  // raw_sections has 3 columns but 2 values were supplied". Safe to
+  // assign sequentially in JS: this is the only writer, in one bulk call,
+  // never concurrent with anything else touching this table.
+  const rawRows: Array<[number, string, string]> = [];
+  let rawSectionId = 0;
   for (const [key, value] of Object.entries(root)) {
     if (STRUCTURED_KEYS.has(key)) continue;
-    rawRows.push([key, JSON.stringify(value)]);
+    rawRows.push([rawSectionId++, key, JSON.stringify(value)]);
   }
   if (rawRows.length > 0) {
     await insertRows(
       db,
-      "INSERT INTO raw_sections (key, data) VALUES (?1, ?2)",
+      "INSERT INTO raw_sections (id, key, data) VALUES (?1, ?2, ?3)",
       rawRows,
     );
   }

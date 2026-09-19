@@ -1,0 +1,17 @@
+/* Country Viewer's side column: nation picker stacked above the
+   category list, sharing one grid area (Shell.css's "sidenav") so they
+   read as one "pick a nation, then a category" unit. */
+.country-viewer-nav {
+  grid-area: sidenav;
+  display: flex;
+  flex-direction: column;
+  min-width: 14rem;
+  border-right: 1px solid var(--color-outline-variant);
+  background: var(--color-surface-container);
+}
+
+.country-viewer-nav .nation-selector {
+  margin: 0;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-outline-variant);
+}

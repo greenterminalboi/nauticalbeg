@@ -1,0 +1,10 @@
+diff --git a/node_modules/@perspective-dev/viewer-charts/dist/esm/event-detail.d.ts b/node_modules/@perspective-dev/viewer-charts/dist/esm/event-detail.d.ts
+index 2d3c2cb..f51ebc5 100644
+--- a/node_modules/@perspective-dev/viewer-charts/dist/esm/event-detail.d.ts
++++ b/node_modules/@perspective-dev/viewer-charts/dist/esm/event-detail.d.ts
+@@ -32,4 +32,4 @@ export interface PerspectiveClickDetail {
+      */
+     panel?: string;
+ }
+-export { PerspectiveSelectDetail } from "@perspective-dev/viewer/src/ts/extensions.js";
++export { PerspectiveSelectDetail } from "@perspective-dev/viewer/dist/esm/extensions.js";

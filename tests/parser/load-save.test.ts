@@ -5,10 +5,7 @@ import { loadSave, resumeSave } from "../../src/parser/load-save";
 import * as db from "../../src/storage/db";
 import { applySchema, closeSaveDatabase, openSaveDatabase } from "../../src/storage/db";
 import { parseAndStore } from "../../src/parser/version-adapters/1.3.11";
-import {
-  ensureTestSQLiteConfigured,
-  TEST_VFS_NAME,
-} from "../helpers/sqlite-test-env";
+import { ensureTestDuckDBConfigured } from "../helpers/duckdb-test-env";
 import { toBytes } from "../helpers/encode";
 
 // This file is also tasks.md's T030 ("fixture-based tests ... for all
@@ -33,7 +30,7 @@ function makeCallbacks() {
 
 describe("loadSave", () => {
   beforeAll(() => {
-    ensureTestSQLiteConfigured();
+    ensureTestDuckDBConfigured();
   });
 
   it("reads, detects the version of, and parses a valid save, ending in onReady", async () => {
@@ -43,7 +40,6 @@ describe("loadSave", () => {
       file,
       callbacks,
       new AbortController().signal,
-      TEST_VFS_NAME,
     );
 
     expect(callbacks.onError).not.toHaveBeenCalled();
@@ -66,7 +62,6 @@ describe("loadSave", () => {
       file,
       callbacks,
       new AbortController().signal,
-      TEST_VFS_NAME,
     );
 
     expect(callbacks.onReady).not.toHaveBeenCalled();
@@ -86,7 +81,6 @@ describe("loadSave", () => {
       file,
       callbacks,
       new AbortController().signal,
-      TEST_VFS_NAME,
     );
 
     expect(callbacks.onReady).not.toHaveBeenCalled();
@@ -112,7 +106,6 @@ describe("loadSave", () => {
       file,
       callbacks,
       new AbortController().signal,
-      TEST_VFS_NAME,
     );
 
     expect(callbacks.onReady).not.toHaveBeenCalled();
@@ -142,14 +135,18 @@ describe("loadSave", () => {
     );
     const deleteSpy = vi.spyOn(db, "deleteSaveDatabase");
 
-    await loadSave(file, callbacks, new AbortController().signal, TEST_VFS_NAME);
+    await loadSave(
+      file,
+      callbacks,
+      new AbortController().signal,
+    );
 
     expect(callbacks.onReady).not.toHaveBeenCalled();
     expect(callbacks.onError).toHaveBeenCalledWith(
       "parse-failed",
       expect.stringContaining("simulated schema failure"),
     );
-    expect(deleteSpy).toHaveBeenCalledWith(expect.any(String), TEST_VFS_NAME);
+    expect(deleteSpy).toHaveBeenCalledWith(expect.any(String));
 
     vi.restoreAllMocks();
   });
@@ -160,7 +157,11 @@ describe("loadSave", () => {
     const controller = new AbortController();
     controller.abort();
 
-    await loadSave(file, callbacks, controller.signal, TEST_VFS_NAME);
+    await loadSave(
+      file,
+      callbacks,
+      controller.signal,
+    );
 
     expect(callbacks.onReady).not.toHaveBeenCalled();
     expect(callbacks.onError).not.toHaveBeenCalled();
@@ -177,17 +178,17 @@ const textWithRusAsPlayer = fixtureBuffer
 
 describe("resumeSave", () => {
   beforeAll(() => {
-    ensureTestSQLiteConfigured();
+    ensureTestDuckDBConfigured();
   });
 
   it("reopens an already-parsed save by id without re-parsing, reporting the same shape as loadSave", async () => {
-    const db = await openSaveDatabase("resume-1", TEST_VFS_NAME);
+    const db = await openSaveDatabase("resume-1");
     await applySchema(db);
     await parseAndStore(db, "resume-1", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
     await closeSaveDatabase(db);
 
     const callbacks = { onReady: vi.fn(), onError: vi.fn() };
-    await resumeSave("resume-1", callbacks, TEST_VFS_NAME);
+    await resumeSave("resume-1", callbacks);
 
     expect(callbacks.onError).not.toHaveBeenCalled();
     expect(callbacks.onReady).toHaveBeenCalledWith({
@@ -198,12 +199,12 @@ describe("resumeSave", () => {
   });
 
   it("reports parse-failed if the save has no data (e.g. parsing never actually ran)", async () => {
-    const db = await openSaveDatabase("resume-empty", TEST_VFS_NAME);
+    const db = await openSaveDatabase("resume-empty");
     await applySchema(db);
     await closeSaveDatabase(db);
 
     const callbacks = { onReady: vi.fn(), onError: vi.fn() };
-    await resumeSave("resume-empty", callbacks, TEST_VFS_NAME);
+    await resumeSave("resume-empty", callbacks);
 
     expect(callbacks.onReady).not.toHaveBeenCalled();
     expect(callbacks.onError).toHaveBeenCalledWith("parse-failed", expect.any(String));

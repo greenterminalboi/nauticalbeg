@@ -1,0 +1,49 @@
+/* FR-001/FR-015: Country Viewer's category list. Mobile is out of scope
+   for this project (decision 2026-09-18) — this layout targets
+   desktop/tablet-width browsers only. Grid placement lives on the
+   `.country-viewer-nav` wrapper (see CountryViewerNav.css), not here —
+   this is one of two stacked pieces of that wrapper. */
+.side-nav {
+  background: var(--color-surface-container);
+  padding: var(--space-md) 0;
+}
+
+.side-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-nav__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-on-surface);
+  background: none;
+  border: none;
+  border-left: 4px solid transparent;
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+}
+
+.side-nav__item:hover {
+  background: var(--color-surface-container-high);
+}
+
+.side-nav__item:focus-visible {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: -2px;
+}
+
+.side-nav__item--active {
+  border-left-color: var(--color-secondary);
+  background: var(--color-surface-container-high);
+  font-weight: 600;
+}

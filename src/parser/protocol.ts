@@ -1,6 +1,13 @@
 // Shared message types for the main-thread <-> parser-worker contract.
 // See specs/001-save-import-overview/contracts/worker-protocol.md — this
 // file is the TypeScript mirror of that contract; keep both in sync.
+//
+// The `keep`/`kept`/`keep-failed` messages that existed here under
+// SQLite are gone as of the 2026-09-18 DuckDB migration (see
+// ARCHITECTURE.md's decision log): DuckDB has no SQLite-style
+// "write-capable connections must come from a dedicated Worker"
+// restriction, so `KeepSaveToggle`'s write now goes straight through
+// `storage/queries.ts` on the main thread — no worker round-trip needed.
 
 export interface LoadMessage {
   type: "load";
@@ -19,19 +26,7 @@ export interface CancelMessage {
   type: "cancel";
 }
 
-/** FR-011: mark a loaded save as kept. Routed through the worker because
- * writing to the save's OPFS-backed SQLite database (setting
- * `save_meta.kept = 1`) requires a write-capable connection, and that
- * can only be opened from a dedicated Worker in this browser — a
- * main-thread open fails outright (confirmed: `createSyncAccessHandle`
- * isn't available there). See `storage/db.ts`'s `openSaveDatabase` doc
- * comment. */
-export interface KeepMessage {
-  type: "keep";
-  saveId: string;
-}
-
-export type MainToWorkerMessage = LoadMessage | CancelMessage | KeepMessage;
+export type MainToWorkerMessage = LoadMessage | CancelMessage;
 
 export type ParsePhase = "validating" | "detecting-version" | "parsing";
 
@@ -57,31 +52,4 @@ export interface ReadyMessage {
   playerNationTag: string;
 }
 
-/** FR-011: `markSaveKept` succeeded in the worker. Carries what the main
- * thread needs to finish the job via `recordKeptSave` (see that
- * function's doc comment for why it can't happen in the worker). */
-export interface KeptMessage {
-  type: "kept";
-  saveId: string;
-  filename: string;
-  inGameDate: string | null;
-}
-
-/** FR-014: `keepSave` failed — distinguishes a storage-quota failure
- * (the case FR-014 specifically calls out) from any other failure, and
- * either way never corrupts a previously kept save (see
- * `storage/queries.ts`'s `keepSave` — the write is attempted before any
- * previous kept save is touched). */
-export interface KeepFailedMessage {
-  type: "keep-failed";
-  saveId: string;
-  message: string;
-  quotaExceeded: boolean;
-}
-
-export type WorkerToMainMessage =
-  | ProgressMessage
-  | ErrorMessage
-  | ReadyMessage
-  | KeptMessage
-  | KeepFailedMessage;
+export type WorkerToMainMessage = ProgressMessage | ErrorMessage | ReadyMessage;

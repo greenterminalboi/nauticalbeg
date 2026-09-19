@@ -6,7 +6,6 @@ import {
   applySchema,
   closeSaveDatabase,
   deleteSaveDatabase,
-  OPFS_VFS_NAME,
   openSaveDatabase,
   type SaveDatabase,
 } from "../storage/db";
@@ -42,11 +41,19 @@ const PROGRESS_INTERVAL_MS = 1000; // FR-008: at least once per second
 
 /**
  * Reads, validates, detects the version of, and parses `file` into a new
- * per-save SQLite database, reporting progress/result/error via
+ * per-save DuckDB database, reporting progress/result/error via
  * `callbacks`. Resolves once a terminal callback (`onReady`/`onError`) has
  * fired, or once `signal` is aborted (in which case neither fires —
  * FR-010's cancel is meant to look like the load never happened, not like
  * a reported failure).
+ *
+ * This runs inside the parser Worker and always fully closes its
+ * connection *before* calling `onReady` — DuckDB-Wasm allows only one
+ * open handle per OPFS file at a time (confirmed via a real Chrome
+ * session), so the main thread's `FileLoader.tsx` (which opens its own
+ * connection to the same path the moment it receives `ready`) would race
+ * the worker's own close otherwise. See ARCHITECTURE.md's storage-engine
+ * decision log.
  *
  * FR-005/FR-012: if a database was created (parsing got as far as
  * `openSaveDatabase`) but this exits without ever calling `onReady` —
@@ -58,16 +65,11 @@ const PROGRESS_INTERVAL_MS = 1000; // FR-008: at least once per second
  * nothing to supersede, and `currentSaveIdRef` is never set for it), so
  * without this it leaked forever — the same class of bug as T035, just
  * on a different trigger.
- *
- * `vfsName` defaults to production's OPFS VFS; tests override it to the
- * in-memory test VFS (see tests/helpers/sqlite-test-env.ts), since Node
- * has no OPFS.
  */
 export async function loadSave(
   file: File,
   callbacks: LoadCallbacks,
   signal: AbortSignal,
-  vfsName: string = OPFS_VFS_NAME,
 ): Promise<void> {
   let db: SaveDatabase | null = null;
   let saveId: string | null = null;
@@ -115,9 +117,13 @@ export async function loadSave(
 
     callbacks.onProgress("parsing", null);
     saveId = crypto.randomUUID();
-    db = await openSaveDatabase(saveId, vfsName);
+    db = await openSaveDatabase(saveId);
     await applySchema(db);
     const summary = await adapter(db, saveId, file.name, data);
+
+    // Close before signaling ready — see this function's doc comment.
+    await closeSaveDatabase(db);
+    db = null;
 
     callbacks.onReady({
       saveId,
@@ -135,7 +141,7 @@ export async function loadSave(
     if (db) await closeSaveDatabase(db);
     if (saveId && !reachedReady) {
       try {
-        await deleteSaveDatabase(saveId, vfsName);
+        await deleteSaveDatabase(saveId);
       } catch (cleanupErr) {
         console.error(`Failed to clean up abandoned save ${saveId}`, cleanupErr);
       }
@@ -151,22 +157,19 @@ export interface ResumeCallbacks {
 /**
  * FR-011/Acceptance Scenario 2: resumes a previously kept save by
  * `saveId` — it's already fully parsed and sitting in OPFS, so this
- * skips file-reading/version-detection/parsing entirely and just opens
- * a read-only connection to confirm it's still there and pull the same
+ * skips file-reading/version-detection/parsing entirely and just opens a
+ * connection to confirm it's still there and pull the same
  * `inGameDate`/`playerNationTag` a fresh `loadSave` would have reported.
- * `readonly: true` because this never writes anything (see
- * `openSaveDatabase`'s doc comment for why that also matters for
- * avoiding a main-thread-style OPFS crash, though this runs in the
- * worker regardless, alongside the `keep`/`load` handlers).
+ * Closes before signaling ready, for the same one-handle-per-file reason
+ * documented on `loadSave` above.
  */
 export async function resumeSave(
   saveId: string,
   callbacks: ResumeCallbacks,
-  vfsName: string = OPFS_VFS_NAME,
 ): Promise<void> {
   let db: SaveDatabase | null = null;
   try {
-    db = await openSaveDatabase(saveId, vfsName, { readonly: true });
+    db = await openSaveDatabase(saveId);
     const meta = await getSaveMeta(db);
     if (!meta.inGameDate) {
       callbacks.onError(
@@ -183,6 +186,10 @@ export async function resumeSave(
     const playerNationTag = await getPlayerNationOverview(db)
       .then((overview) => overview.tag)
       .catch(() => "");
+
+    await closeSaveDatabase(db);
+    db = null;
+
     callbacks.onReady({ saveId, inGameDate: meta.inGameDate, playerNationTag });
   } catch (err) {
     callbacks.onError(

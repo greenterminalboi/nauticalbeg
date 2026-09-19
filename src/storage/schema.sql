@@ -1,7 +1,20 @@
--- Schema for a single save's SQLite database (one database per save; see
+-- Schema for a single save's DuckDB database (one database per save; see
 -- data-model.md, corrected against a real save file — see
 -- specs/001-save-import-overview/research-save-format.md). Applied once,
 -- right after a database is created.
+--
+-- DuckDB dialect notes (migrated from SQLite 2026-09-18 — see
+-- ARCHITECTURE.md's storage-engine decision log):
+-- - No `AUTOINCREMENT` keyword; `raw_sections.id` uses an explicit
+--   SEQUENCE instead (DuckDB's idiom for an auto-generated integer key).
+-- - `REFERENCES` foreign-key clauses were dropped, not translated: the
+--   original SQLite schema never ran `PRAGMA foreign_keys=ON`, so they
+--   were already documentation-only, never enforced. The relationships
+--   are unchanged and still documented in each column's comment below.
+-- - `REAL` means 32-bit float in DuckDB (unlike SQLite, where `REAL` is
+--   always a 64-bit double) — confirmed via a real failing test
+--   (27.27 round-tripped as 27.270000457763672). Every column that held
+--   a game stat under `REAL` now uses `DOUBLE` instead.
 
 CREATE TABLE IF NOT EXISTS save_meta (
   id TEXT PRIMARY KEY,
@@ -22,8 +35,8 @@ CREATE TABLE IF NOT EXISTS nations (
   name TEXT,
   country_type TEXT,
   is_player INTEGER NOT NULL DEFAULT 0,
-  treasury REAL,
-  stability REAL,
+  treasury DOUBLE,
+  stability DOUBLE,
   government_type TEXT
   -- at_war is derived at query time from war data, not stored as a column
   -- (see research-save-format.md's war_manager section) — no dedicated
@@ -36,7 +49,7 @@ CREATE TABLE IF NOT EXISTS nations (
 CREATE TABLE IF NOT EXISTS provinces (
   idx INTEGER PRIMARY KEY,
   name TEXT,
-  owner_idx INTEGER REFERENCES nations(idx),
+  owner_idx INTEGER, -- logically REFERENCES nations(idx); see dialect note above
   capital_location_idx INTEGER
 );
 
@@ -45,9 +58,9 @@ CREATE TABLE IF NOT EXISTS provinces (
 -- computed from (see data-model.md's Derived Values section).
 CREATE TABLE IF NOT EXISTS locations (
   idx INTEGER PRIMARY KEY,
-  owner_idx INTEGER REFERENCES nations(idx),
-  province_idx INTEGER REFERENCES provinces(idx),
-  development REAL
+  owner_idx INTEGER, -- logically REFERENCES nations(idx)
+  province_idx INTEGER, -- logically REFERENCES provinces(idx)
+  development DOUBLE
 );
 
 -- Minimal war participation data: only enough to answer "is this nation
@@ -58,7 +71,7 @@ CREATE TABLE IF NOT EXISTS locations (
 -- be queried like any other stat, rather than relying on parser-time
 -- state that no longer exists once a kept save is reopened later.
 CREATE TABLE IF NOT EXISTS war_participants (
-  nation_idx INTEGER NOT NULL REFERENCES nations(idx),
+  nation_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
   status TEXT NOT NULL
 );
 
@@ -73,8 +86,9 @@ CREATE TABLE IF NOT EXISTS war_participants (
 -- `played_country`, once per human player) — those are handled specially
 -- by the adapter and never reach this table, but nothing here assumes a
 -- key is unique in case a future save version has other repeats.
+CREATE SEQUENCE IF NOT EXISTS raw_sections_id_seq;
 CREATE TABLE IF NOT EXISTS raw_sections (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INTEGER PRIMARY KEY DEFAULT nextval('raw_sections_id_seq'),
   key TEXT NOT NULL,
   data TEXT NOT NULL
 );

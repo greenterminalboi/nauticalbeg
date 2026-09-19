@@ -1,0 +1,26 @@
+/* FR-013 "nothing to show": a plain, unhurried folio note — distinct from
+   NotAvailableState's warning treatment (design.md §Components), text
+   carries the distinction, not color alone (constitution Principle VI). */
+.empty-state {
+  max-width: 34rem;
+  margin: var(--space-lg) 0;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-outline-variant);
+}
+
+.empty-state__label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  margin: 0 0 var(--space-xs);
+}
+
+.empty-state__message {
+  font-family: var(--font-body);
+  color: var(--color-on-surface);
+  margin: 0;
+}

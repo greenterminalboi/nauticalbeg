@@ -1,11 +1,12 @@
 // Covers T034 (keepSave/forgetKeptSave/listKeptSave) and T035 (an unkept
 // save's OPFS database actually being cleaned up on replace/teardown).
 //
-// Node/jsdom has no real OPFS, so `deleteSaveDatabase` no-ops for the
-// in-memory test VFS (see db.ts) — the "database is actually removed
-// from disk" half of T035 can only be verified by hand against a real
-// browser (same documented gap as T025's worker/UI click-through). What
-// *is* verified here, against real SQLite state, is the decision logic
+// Node/jsdom has no real OPFS, so `deleteSaveDatabase` no-ops in test
+// mode (see db.ts's `configureDuckDBForTesting`) — the "database is
+// actually removed from disk" half of T035 can only be verified by hand
+// against a real browser (same documented gap as T025's worker/UI
+// click-through). What *is* verified here, against real DuckDB state
+// (not a shim), is the decision logic
 // this bug was about: an unkept save gets `deleteSaveDatabase` invoked
 // for it and a kept one doesn't, on both the "superseded by a new load"
 // and "explicit cleanup" paths, plus the keep/forget/list bookkeeping
@@ -27,10 +28,7 @@ import {
   keepSave,
   listKeptSave,
 } from "../../src/storage/queries";
-import {
-  ensureTestSQLiteConfigured,
-  TEST_VFS_NAME,
-} from "../helpers/sqlite-test-env";
+import { ensureTestDuckDBConfigured } from "../helpers/duckdb-test-env";
 import { toBytes } from "../helpers/encode";
 
 const FIXTURE_PATH = path.resolve(
@@ -40,7 +38,7 @@ const FIXTURE_PATH = path.resolve(
 const fixtureText = readFileSync(FIXTURE_PATH, "utf-8");
 
 async function seedSave(saveId: string): Promise<SaveDatabase> {
-  const database = await openSaveDatabase(saveId, TEST_VFS_NAME);
+  const database = await openSaveDatabase(saveId);
   await applySchema(database);
   await parseAndStore(
     database,
@@ -55,7 +53,7 @@ describe("storage/queries: keep/forget/list and cleanup", () => {
   const openDbs: SaveDatabase[] = [];
 
   beforeAll(() => {
-    ensureTestSQLiteConfigured();
+    ensureTestDuckDBConfigured();
   });
 
   beforeEach(() => {
@@ -122,9 +120,9 @@ describe("storage/queries: keep/forget/list and cleanup", () => {
     openDbs.push(database);
 
     const deleteSpy = vi.spyOn(db, "deleteSaveDatabase");
-    await cleanupSaveIfNotKept("cleanup-unkept", TEST_VFS_NAME);
+    await cleanupSaveIfNotKept("cleanup-unkept");
 
-    expect(deleteSpy).toHaveBeenCalledWith("cleanup-unkept", TEST_VFS_NAME);
+    expect(deleteSpy).toHaveBeenCalledWith("cleanup-unkept");
   });
 
   it("cleanupSaveIfNotKept leaves a kept save's database alone", async () => {
@@ -133,7 +131,7 @@ describe("storage/queries: keep/forget/list and cleanup", () => {
     await keepSave(database, "cleanup-kept");
 
     const deleteSpy = vi.spyOn(db, "deleteSaveDatabase");
-    await cleanupSaveIfNotKept("cleanup-kept", TEST_VFS_NAME);
+    await cleanupSaveIfNotKept("cleanup-kept");
 
     expect(deleteSpy).not.toHaveBeenCalled();
   });
@@ -151,7 +149,7 @@ describe("storage/queries: keep/forget/list and cleanup", () => {
     );
 
     await expect(
-      cleanupSaveIfNotKept("never-existed", TEST_VFS_NAME),
+      cleanupSaveIfNotKept("never-existed"),
     ).resolves.toBeUndefined();
   });
 
@@ -167,7 +165,7 @@ describe("storage/queries: keep/forget/list and cleanup", () => {
     // Simulate a write failure (e.g. storage quota) on the *new* save's
     // own UPDATE — this must happen before the previous kept save is
     // ever touched, so a failure here can't corrupt it.
-    vi.spyOn(second.sqlite3, "exec").mockRejectedValueOnce(
+    vi.spyOn(second.conn, "query").mockRejectedValueOnce(
       new Error("simulated write failure"),
     );
     const deleteSpy = vi.spyOn(db, "deleteSaveDatabase").mockResolvedValue(undefined);

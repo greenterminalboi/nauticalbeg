@@ -3,10 +3,14 @@
 // see contracts/worker-protocol.md for the message contract this
 // implements, and load-save.ts for the real logic (kept separate so it's
 // unit-testable without a real Worker thread).
+//
+// As of the 2026-09-18 DuckDB migration, this worker only ever does
+// file-reading + parsing + storing (`load`/`cancel`) — "keep" moved to
+// the main thread (see FileLoader.tsx) since DuckDB has no SQLite-style
+// restriction requiring writes to originate from a dedicated Worker.
 import type { MainToWorkerMessage, WorkerToMainMessage } from "./protocol";
 import { loadSave, resumeSave } from "./load-save";
-import { closeSaveDatabase, openSaveDatabase } from "../storage/db";
-import { cleanupSaveIfNotKept, markSaveKept } from "../storage/queries";
+import { cleanupSaveIfNotKept } from "../storage/queries";
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 
@@ -79,42 +83,6 @@ async function handleResume(saveId: string): Promise<void> {
   });
 }
 
-/** FR-011/FR-014: mark a save kept, reporting success/failure — see
- * KeepMessage's doc comment in protocol.ts for why the SQL write must
- * run here rather than on the main thread. Only does the write
- * (`markSaveKept`) — the `localStorage` pointer bookkeeping
- * (`recordKeptSave`) happens on the main thread once `kept` arrives,
- * since `localStorage` doesn't exist in a Worker at all. */
-async function handleKeep(saveId: string): Promise<void> {
-  try {
-    const db = await openSaveDatabase(saveId);
-    let summary;
-    try {
-      summary = await markSaveKept(db, saveId);
-    } finally {
-      await closeSaveDatabase(db);
-    }
-    post({ type: "kept", saveId, filename: summary.filename, inGameDate: summary.inGameDate });
-  } catch (err) {
-    const quotaExceeded = isQuotaExceeded(err);
-    post({
-      type: "keep-failed",
-      saveId,
-      message: quotaExceeded
-        ? "Not enough storage space is available to keep this save."
-        : err instanceof Error
-          ? err.message
-          : "Failed to keep this save.",
-      quotaExceeded,
-    });
-  }
-}
-
-function isQuotaExceeded(err: unknown): boolean {
-  if (err instanceof DOMException && err.name === "QuotaExceededError") return true;
-  return err instanceof Error && /quota/i.test(err.message);
-}
-
 ctx.onmessage = (event: MessageEvent<MainToWorkerMessage>) => {
   const message = event.data;
   switch (message.type) {
@@ -130,9 +98,6 @@ ctx.onmessage = (event: MessageEvent<MainToWorkerMessage>) => {
       break;
     case "cancel":
       currentAbortController?.abort();
-      break;
-    case "keep":
-      void handleKeep(message.saveId);
       break;
   }
 };
