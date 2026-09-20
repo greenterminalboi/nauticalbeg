@@ -1,0 +1,44 @@
+.leaderboard-ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+.leaderboard-ranking-table th {
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.leaderboard-ranking-table td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface);
+}
+
+.leaderboard-ranking-table td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard-ranking-table__rank {
+  color: var(--color-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+  width: 2rem;
+}
+
+.leaderboard-ranking-table__swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: var(--space-sm);
+  border: 1px solid var(--color-outline-variant);
+  vertical-align: middle;
+}

@@ -54,6 +54,29 @@ ALTER TABLE nations ADD COLUMN IF NOT EXISTS color_r INTEGER;
 ALTER TABLE nations ADD COLUMN IF NOT EXISTS color_g INTEGER;
 ALTER TABLE nations ADD COLUMN IF NOT EXISTS color_b INTEGER;
 
+-- specs/006-country-leaderboard: true for every country index appearing
+-- as some played_country[*].country (research.md §5/§6) — deliberately
+-- separate from is_player, which only ever tracks the single country
+-- metadata.player_country_name resolves to and also drives that one
+-- country's `name` assignment elsewhere; overloading it here would risk
+-- changing that unrelated behavior.
+ALTER TABLE nations ADD COLUMN IF NOT EXISTS is_human_played INTEGER DEFAULT 0;
+
+-- specs/006-country-leaderboard: one row per (nation, year, metric),
+-- from countries.database[idx].historical_population/historical_tax_base/
+-- historical_economical_base — each a flat per-year array in the save,
+-- year = 1337 + array index (research.md §1/§3). One row per metric
+-- rather than three value columns so a future metric doesn't need a
+-- schema change (data-model.md).
+CREATE TABLE IF NOT EXISTS nation_history (
+  nation_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  year INTEGER NOT NULL,
+  metric TEXT NOT NULL, -- 'population' | 'tax_base' | 'economical_base'
+  value DOUBLE NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_nation_history_nation_metric
+  ON nation_history (nation_idx, metric, year);
+
 -- Coarse historical-province groupings. Ownership/development are NOT
 -- authoritative here for aggregate stats — see `locations` below.
 CREATE TABLE IF NOT EXISTS provinces (

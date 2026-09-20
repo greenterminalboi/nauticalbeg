@@ -393,6 +393,105 @@ export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuff
   );
 }
 
+/**
+ * specs/006-country-leaderboard: every selectable country for the
+ * Leaderboard's search overlay and default-selection computation. Same
+ * `country_type = 'Real'` filter as `listNations` (below) — reused, not
+ * reinvented, per research.md §4 — extended with the three color
+ * columns (already on `nations` since feature 005) and the new
+ * `is_human_played` flag (research.md §5/§6). Save-wide, like
+ * `listWarsArrow`/`listMapLocationsArrow` — not scoped to a selected
+ * nation.
+ */
+export async function listLeaderboardCountriesArrow(db: SaveDatabase): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `SELECT
+       idx,
+       tag,
+       name,
+       color_r,
+       color_g,
+       color_b,
+       is_human_played
+     FROM nations
+     WHERE country_type = 'Real'
+     ORDER BY COALESCE(name, tag)`,
+  );
+}
+
+/**
+ * specs/006-country-leaderboard: one row per `(nation, year, metric)`
+ * for exactly the requested countries — deliberately **not** a
+ * load-everything-once query like `listMapLocationsArrow` (contract's
+ * own note: `nation_history` can be a few-million-row table across a
+ * whole save, so this is re-queried each time the Leaderboard's
+ * selected-country set changes, scoped down every time). Returns every
+ * row including leading zeros — leading-zero suppression (research.md
+ * §8) is applied client-side by `leaderboardData.ts`, not here.
+ */
+export async function listNationHistoryArrow(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<ArrayBuffer> {
+  if (nationIdxs.length === 0) {
+    return queryArrowIPC(
+      db,
+      "SELECT nation_idx, year, metric, value FROM nation_history WHERE FALSE",
+    );
+  }
+  const placeholders = nationIdxs.map((_, i) => `?${i + 1}`).join(", ");
+  return queryArrowIPC(
+    db,
+    `SELECT nation_idx, year, metric, value
+     FROM nation_history
+     WHERE nation_idx IN (${placeholders})
+     ORDER BY nation_idx, metric, year`,
+    nationIdxs,
+  );
+}
+
+/**
+ * specs/006-country-leaderboard treemap stretch goal: one row per
+ * currently-existing `country_type = 'Real'` country with its most-
+ * recently-recorded value for `metric` — the "world total" the
+ * treemap's box areas are shares of. "Currently existing" is checked
+ * directly, not assumed from `country_type = 'Real'` alone: that flag
+ * covers ~2,467 of ~2,470 country slots in a real save (research.md
+ * §4) — the overwhelming majority of which are historical/defunct tags
+ * that formed and were annexed centuries ago, still carrying a stale
+ * `historical_*` value from whenever they were last alive rather than
+ * a real current one. Per direct product correction, "actually exist"
+ * means *currently owns at least one location* (`EXISTS` against
+ * `locations.owner_idx`) — the same territory-ownership signal feature
+ * 005's map already treats as authoritative for "is this country
+ * alive," reused here rather than invented fresh. Deliberately a
+ * SEPARATE, cheap query rather than reusing `listNationHistoryArrow`
+ * against every real country's full history (which would load up to
+ * ~2.1M rows just to find one value each, contradicting that
+ * function's own deliberately-scoped design). Uses DuckDB's
+ * `arg_max(value, year)` aggregate to get each country's value at its
+ * own latest year in one pass, no self-join needed.
+ */
+export async function listLatestNationMetricArrow(
+  db: SaveDatabase,
+  metric: string,
+): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `SELECT
+       nation_history.nation_idx as nation_idx,
+       arg_max(nation_history.value, nation_history.year) as value
+     FROM nation_history
+     JOIN nations ON nations.idx = nation_history.nation_idx
+     WHERE nation_history.metric = ?1
+       AND nations.country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)
+     GROUP BY nation_history.nation_idx`,
+    [metric],
+  );
+}
+
 /** Used on app start to offer resuming a kept save (Acceptance Scenario 2). */
 export async function listKeptSave(): Promise<KeptSaveSummary | null> {
   return readKeptSavePointer();

@@ -1,0 +1,11 @@
+/* Same grid-area/box treatment as CountryViewerNav.css's
+   `.country-viewer-nav` (Country Viewer's own side-nav wrapper) — the
+   Leaderboard's side nav sits in the same `sidenav` shell grid area
+   (Shell.css's `.shell--with-nav`), just without a nation-selector
+   child above the item list. */
+.leaderboard-side-nav {
+  grid-area: sidenav;
+  min-width: 14rem;
+  border-right: 1px solid var(--color-outline-variant);
+  background: var(--color-surface-container);
+}

@@ -761,3 +761,70 @@ own real colors (traced through `common/goods/*.txt` + `common/
 named_colors/02_map.txt` into a committed static table, `rgoGameColors
 .ts`); and the hover tooltip now follows the cursor instead of sitting
 fixed in a corner.
+
+## Country Leaderboard (006) ships: three hand-rolled visualizations, and Perspective ruled out twice on hard evidence (2026-09-20)
+
+`specs/006-country-leaderboard` landed a new "Leaderboard" section
+under Factbook (see below): three pages (Population, Economic Base, Tax
+Base — the only per-year time series the save actually tracks;
+`historical_population`/`historical_tax_base`/`historical_economical_base`
+on each country record, landing in a new `nation_history` table), each
+switchable between a line graph, a ranking table, and a treemap, all
+sharing one search-overlay-driven country selection. Default selection
+is every country the save marks as human-played (`played_country`,
+extended to capture every human player rather than just the first,
+which is all the pre-existing `is_player` column tracked).
+
+**Perspective was investigated twice for this feature's visualizations
+and rejected both times on direct evidence, not assumption** — worth
+recording since it's this app's standard charting tool everywhere else:
+
+1. For the line/wealth charts: every color mode Perspective's chart
+   plugins expose (`"series"` categorical, palette-assigned by split
+   group; `"numeric"`, a continuous gradient) resolves to an
+   auto-assigned or interpolated color — there is no mechanism to bind
+   an arbitrary literal RGB value from a data column to a series, the
+   same gap 005 hit for the map (research.md §7 there).
+2. For the treemap: re-investigated specifically because it looked more
+   promising from the source (`tree-data.ts`'s `palette[dictIdx %
+   paletteSize]`, seeded from a real, documented `ViewerConfig
+   .columns_config`/`sort` config surface — not the undocumented hack
+   it first looked like). Built an actual throwaway spike
+   (`src/PerspectivePalettePoc.tsx`, gated behind a temporary `?poc`
+   flag, fully reverted after) and drove it through a real running
+   browser: the Style editor's actual UI persists a `gradient` key with
+   percentage stops, not the `palette` key its own
+   `column_config_schema()` declares for a string/Hierarchical-category
+   column — confirmed inconsistency in the library, not a
+   misconfiguration here. Even after getting a `gradient` value to
+   round-trip through `columns_config` (confirmed via `viewer.save()`),
+   rendered colors never changed; forcing a repaint via
+   `restyleElement()`/`restore()` threw a WASM `"View not found"` error.
+
+Both charts and the treemap are hand-rolled SVG instead (`LeaderboardChart
+.tsx`, `LeaderboardTreemap.tsx` + `treemapLayout.ts`'s squarified-treemap
+implementation) — consistent with 005's map choice, now confirmed twice
+over for the same underlying reason.
+
+**A real, user-reported bug in the treemap's "Other" bucket**: `country_type
+= 'Real'` (the existing "is this a real nation, not Pirates/DUMMY"
+filter, reused from feature 001) covers ~2,467 of ~2,470 country slots
+in a real save — the overwhelming majority long-defunct historical tags
+that formed and were annexed centuries ago, not currently-alive nations.
+The treemap's "Other" box (every non-selected real country's latest
+value, summed) was silently including all of them, each contributing a
+centuries-stale figure from whenever it was last alive. Fixed by also
+requiring current territory ownership (`EXISTS` against `locations
+.owner_idx`) — the same signal 005's map already treats as
+authoritative for "is this country alive." Verified against a real
+save: contributing countries dropped from 2,467 to 265, Other's share
+of world population dropped from ~99%+ to 60.6%.
+
+**Nav rename, decided alongside this feature**: "Map" → **Atlas**
+(label only); "Encyclopedia" (Countries/Wars/Leaderboard/Characters/
+Markets) → **Factbook** (internal `AppSection` id renamed too, since a
+genuinely new, separate **Encyclopedia** top-level section was added at
+the same time — currently a placeholder). `EncyclopediaTab`/
+`EncyclopediaNav.tsx` were deliberately left named as-is — they
+describe Factbook's own five sub-tabs, a still-accurate name for a
+still-accurate concept independent of the section-level rename.

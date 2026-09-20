@@ -99,6 +99,15 @@ function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
 }
 
+/** specs/006-country-leaderboard research.md §1: a Clausewitz flat
+ * numeric array literal (`{ 0 0 39.18862 ... }`) parses via jomini as a
+ * plain JS array — used for historical_population/historical_tax_base/
+ * historical_economical_base. Filters to actual `number` entries only,
+ * same defensive posture as `asStringArray`. */
+function asNumberArray(value: unknown): number[] {
+  return Array.isArray(value) ? value.filter((v): v is number => typeof v === "number") : [];
+}
+
 /** specs/005-map-visualization research.md §3: a Clausewitz `rgb { r g b
  * }` color literal parses via jomini as `{ rgb: [r, g, b] }`. Returns
  * null (not a partial/fabricated triple) unless all three components are
@@ -165,6 +174,15 @@ export async function parseAndStore(
     playedCountryEntries.length > 0
       ? asNumberOrNull(playedCountryEntries[0].country)
       : null;
+  // specs/006-country-leaderboard research.md §5/§6: every country any
+  // human player controls, not just the single `playerIdx` above (which
+  // only ever looks at the first played_country entry — a real
+  // multiplayer save can have many).
+  const humanPlayedIdxs = new Set(
+    playedCountryEntries
+      .map((e) => asNumberOrNull(e.country))
+      .filter((n): n is number => n !== null),
+  );
 
   const countriesSection = asRecord(root.countries);
   const tags = asRecord(countriesSection.tags) as Record<string, string>; // { "2025": "RUS", ... }
@@ -183,8 +201,19 @@ export async function parseAndStore(
       number | null,
       number | null,
       number | null,
+      number,
     ]
   > = [];
+  // specs/006-country-leaderboard research.md §1/§3: one row per
+  // (nation, year, metric) — year = 1337 + array index, the campaign's
+  // start year derived two independent ways (research.md §3).
+  const HISTORY_START_YEAR = 1337;
+  const HISTORY_METRICS = [
+    ["historical_population", "population"],
+    ["historical_tax_base", "tax_base"],
+    ["historical_economical_base", "economical_base"],
+  ] as const;
+  const nationHistoryRows: Array<[number, number, string, number]> = [];
   for (const [idxStr, tag] of Object.entries(tags)) {
     const record = asRecord(countryDatabase[idxStr]);
     const currencyData = asRecord(record.currency_data);
@@ -192,8 +221,9 @@ export async function parseAndStore(
     // specs/005-map-visualization research.md §3: the country's in-game
     // map color, for the Political/Control layers.
     const rgb = asRgbOrNull(record.color);
+    const idx = Number(idxStr);
     nationRows.push([
-      Number(idxStr),
+      idx,
       tag,
       null, // name: only the player nation gets one, set via UPDATE below once known
       asStringOrNull(record.country_type),
@@ -204,12 +234,24 @@ export async function parseAndStore(
       rgb ? rgb[0] : null,
       rgb ? rgb[1] : null,
       rgb ? rgb[2] : null,
+      humanPlayedIdxs.has(idx) ? 1 : 0,
     ]);
+    for (const [field, metric] of HISTORY_METRICS) {
+      const values = asNumberArray(record[field]);
+      values.forEach((value, i) => {
+        nationHistoryRows.push([idx, HISTORY_START_YEAR + i, metric, value]);
+      });
+    }
   }
   await insertRows(
     db,
-    "INSERT INTO nations (idx, tag, name, country_type, is_player, treasury, stability, government_type, color_r, color_g, color_b) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+    "INSERT INTO nations (idx, tag, name, country_type, is_player, treasury, stability, government_type, color_r, color_g, color_b, is_human_played) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
     nationRows,
+  );
+  await insertRows(
+    db,
+    "INSERT INTO nation_history (nation_idx, year, metric, value) VALUES (?1, ?2, ?3, ?4)",
+    nationHistoryRows,
   );
 
   const provinceDatabase = asRecord(asRecord(root.provinces).database);

@@ -3,10 +3,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { TopBar } from "../../src/components/Overview/TopBar";
 
 describe("TopBar", () => {
-  it("shows all four app sections and the file picker, with no nation selector (decision 2026-09-18: nation picker is Encyclopedia-scoped, not global)", () => {
+  it("shows all five app sections and the file picker, with no nation selector (decision 2026-09-18: nation picker is Factbook-scoped, not global)", () => {
     render(
       <TopBar
-        activeSection="encyclopedia"
+        activeSection="factbook"
         onSelectSection={vi.fn()}
         onFileSelected={vi.fn()}
         keepState={null}
@@ -15,8 +15,9 @@ describe("TopBar", () => {
     );
     expect(screen.getByLabelText(/select an eu5 save file/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /nauticalbot/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^map$/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /encyclopedia/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^atlas$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^factbook$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^encyclopedia$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /settings/i })).toBeInTheDocument();
     expect(screen.queryByRole("combobox", { name: /viewing nation/i })).not.toBeInTheDocument();
     // Independent from the section nav and file picker — no keep/forget button yet.
@@ -33,8 +34,8 @@ describe("TopBar", () => {
         onKeepToggle={vi.fn()}
       />,
     );
-    expect(screen.getByRole("button", { name: /^map$/i })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("button", { name: /encyclopedia/i })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("button", { name: /^atlas$/i })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: /^factbook$/i })).not.toHaveAttribute("aria-current");
     expect(screen.getByRole("button", { name: /keep this save/i })).toBeInTheDocument();
   });
 
@@ -42,7 +43,7 @@ describe("TopBar", () => {
     const onSelectSection = vi.fn();
     render(
       <TopBar
-        activeSection="encyclopedia"
+        activeSection="factbook"
         onSelectSection={onSelectSection}
         onFileSelected={vi.fn()}
         keepState={null}

@@ -10,7 +10,8 @@ interface KeepState {
 
 const SECTIONS: { id: AppSection; label: string }[] = [
   { id: "nauticalbot", label: "NauticalBot" },
-  { id: "map", label: "Map" },
+  { id: "map", label: "Atlas" },
+  { id: "factbook", label: "Factbook" },
   { id: "encyclopedia", label: "Encyclopedia" },
   { id: "settings", label: "Settings" },
 ];
@@ -35,12 +36,13 @@ interface TopBarProps {
 /**
  * The one piece of the shell present in every state and every section,
  * visible from the very first render (before any save is loaded). Holds
- * the app-level section nav (NauticalBot / Map / Encyclopedia /
- * Settings — decision 2026-09-18, renamed 2026-09-19) and the save/keep
- * controls, which are global (a loaded save stays loaded regardless of
- * which section is active). The nation selector is NOT here — it only
- * makes sense within Encyclopedia's "Countries" sub-tab, so it lives
- * there instead (see FileLoader.tsx).
+ * the app-level section nav (NauticalBot / Atlas / Factbook /
+ * Encyclopedia / Settings — decision 2026-09-18, renamed 2026-09-19,
+ * "Map"→"Atlas" and "Encyclopedia"→"Factbook" plus new "Encyclopedia"
+ * added 2026-09-20) and the save/keep controls, which are global (a
+ * loaded save stays loaded regardless of which section is active). The
+ * nation selector is NOT here — it only makes sense within Factbook's
+ * "Countries" sub-tab, so it lives there instead (see FileLoader.tsx).
  */
 export function TopBar({
   activeSection,

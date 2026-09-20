@@ -26,6 +26,9 @@ import { CountryViewerNav } from "./CountryViewerNav";
 import { EncyclopediaNav } from "./EncyclopediaNav";
 import { ErrorMessage } from "./ErrorMessage";
 import { KeptSaveOffer } from "./KeptSaveOffer";
+import { LeaderboardTab } from "./LeaderboardTab";
+import { LeaderboardSideNav } from "./LeaderboardSideNav";
+import type { LeaderboardMetric } from "./leaderboardData";
 import { LoadingCircle } from "./LoadingCircle";
 import { MapTab } from "./MapTab";
 import { OverviewCard } from "./OverviewCard";
@@ -80,14 +83,16 @@ type Status =
 
 /**
  * File picker + worker orchestration, plus the app-level section switch
- * (NauticalBot / Map / Encyclopedia / Settings — decision 2026-09-18,
- * renamed 2026-09-19) and Encyclopedia's own sub-tab switch (Countries /
- * Wars, decision 2026-09-19). The save/keep controls (TopBar) are
- * global — a loaded save stays loaded regardless of which section is
- * active. The nation selector/category tabs (CountryViewerNav) only
- * render within Encyclopedia's "Countries" sub-tab, since they're
- * meaningless anywhere else (including Encyclopedia's own "Wars"
- * sub-tab, which spans multiple countries rather than belonging to one).
+ * (NauticalBot / Atlas / Factbook / Encyclopedia / Settings — decision
+ * 2026-09-18, renamed 2026-09-19, "Map"→"Atlas" and "Encyclopedia"→
+ * "Factbook" plus new "Encyclopedia" placeholder added 2026-09-20) and
+ * Factbook's own sub-tab switch (Countries / Wars, decision 2026-09-19).
+ * The save/keep controls (TopBar) are global — a loaded save stays
+ * loaded regardless of which section is active. The nation selector/
+ * category tabs (CountryViewerNav) only render within Factbook's
+ * "Countries" sub-tab, since they're meaningless anywhere else
+ * (including Factbook's own "Wars" sub-tab, which spans multiple
+ * countries rather than belonging to one).
  *
  * Once parsing succeeds, this opens the one connection to the save that
  * stays open for the rest of the "ready" session (see `readDbRef`) —
@@ -104,8 +109,9 @@ type Status =
  * `keepSave` doc comment), so there's no worker round-trip for this.
  */
 export function FileLoader() {
-  const [activeSection, setActiveSection] = useState<AppSection>("encyclopedia");
+  const [activeSection, setActiveSection] = useState<AppSection>("factbook");
   const [encyclopediaTab, setEncyclopediaTab] = useState<EncyclopediaTab>("countries");
+  const [leaderboardMetric, setLeaderboardMetric] = useState<LeaderboardMetric>("population");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const workerRef = useRef<Worker | null>(null);
   // Tracks the most recently ready save's id so the beforeunload handler
@@ -351,20 +357,32 @@ export function FileLoader() {
 
   const isReady = status.kind === "ready";
   const isLoadingSave = isLoadingStatus(status);
-  const isEncyclopedia = activeSection === "encyclopedia";
-  const showCountriesNav = isEncyclopedia && encyclopediaTab === "countries" && isReady;
-  const shellClassName = showCountriesNav
-    ? "shell shell--with-nav"
-    : isEncyclopedia
-      ? "shell shell--with-subnav"
-      : "shell";
+  // Named for the section's internal id, not its display label — this
+  // is Factbook (formerly "Encyclopedia"; renamed 2026-09-20 once a
+  // separate, new "Encyclopedia" section existed too — see tabs.ts).
+  const isFactbook = activeSection === "factbook";
+  const showCountriesNav = isFactbook && encyclopediaTab === "countries" && isReady;
+  // Same gating as showCountriesNav (isReady + a loaded db), so the side
+  // nav only appears once there's actually a save to page metrics for —
+  // mirrors Wars/Map's own isReady + readDbRef.current guard elsewhere
+  // in this file.
+  const showLeaderboardNav =
+    isFactbook && encyclopediaTab === "leaderboard" && isReady && !!readDbRef.current;
+  const shellClassName =
+    showCountriesNav || showLeaderboardNav
+      ? "shell shell--with-nav"
+      : isFactbook
+        ? "shell shell--with-subnav"
+        : "shell";
   // Decision 2026-09-19: every Perspective-backed data table (not
   // Overview/placeholders) uses the full main content width — see
   // Shell.css's `--full-width` modifier doc comment. Extend this
-  // condition as more Perspective tabs get built (Leaderboard/
-  // Characters/Markets are still ComingSoonPlaceholder for now).
+  // condition as more Perspective tabs get built (Characters/Markets
+  // are still ComingSoonPlaceholder for now). Leaderboard
+  // (specs/006-country-leaderboard) is real now too, but isn't
+  // Perspective-backed — its own CSS bounds its width instead.
   const isTableTab =
-    (isEncyclopedia && encyclopediaTab === "wars" && isReady) ||
+    (isFactbook && encyclopediaTab === "wars" && isReady) ||
     (showCountriesNav && status.kind === "ready" && status.activeTab === "provinces");
   // The Map tab (once a save is actually loaded — the pre-load "select a
   // save" message stays in the normal padded/centered layout) wants the
@@ -389,7 +407,7 @@ export function FileLoader() {
         onKeepToggle={handleKeepToggle}
         loadedFilename={isReady ? status.filename : null}
       />
-      {isEncyclopedia && <EncyclopediaNav activeTab={encyclopediaTab} onSelectTab={setEncyclopediaTab} />}
+      {isFactbook && <EncyclopediaNav activeTab={encyclopediaTab} onSelectTab={setEncyclopediaTab} />}
       {showCountriesNav && (
         <CountryViewerNav
           nations={status.nations}
@@ -398,6 +416,9 @@ export function FileLoader() {
           activeTab={status.activeTab}
           onSelectTab={handleSelectTab}
         />
+      )}
+      {showLeaderboardNav && (
+        <LeaderboardSideNav activeMetric={leaderboardMetric} onSelectMetric={setLeaderboardMetric} />
       )}
       <main className={mainClassName}>
         <div className={mainInnerClassName}>
@@ -419,7 +440,8 @@ export function FileLoader() {
                   <p>Select a save file above to get started.</p>
                 ))}
               {activeSection === "settings" && <ComingSoonPlaceholder feature="Settings" />}
-              {isEncyclopedia && encyclopediaTab === "countries" && (
+              {activeSection === "encyclopedia" && <ComingSoonPlaceholder feature="Encyclopedia" />}
+              {isFactbook && encyclopediaTab === "countries" && (
                 <StatusView
                   status={status}
                   db={readDbRef.current}
@@ -427,7 +449,7 @@ export function FileLoader() {
                   onDismissKeptSaveOffer={handleDismissKeptSaveOffer}
                 />
               )}
-              {isEncyclopedia && encyclopediaTab === "wars" && (
+              {isFactbook && encyclopediaTab === "wars" && (
                 // Wars is save-wide, not nation-scoped (research.md-style
                 // decision 2026-09-19 — see tabs.ts), so it only needs a
                 // loaded save, not a selected nation. Reuses the same idle
@@ -438,13 +460,19 @@ export function FileLoader() {
                   <p>Select a save file above to get started.</p>
                 )
               )}
-              {isEncyclopedia && encyclopediaTab === "leaderboard" && (
-                <ComingSoonPlaceholder feature="Leaderboard" />
+              {isFactbook && encyclopediaTab === "leaderboard" && (
+                // Save-wide, not nation-scoped, same isReady + readDbRef.current
+                // gate and idle wording as Wars/Map above.
+                isReady && readDbRef.current ? (
+                  <LeaderboardTab db={readDbRef.current} activeMetric={leaderboardMetric} />
+                ) : (
+                  <p>Select a save file above to get started.</p>
+                )
               )}
-              {isEncyclopedia && encyclopediaTab === "characters" && (
+              {isFactbook && encyclopediaTab === "characters" && (
                 <ComingSoonPlaceholder feature="Characters" />
               )}
-              {isEncyclopedia && encyclopediaTab === "markets" && <ComingSoonPlaceholder feature="Markets" />}
+              {isFactbook && encyclopediaTab === "markets" && <ComingSoonPlaceholder feature="Markets" />}
             </>
           )}
         </div>

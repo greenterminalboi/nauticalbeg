@@ -1,0 +1,47 @@
+.leaderboard-treemap {
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 6px;
+  padding: var(--space-md);
+}
+
+.leaderboard-treemap__title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-on-surface-variant);
+  margin: 0 0 var(--space-sm);
+}
+
+.leaderboard-treemap__svg {
+  width: 100%;
+  height: auto;
+}
+
+.leaderboard-treemap__box {
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+
+.leaderboard-treemap__label {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  fill: #fff;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 2px;
+}
+
+.leaderboard-treemap__tooltip rect {
+  fill: var(--color-surface-container-high);
+  stroke: var(--color-outline-variant);
+  stroke-width: 1;
+}
+
+.leaderboard-treemap__tooltip text {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  fill: var(--color-on-surface);
+}

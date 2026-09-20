@@ -1,19 +1,24 @@
 /**
  * Which top-level app section is active: NauticalBot (the future AI
- * copilot, constitution Principle VIII), Map, Encyclopedia (the
- * per-save reference browser — formerly "Country Viewer," renamed and
- * given its own sub-navigation, decision 2026-09-19, since it now
- * covers more than just per-nation data), or Settings. Plain component
+ * copilot, constitution Principle VIII), Atlas (the map — labeled "Map"
+ * until 2026-09-20), Factbook (the per-save reference browser —
+ * formerly "Country Viewer," then "Encyclopedia"; internal id renamed
+ * `"factbook"` on 2026-09-20 specifically so it stops colliding with
+ * the *new*, separate "Encyclopedia" section below — the two are not
+ * the same thing despite the name history), Encyclopedia (new
+ * 2026-09-20, currently a placeholder), or Settings. Plain component
  * state, not routing — see research.md §4. Global save/keep controls
- * stay visible across every section; only Encyclopedia has a
+ * stay visible across every section; only Factbook has a
  * sub-navigation, and only its "Countries" sub-tab has a nation
  * selector and category tabs.
  */
-export type AppSection = "nauticalbot" | "map" | "encyclopedia" | "settings";
+export type AppSection = "nauticalbot" | "map" | "factbook" | "encyclopedia" | "settings";
 
 /**
- * Which sub-tab is active *within* Encyclopedia (decision 2026-09-19):
- * "Countries" is exactly what the whole Encyclopedia section used to be
+ * Which sub-tab is active *within* Factbook (decision 2026-09-19,
+ * section itself renamed from "Encyclopedia" to "Factbook" 2026-09-20 —
+ * this type's own name is unchanged, still describes the same five
+ * sub-tabs): "Countries" is exactly what the whole section used to be
  * (nation selector + category tabs, below); "Wars," "Leaderboard,"
  * "Characters," and "Markets" are sibling save-wide reference browsers
  * at the same level, not nested under Countries — each spans multiple

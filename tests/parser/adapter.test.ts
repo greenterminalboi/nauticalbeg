@@ -329,6 +329,68 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     expect(declinedNotAtWar[0].at_war).toBe(false);
   });
 
+  it("sets is_human_played for every played_country entry's country, not just the first (specs/006-country-leaderboard)", async () => {
+    // The fixture has three played_country entries: the original
+    // (dangling, country=1576 — doesn't match any nation, see above) plus
+    // two added for this feature, referencing RUS (2025) and SCA (3).
+    // is_player/name resolution (existing behavior) only ever looks at
+    // the first entry; is_human_played must look at all of them.
+    const database = await freshDb("adapter-human-played.db");
+    await parseAndStore(database, "save-16", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rus = await queryAll(database, "SELECT is_human_played FROM nations WHERE idx = 2025");
+    expect(rus[0]).toMatchObject({ is_human_played: 1 });
+
+    const sca = await queryAll(database, "SELECT is_human_played FROM nations WHERE idx = 3");
+    expect(sca[0]).toMatchObject({ is_human_played: 1 });
+
+    // DUMMY (idx 0) is never referenced by any played_country entry.
+    const dummy = await queryAll(database, "SELECT is_human_played FROM nations WHERE idx = 0");
+    expect(dummy[0]).toMatchObject({ is_human_played: 0 });
+  });
+
+  it("populates nation_history from historical_population/historical_tax_base/historical_economical_base, year = 1337 + array index (specs/006-country-leaderboard research.md §1, §3)", async () => {
+    const database = await freshDb("adapter-nation-history.db");
+    await parseAndStore(database, "save-17", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    // SCA (idx 3): 3 real entries per metric, no leading zeros.
+    const scaPopulation = await queryAll(
+      database,
+      "SELECT year, value FROM nation_history WHERE nation_idx = 3 AND metric = 'population' ORDER BY year",
+    );
+    expect(scaPopulation).toEqual([
+      { year: 1337, value: 12.10004 },
+      { year: 1338, value: 12.34517 },
+      { year: 1339, value: 12.55029 },
+    ]);
+    const scaTaxBase = await queryAll(
+      database,
+      "SELECT year, value FROM nation_history WHERE nation_idx = 3 AND metric = 'tax_base' ORDER BY year",
+    );
+    expect(scaTaxBase.map((r) => r.year)).toEqual([1337, 1338, 1339]);
+    const scaEconomicalBase = await queryAll(
+      database,
+      "SELECT year, value FROM nation_history WHERE nation_idx = 3 AND metric = 'economical_base' ORDER BY year",
+    );
+    expect(scaEconomicalBase.map((r) => r.year)).toEqual([1337, 1338, 1339]);
+
+    // RUS (idx 2025): leading zeros at indices 0/1 (years 1337/1338) are
+    // still stored as real, raw rows (data-model.md: suppression is a
+    // presentation-layer concern applied when reading this table, not a
+    // filter applied when populating it — constitution Principle IV).
+    const rusPopulation = await queryAll(
+      database,
+      "SELECT year, value FROM nation_history WHERE nation_idx = 2025 AND metric = 'population' ORDER BY year",
+    );
+    expect(rusPopulation).toEqual([
+      { year: 1337, value: 0 },
+      { year: 1338, value: 0 },
+      { year: 1339, value: 39.18862 },
+      { year: 1340, value: 39.55171 },
+      { year: 1341, value: 40.01348 },
+    ]);
+  });
+
   it("populates wars from war_manager.database (Encyclopedia's Wars tab)", async () => {
     const database = await freshDb("adapter-wars.db");
     await parseAndStore(database, "save-12", "rus-1628-minimal.eu5", toBytes(fixtureText));

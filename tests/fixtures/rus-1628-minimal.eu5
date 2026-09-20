@@ -93,6 +93,9 @@ countries={
 				ruler=16861698
 				heir=16858582
 			}
+			historical_population={ 12.10004 12.34517 12.55029 }
+			historical_tax_base={ 3.10422 3.20981 3.31557 }
+			historical_economical_base={ 4.02218 4.11837 4.20956 }
 		}
 		2025={
 			country_name={
@@ -136,6 +139,9 @@ countries={
 				consort=83894681
 				heir=33645428
 			}
+			historical_population={ 0 0 39.18862 39.55171 40.01348 }
+			historical_tax_base={ 0 0 10.44219 10.61903 10.79581 }
+			historical_economical_base={ 0 0 13.02218 13.24891 13.47501 }
 		}
 	}
 }
@@ -378,5 +384,19 @@ played_country={
 	id=2
 	same_name=yes
 	country=1576
+	player_proficiency=EXPERT
+}
+played_country={
+	name="nautical_boi"
+	id=4
+	same_name=yes
+	country=2025
+	player_proficiency=EXPERT
+}
+played_country={
+	name="some garlic"
+	id=6
+	same_name=yes
+	country=3
 	player_proficiency=EXPERT
 }
