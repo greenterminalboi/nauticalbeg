@@ -385,6 +385,11 @@ export function FileLoader() {
   const isTableTab =
     (isFactbook && encyclopediaTab === "wars" && isReady) ||
     (showCountriesNav && status.kind === "ready" && status.activeTab === "provinces");
+  // The Encyclopedia section (008) wants the full main content width too
+  // — same reasoning as the table tabs above (a lot of browsable content,
+  // not the bounded/centered default), even though it isn't
+  // Perspective-backed either (same as Leaderboard's own case).
+  const isEncyclopediaSection = activeSection === "encyclopedia";
   // The Map tab (once a save is actually loaded — the pre-load "select a
   // save" message stays in the normal padded/centered layout) wants the
   // full remaining viewport edge-to-edge, not just the full width
@@ -394,7 +399,7 @@ export function FileLoader() {
   const mainClassName = isMapTab ? "shell__main shell__main--flush" : "shell__main";
   const mainInnerClassName = isMapTab
     ? "shell__main-inner shell__main-inner--full-width shell__main-inner--flush"
-    : isTableTab
+    : isTableTab || isEncyclopediaSection
       ? "shell__main-inner shell__main-inner--full-width"
       : "shell__main-inner";
 
