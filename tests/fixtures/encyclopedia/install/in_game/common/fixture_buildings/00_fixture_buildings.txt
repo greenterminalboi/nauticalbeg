@@ -1,0 +1,9 @@
+fixture_stable = {
+	category = infrastructure_category
+	build_time = 10
+}
+
+fixture_academy = {
+	category = infrastructure_category
+	build_time = 20
+}

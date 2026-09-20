@@ -1,0 +1,4 @@
+broken_entry = {
+	category = raw_material
+	note = "unterminated string triggers a real jomini parse error
+}

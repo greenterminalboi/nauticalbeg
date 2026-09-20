@@ -1,6 +1,21 @@
 <!--
 Sync Impact Report
 ==================
+Version change: 1.1.2 → 1.2.0
+Rationale: MINOR — Technical Constraints' game-asset redistribution rule gains
+a narrow, explicit exception: structured game-mechanics reference data (keys,
+localized names/descriptions, numeric values) derived from the base game's own
+files MAY be extracted and shipped as part of the app's own Encyclopedia
+feature, mirroring the existing rgoGameColors.ts precedent. Icons/textures/art
+remain forbidden to commit or ship — those stay local-install-only. Applies to
+base game and DLC content alike, on the same structured-data-yes/art-no terms.
+No existing principle redefined or removed, so this is additive guidance, not
+a MAJOR change.
+
+Modified sections: Technical Constraints (redistribution bullet split into
+the general rule plus a new Encyclopedia-data exception bullet).
+
+--- Prior report (v1.1.2) ---
 Version change: 1.1.1 → 1.1.2
 Rationale: PATCH — the Technical Constraints cross-reference to
 architecture_constitution.md named `wa-sqlite` specifically; genericized to
@@ -191,6 +206,25 @@ promise of accurate representation.
   and any reference assets used for presentation (e.g., a base map) MUST be
   either originally created, licensed, or sourced from data the user's own game
   installation/save provides.
+- **Encyclopedia-data exception**: structured game-mechanics reference data —
+  internal keys, localized display names, localized descriptions, and
+  numeric/mechanical values (prices, costs, production figures, and similar) —
+  derived from the base game's own definition and localization files MAY be
+  extracted, stored, and shipped/committed as part of the application's own
+  reference Encyclopedia feature. This is factual/informational game-mechanics
+  content, analogous to a fan wiki, not creative/artistic content, and mirrors
+  the existing precedent of committing `src/components/Overview/rgoGameColors.ts`
+  (a resolved color table derived the same way). The exception is narrow: it
+  does NOT lift the ban above on icons, textures, or other raw art/image
+  assets — those remain forbidden to commit or ship, and any icon/art display
+  MUST be resolved only from the user's own local game installation at
+  runtime/generation-time, never bundled into the repository or served to
+  other users. The exception covers game files generated against — base
+  game and any DLC content present in that local installation alike — on
+  the same terms: structured mechanics data (keys, localized names/
+  descriptions, numeric values) may be extracted and shipped; icons,
+  textures, and other art/image assets from DLC are bound by the same
+  local-install-only rule as base-game art.
 - Any server-side component MUST minimize retention of user save data per
   Principle I and MUST document what is stored, for how long, and why.
 - The parsing layer MUST be decoupled from the visualization layer (parsed data
@@ -242,4 +276,4 @@ Repeated or systemic violations should prompt a constitution amendment
 (if the rule is wrong) rather than repeated ad-hoc exceptions (if the rule is
 right but frequently ignored).
 
-**Version**: 1.1.2 | **Ratified**: 2026-09-17 | **Last Amended**: 2026-09-18
+**Version**: 1.2.0 | **Ratified**: 2026-09-17 | **Last Amended**: 2026-09-20

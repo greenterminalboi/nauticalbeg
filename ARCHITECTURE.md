@@ -828,3 +828,70 @@ the same time — currently a placeholder). `EncyclopediaTab`/
 `EncyclopediaNav.tsx` were deliberately left named as-is — they
 describe Factbook's own five sub-tabs, a still-accurate name for a
 still-accurate concept independent of the section-level rename.
+
+## Game Encyclopedia (008) ships: a second data source entirely outside the save pipeline, and a constitution amendment to allow it (2026-09-20)
+
+`specs/008-game-encyclopedia` filled in the top-level **Encyclopedia**
+placeholder from feature 006 with a browsable, searchable reference of
+the game's own definitions — goods, buildings, religions, traits, units,
+and the rest of its ~124 `game/in_game/common/` categories plus the
+`game_concepts` glossary — scraped from a local EU5 installation (base
+game **and** owned DLC) rather than from any save file. This is a
+deliberately different data source from everything else in this app:
+`tools/encyclopedia-scraping/` (mirrors `tools/map-generation`'s
+`--install` CLI convention) parses the game's own `.txt`/`.yml` files
+with the existing `jomini` dependency — the same Clausewitz grammar it
+already parses for saves — and writes static JSON to
+`public/encyclopedia/` (mirrors `public/map/*.topojson`'s "generate
+once, fetch on demand" pattern), never touching `src/storage/`'s
+per-save DuckDB schema. The Encyclopedia section renders with or without
+a loaded save.
+
+**Constitution amended (v1.1.2 → v1.2.0) before this feature could be
+built at all**: the existing Technical Constraints flatly banned
+redistributing Paradox's game text/assets as part of the app. A narrow
+**Encyclopedia-data exception** now permits shipping *structured*
+game-mechanics data (keys, localized names/descriptions, numeric
+values) — factual/informational content, not creative art — while the
+ban on icons/textures/other art stays exactly as strict as before: this
+feature ships zero image files (verified: `git ls-files` for
+`.dds`/`.png`/`.jpg`/etc. under `public/encyclopedia/` and
+`tools/encyclopedia-scraping/` returns nothing). The exception covers
+DLC content on the same terms as the base game.
+
+**The game already has its own "Europedia"** (confirmed:
+`main_menu/localization/english/encyclopedia_l_english.yml`'s
+`HEADING_ENCYCLOPEDIA: "Europedia"`) — its own 40-page curated list and
+a 2,633-line hand-written `game_concepts` glossary are used as a
+labeling/priority signal (`categories.ts`'s `CategoryMeta.label` prefers
+the game's own page wording), not as a hard inclusion filter — several
+categories the game's own Europedia widget has no dedicated page for
+(`goods_demand`, `production_methods`, `prices`) are still included,
+since they're exactly what a planned Production/Trade/Markets feature
+will need.
+
+**Two real bugs found and fixed by actually running generation against
+the real local install, not just reading the code:**
+
+1. `game_concepts` entries localize under a `game_concept_<key>` prefix
+   (e.g. the definition key `modifier` has no `modifier` loc string at
+   all, only `game_concept_modifier: "Modifier"`) — before this was
+   known, only 90 of 696 real entries resolved a name. Fixed with a
+   category-specific lookup in `write-output.ts`; verified 696/696 after.
+2. `generate.ts`'s own category loop only ever iterates the committed
+   `categories.ts` table, so it could never by itself notice a new
+   category folder a future game patch adds — `warnOnUnlistedCategories`
+   closes that gap with an explicit disk-listing scan, run once per
+   generation (verified: zero unlisted categories against the real
+   install today).
+
+Cross-references between entries (e.g. a building's `category` field →
+a Building Categories entry) are resolved once at generation time
+against *every* parsed category, including excluded ones — a reference
+to an excluded category's key renders as a real (if unresolved) link
+note rather than silently vanishing, while a reference to a genuinely
+absent DLC key produces no link at all (there's no way to tell "meant
+to reference something now missing" from "never was a reference").
+24,658 real cross-references were found this way on the first real
+generation run, across 8,935 entries with at least one (every parsed
+`building_types` entry had at least one).

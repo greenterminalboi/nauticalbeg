@@ -24,6 +24,7 @@ import {
 import { ComingSoonPlaceholder } from "./ComingSoonPlaceholder";
 import { CountryViewerNav } from "./CountryViewerNav";
 import { EncyclopediaNav } from "./EncyclopediaNav";
+import { EncyclopediaSection } from "./EncyclopediaSection";
 import { ErrorMessage } from "./ErrorMessage";
 import { KeptSaveOffer } from "./KeptSaveOffer";
 import { LeaderboardTab } from "./LeaderboardTab";
@@ -440,7 +441,7 @@ export function FileLoader() {
                   <p>Select a save file above to get started.</p>
                 ))}
               {activeSection === "settings" && <ComingSoonPlaceholder feature="Settings" />}
-              {activeSection === "encyclopedia" && <ComingSoonPlaceholder feature="Encyclopedia" />}
+              {activeSection === "encyclopedia" && <EncyclopediaSection />}
               {isFactbook && encyclopediaTab === "countries" && (
                 <StatusView
                   status={status}

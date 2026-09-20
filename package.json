@@ -11,6 +11,7 @@
     "test": "vitest run",
     "generate:map": "tsx tools/map-generation/generate.ts",
     "schema-map": "tsx tools/schema-mapping/generate.ts",
+    "generate:encyclopedia": "tsx tools/encyclopedia-scraping/generate.ts",
     "postinstall": "patch-package"
   },
   "keywords": [],

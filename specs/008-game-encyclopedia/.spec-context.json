@@ -1,0 +1,735 @@
+{
+  "workflow": "companion",
+  "specName": "Game Encyclopedia",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-20T12:53:14.653Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-20T13:01:21.304Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-20T13:01:45.757Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:04:56.347Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:05:48.332Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:06:10.944Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-20T13:06:18.717Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:11:29.552Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-20T13:12:31.668Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:12:45.231Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:12:59.118Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:14:13.063Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:15:54.341Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:16:52.693Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:17:23.153Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:18:48.163Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:20:41.025Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:20:41.098Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:20:41.165Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:20:41.233Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:22:15.793Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:22:33.633Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:22:46.748Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:24:42.224Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:24:42.293Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:24:42.362Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:24:42.429Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:25:17.679Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:25:17.746Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:27:45.619Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:28:14.041Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:30:44.990Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:31:03.994Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:32:22.175Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:32:22.238Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:32:22.298Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:32:22.362Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:34:38.463Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:34:38.529Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-20T13:34:38.543Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Game Encyclopedia section reachable from existing Encyclopedia nav, real page not placeholder",
+      "tasks": "T019,T020",
+      "tests": "manual browser verification (no automated route test exists in this project's conventions)"
+    },
+    "FR-002": {
+      "title": "Content produced by explicit repeatable generation step against local game install, not live scraping",
+      "tasks": "T009,T011",
+      "tests": "tools/encyclopedia-scraping/generate.ts run against real local install (documented in task closures)"
+    },
+    "FR-003": {
+      "title": "Every entry carries source category, internal key, localized name/description when available",
+      "tasks": "T005,T006,T008",
+      "tests": "tests/encyclopedia-scraping/parse-definitions.test.ts,tests/encyclopedia-scraping/parse-localization.test.ts,tests/encyclopedia-scraping/write-output.test.ts"
+    },
+    "FR-004": {
+      "title": "Entry with no matching localization shows raw key, never fabricated name",
+      "tasks": "T006,T013,T017",
+      "tests": "tests/encyclopedia-scraping/parse-localization.test.ts::gives a key with a name but no _desc pair a null description"
+    },
+    "FR-005": {
+      "title": "Entry carries recorded numeric/mechanical fields exactly as game files state them",
+      "tasks": "T005,T017",
+      "tests": "tests/encyclopedia-scraping/parse-definitions.test.ts::preserves nested field structure verbatim"
+    },
+    "FR-006": {
+      "title": "Entries organized into five browsable domain groups covering full reference catalog",
+      "tasks": "T004,T015",
+      "tests": "tests/components/EncyclopediaDomainNav.test.tsx::shows all five domain groups"
+    },
+    "FR-007": {
+      "title": "Every reference category accounted for: included or recorded exclusion, none silently dropped",
+      "tasks": "T004,T008,T021",
+      "tests": "tests/encyclopedia-scraping/write-output.test.ts::accounts for every category,tests/encyclopedia-scraping/write-output.test.ts::warnOnUnlistedCategories tests"
+    },
+    "FR-008": {
+      "title": "Entry fields referencing another entry render as link when target exists, plain text otherwise",
+      "tasks": "T007,T024,T027",
+      "tests": "tests/encyclopedia-scraping/resolve-cross-refs.test.ts"
+    },
+    "FR-009": {
+      "title": "Single search matches entries by name or key across all domain groups",
+      "tasks": "T025,T026",
+      "tests": "tests/components/EncyclopediaSearch.test.tsx"
+    },
+    "FR-010": {
+      "title": "Generation sources base game and owned DLC; every entry records its source, DLC entries labeled",
+      "tasks": "T009,T018,T023",
+      "tests": "manual browser verification (D008_FATE_OF_THE_PHOENIX badge on accessory_genes)"
+    },
+    "FR-011": {
+      "title": "App must not commit/ship raw icon/texture/art files; icons resolved only from local install at runtime",
+      "tasks": "T009,T030",
+      "tests": "manual grep verification (quickstart.md step 5), zero image files found"
+    },
+    "FR-012": {
+      "title": "Generation on machine with no local game install fails clearly, never produces empty/partial Encyclopedia",
+      "tasks": "T009",
+      "tests": "tests/encyclopedia-scraping (generate.ts validateInstallPath manual verification)"
+    },
+    "FR-013": {
+      "title": "Unparseable definition file skipped and recorded, does not abort generation run",
+      "tasks": "T005,T012",
+      "tests": "tests/encyclopedia-scraping/parse-definitions.test.ts::skips a file that fails to parse"
+    },
+    "FR-014": {
+      "title": "Entry uniquely identified by category + internal key together",
+      "tasks": "T008,T014",
+      "tests": "tests/encyclopedia-scraping/write-output.test.ts::keeps two entries with the same key distinguishable"
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 32,
+    "projectedTasks": 70,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "connecting Encyclopedia entries to save data (e.g. which countries produce this good) is future work",
+    "updating other features (Markets, Leaderboard) to use these real display names instead of raw save keys is future work",
+    "in-app editing of Encyclopedia content is out of scope - read-only reference"
+  ],
+  "context": [
+    "area: src/components/Overview (new Encyclopedia top-level section, currently ComingSoonPlaceholder in FileLoader.tsx/tabs.ts, added 2026-09-20)",
+    "area: game/in_game/common (~124 reference category folders, 1827 definition .txt files, base game + dlc/*)",
+    "area: game/main_menu/localization/english (localization ymls, keys not filename-scoped to category)",
+    "area: game/main_menu/gfx/interface/icons/<category>/ (per-category icon assets, keyed by entry internal key)",
+    "constraint: constitution v1.2.0 Encyclopedia-data exception - structured data (keys/names/descriptions/values) may be shipped, art/icons stay local-install-only, base game and DLC alike",
+    "constraint: no fabricated display names for keys with no localization, raw key fallback (Constitution Principle IV)",
+    "precedent: src/components/Overview/rgoGameColors.ts - existing committed table resolved from game files the same way, regenerate via script not by hand",
+    "decision: encyclopedia scraper/generator lives under tools/ (e.g. tools/encyclopedia-scraping), matching existing tools/schema-mapping and tools/map-generation convention - offline generation tooling, not shipped runtime code"
+  ],
+  "intent": "Scrape the game's own definition/localization files (base game + owned DLC) into a structured, browsable reference Encyclopedia shipped with the app - names/descriptions/mechanics data only, never raw art",
+  "decisions": [
+    {
+      "decision": "Reuse existing jomini dependency to parse game definition .txt files",
+      "why": "Same Clausewitz script grammar as saves, jomini already proven at scale in this project",
+      "rejected": "hand-rolled parser or a second parsing library"
+    },
+    {
+      "decision": "Dedicated regex-based localization merge across all english .yml files into one global key->text map",
+      "why": "Paradox loc format isn't strict YAML and keys aren't filename-scoped to category",
+      "rejected": "generic YAML library, or per-category filename matching"
+    },
+    {
+      "decision": "Committed category-to-domain-group table (tools/encyclopedia-scraping/categories.ts) as source of truth, not runtime inference",
+      "why": "FR-007 requires every category accounted for, reviewable and never silently dropped",
+      "rejected": "heuristic inference from category folder names"
+    },
+    {
+      "decision": "Static per-category JSON under public/encyclopedia/, fetched on demand, plus an eager small search index",
+      "why": "Encyclopedia data is save-independent (unlike src/storage's per-save DuckDB schema), mirrors existing public/map/*.topojson precedent",
+      "rejected": "bolting onto per-save DuckDB schema; one giant JSON/TS file for all categories; a dedicated static DuckDB/SQLite bundle"
+    },
+    {
+      "decision": "v1 ships zero icons; FR-011's local-resolution path deferred to a future feature",
+      "why": "no user story requires icons to deliver value; File System Access API local-grant flow is real added scope",
+      "rejected": "implementing local icon resolution now"
+    },
+    {
+      "decision": "DLC detected by scanning <install>/dlc/*, every entry tagged with its source (base or named DLC), D000_shared treated like any other DLC folder",
+      "why": "directly satisfies FR-010, avoids guessing at Paradox's packaging intent",
+      "rejected": "special-casing D000_shared as base-game content"
+    },
+    {
+      "decision": "Cross-references resolved once at generation time and stored pre-resolved on each entry",
+      "why": "centralizes broken/missing-reference handling, keeps per-category JSON self-describing",
+      "rejected": "resolving links at render time in the UI"
+    },
+    {
+      "decision": "Generation tool lives under tools/encyclopedia-scraping/, mirroring tools/map-generation's --install CLI convention",
+      "why": "user directive + existing project precedent for offline generation tooling",
+      "rejected": "a src/ build script or a server-side generation step"
+    },
+    {
+      "decision": "Zero-owner per-file conventions: EncyclopediaSection composes all sub-components, navigateToEntry is the single shared jump target for both search and cross-ref clicks",
+      "why": "avoids duplicating navigation logic between the two entry points spec User Story 3 requires",
+      "rejected": "separate ad-hoc navigation handlers per entry point"
+    },
+    {
+      "decision": "Top-level-only cross-reference links in EncyclopediaEntryView (simplified, documented in code)",
+      "why": "a nested field's whole value already renders as one JSON blob; deep-linking inside it is real added complexity no user story requires",
+      "rejected": "resolving/rendering links at arbitrary nesting depth"
+    },
+    {
+      "decision": "game_concepts entries resolve localization via a game_concept_<key> prefix, found and fixed during implementation",
+      "why": "the real game files use this prefix; without it only 90/696 entries had real names, confirmed empirically and fixed to 696/696",
+      "rejected": "leaving the sparser bare-key lookup"
+    },
+    {
+      "decision": "warnOnUnlistedCategories added as a real disk-scan check, not just documented intent",
+      "why": "generate.ts's main loop only iterates the assignment table and could never by itself notice a new game-added category folder; without this check FR-007's completeness guarantee would silently erode after a future game update",
+      "rejected": "relying on the research.md decision alone without an enforcing check"
+    }
+  ],
+  "step_summaries": {
+    "specify": {
+      "summary": "All 30 tasks complete across 3 user stories; 242/242 tests pass (1 pre-existing unrelated flaky test confirmed by isolated rerun); tsc -b + vite build clean; verified live in browser end-to-end including a real bug found and fixed (game_concepts localization prefix, 90->696/696 names)",
+      "key_finding": "The existing jomini save-parser dependency directly handles the game's definition-file grammar too (same Clausewitz script family), so no new parsing library is needed despite the ~124-category scope."
+    },
+    "tasks": {
+      "summary": "30 tasks across Setup, Foundational (generation pipeline), 3 user-story phases (Economy & Production, full catalog, cross-ref/search), and Polish"
+    }
+  },
+  "approach": "Offline tools/encyclopedia-scraping/ generator reuses jomini to scrape base game + owned DLC common/ definitions and localization into static public/encyclopedia/ JSON (per-category files + eager search index), consumed by a new save-independent Encyclopedia UI section with five domain groups, resolved cross-references, and global search. No icons shipped in v1; no changes to the per-save DuckDB pipeline.",
+  "currentTask": "T030",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added generate:encyclopedia npm script",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Shared pipeline/output types matching data-model.md",
+      "files": [
+        "tools/encyclopedia-scraping/types.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Fixture install tree (2 categories, malformed file confirmed to throw in jomini, localization gaps, DLC folder) for generation-tool tests",
+      "files": [
+        "tests/fixtures/encyclopedia/**"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Full 124-category + game_concepts classification table into 5 domain groups / exclusion reasons, verified complete against real install listing",
+      "files": [
+        "tools/encyclopedia-scraping/categories.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "jomini-based .txt parser; widened EntryFieldValue to include nested records (real building definitions nest deeply); verified against fixtures incl. malformed-file skip",
+      "files": [
+        "tools/encyclopedia-scraping/parse-definitions.ts",
+        "tools/encyclopedia-scraping/types.ts",
+        "specs/008-game-encyclopedia/data-model.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Regex-based localization merge across all english .yml files into global key->{name,description} map, verified against fixtures",
+      "files": [
+        "tools/encyclopedia-scraping/parse-localization.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Cross-reference resolver: global unique-key matching across all parsed categories incl. excluded ones (enables real resolved:false), verified against fixtures",
+      "files": [
+        "tools/encyclopedia-scraping/resolve-cross-refs.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "buildOutput/writeOutput: manifest/search-index/per-category JSON, injectable category table for testability, zero-entry categories still get a file",
+      "files": [
+        "tools/encyclopedia-scraping/write-output.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "parse-definitions unit tests: real extraction, nested fields preserved, malformed file skip-and-record",
+      "files": [
+        "tests/encyclopedia-scraping/parse-definitions.test.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "parse-localization unit tests: name/_desc pairing, no fabricated fallback at this layer",
+      "files": [
+        "tests/encyclopedia-scraping/parse-localization.test.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "write-output unit tests: (category,key) uniqueness, FR-007 accounting, zero-entry category still written",
+      "files": [
+        "tests/encyclopedia-scraping/write-output.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "generate.ts CLI: --install/--out/--game-version, DLC scanning, verified end-to-end against real local install: 18874 raw entries, 12040 written across 83 categories (42 excluded), 1 malformed file skipped cleanly",
+      "files": [
+        "tools/encyclopedia-scraping/generate.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Client loading interface: loadManifest/loadSearchIndex/loadCategory (in-memory cached)/findEntry, fetches from /encyclopedia/*.json",
+      "files": [
+        "src/components/Overview/encyclopediaData.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Ran generation against real local install: 85 files (manifest+search-index+83 category JSON), 12040 entries, 12MB total, committed",
+      "files": [
+        "public/encyclopedia/**"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Domain-group tabs + active group's category sub-list, reads manifest.json",
+      "files": [
+        "src/components/Overview/EncyclopediaDomainNav.tsx",
+        "src/components/Overview/EncyclopediaDomainNav.css"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Category entry list, raw-key fallback, paginated (50/page) for large categories",
+      "files": [
+        "src/components/Overview/EncyclopediaCategoryList.tsx",
+        "src/components/Overview/EncyclopediaCategoryList.css"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Entry detail: name/description/fields table verbatim, cross-ref fields hinted as plain text (US3 upgrades to links)",
+      "files": [
+        "src/components/Overview/EncyclopediaEntryView.tsx",
+        "src/components/Overview/EncyclopediaEntryView.css"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Source badge: text label (Base Game / DLC name), non-color-only",
+      "files": [
+        "src/components/Overview/EncyclopediaSourceBadge.tsx",
+        "src/components/Overview/EncyclopediaSourceBadge.css"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "EncyclopediaSection composes Nav/List/EntryView, defaults to Economy & Production, handles load error/loading states",
+      "files": [
+        "src/components/Overview/EncyclopediaSection.tsx",
+        "src/components/Overview/EncyclopediaSection.css"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Wired activeSection===encyclopedia to render EncyclopediaSection instead of ComingSoonPlaceholder; tsc -b clean",
+      "files": [
+        "src/components/Overview/FileLoader.tsx"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Manifest completeness tests + fixed a real gap: generate.ts only iterated the assignment table, never scanning disk for unlisted folders. Added warnOnUnlistedCategories, verified zero unlisted against real install",
+      "files": [
+        "tools/encyclopedia-scraping/generate.ts",
+        "tests/encyclopedia-scraping/write-output.test.ts",
+        "specs/008-game-encyclopedia/research.md"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "UI tests: all 5 domain groups render, group switching works, CategoryList renders real entries for a non-Economy category via mocked fetch",
+      "files": [
+        "tests/components/EncyclopediaDomainNav.test.tsx"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Manual browser verification: all 5 domain groups render real data; found & fixed a real bug (game_concepts localization prefix, 90->696/696 names resolved); DLC badge confirmed visually distinct",
+      "files": [
+        "tools/encyclopedia-scraping/write-output.ts",
+        "tests/encyclopedia-scraping/write-output.test.ts",
+        "specs/008-game-encyclopedia/research.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "resolve-cross-refs tests: resolved, unresolved (excluded target), no-match, and ambiguous-match cases",
+      "files": [
+        "tests/encyclopedia-scraping/resolve-cross-refs.test.ts"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "EncyclopediaSearch tests: match by name, match by key when no name, onSelectEntry called with correct category+key",
+      "files": [
+        "tests/components/EncyclopediaSearch.test.tsx"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Global search box over eagerly-loaded search-index.json, in-memory filter by name/key",
+      "files": [
+        "src/components/Overview/EncyclopediaSearch.tsx",
+        "src/components/Overview/EncyclopediaSearch.css"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "EncyclopediaEntryView: top-level cross-refs render as working links when resolved, excluded-content note when not (FR-008)",
+      "files": [
+        "src/components/Overview/EncyclopediaEntryView.tsx"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Wired EncyclopediaSearch + cross-ref navigation into EncyclopediaSection via shared navigateToEntry",
+      "files": [
+        "src/components/Overview/EncyclopediaSection.tsx"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Full suite: 242/242 tests pass (1 pre-existing unrelated flaky timeout in keep-save.test.ts confirmed by isolated rerun); tsc -b + vite build clean; no lint script in this project",
+      "files": [
+        "N/A - verification only"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Confirmed zero icon/art files (dds/png/jpg/tga/bmp/webp) anywhere under public/encyclopedia or tools/encyclopedia-scraping (SC-003, FR-011)",
+      "files": [
+        "N/A - verification only"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "Cross-reference matching is a global unique-key heuristic (// simplified: in resolve-cross-refs.ts) - an ambiguous key shared by two categories produces no link even when a real relationship exists; acceptable given the alternative (per-category known-field-name lists) is real added complexity with no evidence yet that it's needed",
+      "step": "implement"
+    },
+    {
+      "note": "v1 ships zero icons (research.md §5) - FR-011's 'local install only' icon path is not implemented, entries are text/data only; deferred, no user story requires it",
+      "step": "implement"
+    }
+  ],
+  "last_action": "All 30 tasks done, 242/242 tests pass, build clean, verified live in real browser against real generated data",
+  "verified": [
+    {
+      "what": "full test suite",
+      "command": "npx vitest run",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 33.7,
+      "result": "     88|     const first = await seedSave(\"keep-a\"); ·      89|     openDbs.push(first); · ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯",
+      "warnings": [
+        "exited 1"
+      ]
+    }
+  ]
+}

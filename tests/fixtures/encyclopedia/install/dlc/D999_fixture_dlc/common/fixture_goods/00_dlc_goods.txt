@@ -1,0 +1,4 @@
+fixture_silk = {
+	category = raw_material
+	default_market_price = 5
+}

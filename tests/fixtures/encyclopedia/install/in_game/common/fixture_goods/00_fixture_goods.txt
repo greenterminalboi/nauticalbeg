@@ -1,0 +1,10 @@
+fixture_horses = {
+	category = raw_material
+	default_market_price = 3
+	built_from = fixture_stable
+}
+
+fixture_clay = {
+	category = raw_material
+	default_market_price = 0.5
+}

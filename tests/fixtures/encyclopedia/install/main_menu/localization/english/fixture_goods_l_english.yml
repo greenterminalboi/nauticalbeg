@@ -1,0 +1,4 @@
+l_english:
+ fixture_horses: "Fixture Horses"
+ fixture_horses_desc: "A fixture good used for testing."
+ fixture_clay: "Fixture Clay"

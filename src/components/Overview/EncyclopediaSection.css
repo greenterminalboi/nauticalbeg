@@ -1,0 +1,16 @@
+.encyclopedia-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.encyclopedia-section__status {
+  color: var(--color-on-surface-variant);
+  padding: var(--space-lg);
+}
+
+.encyclopedia-section__content {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: flex-start;
+}

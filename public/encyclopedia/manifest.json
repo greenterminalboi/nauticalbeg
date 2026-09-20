@@ -1,0 +1,752 @@
+{
+  "generatedAt": "2026-09-20T13:29:43.921Z",
+  "gameVersion": "1.3.11",
+  "dlcs": [
+    "D000_shared",
+    "D008_fate_of_the_phoenix",
+    "D015_ancient_monuments_pack",
+    "D017_sacred_sites_pack"
+  ],
+  "domainGroups": [
+    {
+      "id": "government-society",
+      "label": "Government & Society",
+      "categories": [
+        {
+          "id": "advances",
+          "label": "Advances",
+          "entryCount": 3160,
+          "excluded": false
+        },
+        {
+          "id": "bureaucracies",
+          "label": "Bureaucracies",
+          "entryCount": 25,
+          "excluded": false
+        },
+        {
+          "id": "cabinet_actions",
+          "label": "Cabinet Actions",
+          "entryCount": 73,
+          "excluded": false
+        },
+        {
+          "id": "country_ranks",
+          "label": "Country Ranks",
+          "entryCount": 4,
+          "excluded": false
+        },
+        {
+          "id": "designated_heir_reason",
+          "label": "Designated Heir Reasons",
+          "entryCount": 7,
+          "excluded": false
+        },
+        {
+          "id": "estate_privileges",
+          "label": "Estate Privileges",
+          "entryCount": 261,
+          "excluded": false
+        },
+        {
+          "id": "estates",
+          "label": "Estate Types",
+          "entryCount": 8,
+          "excluded": false
+        },
+        {
+          "id": "formable_countries",
+          "label": "Formable Countries",
+          "entryCount": 151,
+          "excluded": false
+        },
+        {
+          "id": "government_reforms",
+          "label": "Government Reforms",
+          "entryCount": 328,
+          "excluded": false
+        },
+        {
+          "id": "government_types",
+          "label": "Government Types",
+          "entryCount": 5,
+          "excluded": false
+        },
+        {
+          "id": "heir_selections",
+          "label": "Heir Selections",
+          "entryCount": 44,
+          "excluded": false
+        },
+        {
+          "id": "institution",
+          "label": "Institutions",
+          "entryCount": 18,
+          "excluded": false
+        },
+        {
+          "id": "laws",
+          "label": "Laws",
+          "entryCount": 196,
+          "excluded": false
+        },
+        {
+          "id": "location_ranks",
+          "label": "Location Ranks",
+          "entryCount": 4,
+          "excluded": false
+        },
+        {
+          "id": "parliament_agendas",
+          "label": "Parliament Agendas",
+          "entryCount": 128,
+          "excluded": false
+        },
+        {
+          "id": "parliament_issues",
+          "label": "Parliament Issues",
+          "entryCount": 160,
+          "excluded": false
+        },
+        {
+          "id": "parliament_types",
+          "label": "Parliament Types",
+          "entryCount": 14,
+          "excluded": false
+        },
+        {
+          "id": "policies",
+          "label": "Policies",
+          "entryCount": 0,
+          "excluded": false
+        },
+        {
+          "id": "regencies",
+          "label": "Regency Types",
+          "entryCount": 15,
+          "excluded": false
+        },
+        {
+          "id": "societal_values",
+          "label": "Societal Values",
+          "entryCount": 17,
+          "excluded": false
+        },
+        {
+          "id": "town_rights",
+          "label": "Urban Rights",
+          "entryCount": 50,
+          "excluded": false
+        },
+        {
+          "id": "game_concepts",
+          "label": "Game Concepts",
+          "entryCount": 696,
+          "excluded": false
+        }
+      ]
+    },
+    {
+      "id": "world-events",
+      "label": "World & Events",
+      "categories": [
+        {
+          "id": "age",
+          "label": "Ages",
+          "entryCount": 6,
+          "excluded": false
+        },
+        {
+          "id": "climates",
+          "label": "Climates",
+          "entryCount": 8,
+          "excluded": false
+        },
+        {
+          "id": "disasters",
+          "label": "Disasters",
+          "entryCount": 36,
+          "excluded": false
+        },
+        {
+          "id": "diseases",
+          "label": "Diseases",
+          "entryCount": 7,
+          "excluded": false
+        },
+        {
+          "id": "missions",
+          "label": "Missions",
+          "entryCount": 11,
+          "excluded": false
+        },
+        {
+          "id": "movements",
+          "label": "Movements",
+          "entryCount": 4,
+          "excluded": false
+        },
+        {
+          "id": "rebel_demands",
+          "label": "Rebel Demands",
+          "entryCount": 13,
+          "excluded": false
+        },
+        {
+          "id": "situations",
+          "label": "Situations",
+          "entryCount": 22,
+          "excluded": false
+        },
+        {
+          "id": "topography",
+          "label": "Topographies",
+          "entryCount": 22,
+          "excluded": false
+        },
+        {
+          "id": "vegetation",
+          "label": "Vegetation",
+          "entryCount": 7,
+          "excluded": false
+        }
+      ]
+    },
+    {
+      "id": "culture-religion-characters",
+      "label": "Culture, Religion & Characters",
+      "categories": [
+        {
+          "id": "artist_types",
+          "label": "Artists",
+          "entryCount": 13,
+          "excluded": false
+        },
+        {
+          "id": "artist_work",
+          "label": "Artist Work",
+          "entryCount": 21,
+          "excluded": false
+        },
+        {
+          "id": "avatars",
+          "label": "Avatars",
+          "entryCount": 20,
+          "excluded": false
+        },
+        {
+          "id": "character_interactions",
+          "label": "Character Interactions",
+          "entryCount": 34,
+          "excluded": false
+        },
+        {
+          "id": "child_educations",
+          "label": "Child Educations",
+          "entryCount": 6,
+          "excluded": false
+        },
+        {
+          "id": "culture_groups",
+          "label": "Culture Groups",
+          "entryCount": 209,
+          "excluded": false
+        },
+        {
+          "id": "cultures",
+          "label": "Cultures",
+          "entryCount": 2087,
+          "excluded": false
+        },
+        {
+          "id": "death_reason",
+          "label": "Death Reasons",
+          "entryCount": 51,
+          "excluded": false
+        },
+        {
+          "id": "ethnicities",
+          "label": "Ethnicities",
+          "entryCount": 60,
+          "excluded": false
+        },
+        {
+          "id": "genes",
+          "label": "Genes",
+          "entryCount": 6,
+          "excluded": false
+        },
+        {
+          "id": "gods",
+          "label": "Gods",
+          "entryCount": 127,
+          "excluded": false
+        },
+        {
+          "id": "holy_site_types",
+          "label": "Holy Site Types",
+          "entryCount": 10,
+          "excluded": false
+        },
+        {
+          "id": "holy_sites",
+          "label": "Holy Sites",
+          "entryCount": 241,
+          "excluded": false
+        },
+        {
+          "id": "language_families",
+          "label": "Language Families",
+          "entryCount": 56,
+          "excluded": false
+        },
+        {
+          "id": "languages",
+          "label": "Languages",
+          "entryCount": 528,
+          "excluded": false
+        },
+        {
+          "id": "religion_groups",
+          "label": "Religion Groups",
+          "entryCount": 29,
+          "excluded": false
+        },
+        {
+          "id": "religions",
+          "label": "Religions",
+          "entryCount": 293,
+          "excluded": false
+        },
+        {
+          "id": "religious_aspects",
+          "label": "Religious Aspects",
+          "entryCount": 177,
+          "excluded": false
+        },
+        {
+          "id": "religious_factions",
+          "label": "Religious Factions",
+          "entryCount": 5,
+          "excluded": false
+        },
+        {
+          "id": "religious_figures",
+          "label": "Religious Figures",
+          "entryCount": 2,
+          "excluded": false
+        },
+        {
+          "id": "religious_focuses",
+          "label": "Religious Focuses",
+          "entryCount": 8,
+          "excluded": false
+        },
+        {
+          "id": "religious_schools",
+          "label": "Religious Schools",
+          "entryCount": 43,
+          "excluded": false
+        },
+        {
+          "id": "traits",
+          "label": "Traits",
+          "entryCount": 147,
+          "excluded": false
+        }
+      ]
+    },
+    {
+      "id": "economy-production",
+      "label": "Economy & Production",
+      "categories": [
+        {
+          "id": "building_categories",
+          "label": "Building Categories",
+          "entryCount": 15,
+          "excluded": false
+        },
+        {
+          "id": "building_types",
+          "label": "Buildings",
+          "entryCount": 465,
+          "excluded": false
+        },
+        {
+          "id": "employment_systems",
+          "label": "Employment Systems",
+          "entryCount": 6,
+          "excluded": false
+        },
+        {
+          "id": "goods",
+          "label": "Goods",
+          "entryCount": 74,
+          "excluded": false
+        },
+        {
+          "id": "goods_demand",
+          "label": "Goods Demand",
+          "entryCount": 355,
+          "excluded": false
+        },
+        {
+          "id": "goods_demand_category",
+          "label": "Goods Demand Categories",
+          "entryCount": 13,
+          "excluded": false
+        },
+        {
+          "id": "pop_types",
+          "label": "Social Classes",
+          "entryCount": 8,
+          "excluded": false
+        },
+        {
+          "id": "prices",
+          "label": "Prices",
+          "entryCount": 400,
+          "excluded": false
+        },
+        {
+          "id": "production_methods",
+          "label": "Production Methods",
+          "entryCount": 90,
+          "excluded": false
+        },
+        {
+          "id": "road_types",
+          "label": "Road Types",
+          "entryCount": 4,
+          "excluded": false
+        }
+      ]
+    },
+    {
+      "id": "military-diplomacy",
+      "label": "Military & Diplomacy",
+      "categories": [
+        {
+          "id": "casus_belli",
+          "label": "Casus Belli",
+          "entryCount": 102,
+          "excluded": false
+        },
+        {
+          "id": "chivalric_orders",
+          "label": "Chivalric Orders",
+          "entryCount": 15,
+          "excluded": false
+        },
+        {
+          "id": "country_interactions",
+          "label": "Country Interactions",
+          "entryCount": 138,
+          "excluded": false
+        },
+        {
+          "id": "diplomatic_costs",
+          "label": "Diplomatic Costs",
+          "entryCount": 29,
+          "excluded": false
+        },
+        {
+          "id": "hegemons",
+          "label": "Hegemons",
+          "entryCount": 5,
+          "excluded": false
+        },
+        {
+          "id": "international_organization_payments",
+          "label": "International Organization Payments",
+          "entryCount": 10,
+          "excluded": false
+        },
+        {
+          "id": "international_organization_special_statuses",
+          "label": "International Organization Special Statuses",
+          "entryCount": 26,
+          "excluded": false
+        },
+        {
+          "id": "international_organizations",
+          "label": "International Organization Types",
+          "entryCount": 36,
+          "excluded": false
+        },
+        {
+          "id": "levies",
+          "label": "Levies",
+          "entryCount": 43,
+          "excluded": false
+        },
+        {
+          "id": "peace_treaties",
+          "label": "Peace Treaties",
+          "entryCount": 64,
+          "excluded": false
+        },
+        {
+          "id": "recruitment_method",
+          "label": "Recruitment Methods",
+          "entryCount": 4,
+          "excluded": false
+        },
+        {
+          "id": "resolutions",
+          "label": "Resolutions",
+          "entryCount": 21,
+          "excluded": false
+        },
+        {
+          "id": "subject_military_stances",
+          "label": "Subject Military Stances",
+          "entryCount": 6,
+          "excluded": false
+        },
+        {
+          "id": "subject_types",
+          "label": "Subject Types",
+          "entryCount": 20,
+          "excluded": false
+        },
+        {
+          "id": "unit_abilities",
+          "label": "Unit Abilities",
+          "entryCount": 17,
+          "excluded": false
+        },
+        {
+          "id": "unit_categories",
+          "label": "Unit Categories",
+          "entryCount": 10,
+          "excluded": false
+        },
+        {
+          "id": "unit_types",
+          "label": "Unit Types",
+          "entryCount": 323,
+          "excluded": false
+        },
+        {
+          "id": "wargoals",
+          "label": "War Goals",
+          "entryCount": 68,
+          "excluded": false
+        }
+      ]
+    }
+  ],
+  "excludedCategories": [
+    {
+      "id": "ai_diplochance",
+      "reason": "AI-internal diplomacy scoring, not player-facing",
+      "excluded": true
+    },
+    {
+      "id": "ai_personalities",
+      "reason": "AI-internal behavior tuning, not player-facing",
+      "excluded": true
+    },
+    {
+      "id": "ai_scripted_expansion_score",
+      "reason": "AI-internal scoring table",
+      "excluded": true
+    },
+    {
+      "id": "ai_scripted_expansion_target",
+      "reason": "AI-internal scoring table",
+      "excluded": true
+    },
+    {
+      "id": "alert_descriptions",
+      "reason": "Internal UI alert text definitions, not a reference concept",
+      "excluded": true
+    },
+    {
+      "id": "area_preferences",
+      "reason": "AI-internal targeting weights",
+      "excluded": true
+    },
+    {
+      "id": "attribute_columns",
+      "reason": "Internal UI table layout configuration",
+      "excluded": true
+    },
+    {
+      "id": "auto_modifiers",
+      "reason": "Internal scripted-modifier plumbing, not a player concept",
+      "excluded": true
+    },
+    {
+      "id": "biases",
+      "reason": "Internal AI/character bias scoring",
+      "excluded": true
+    },
+    {
+      "id": "country_description_categories",
+      "reason": "Internal UI text categorization",
+      "excluded": true
+    },
+    {
+      "id": "customizable_localization",
+      "reason": "Internal templated-text plumbing",
+      "excluded": true
+    },
+    {
+      "id": "effect_localization",
+      "reason": "Internal script-effect text templates",
+      "excluded": true
+    },
+    {
+      "id": "generic_action_ai_lists",
+      "reason": "AI-internal action-list plumbing",
+      "excluded": true
+    },
+    {
+      "id": "generic_actions",
+      "reason": "Internal action-definition plumbing, low standalone reference value",
+      "excluded": true
+    },
+    {
+      "id": "historical_scores",
+      "reason": "Internal scoring/leaderboard weighting, not a browsable concept",
+      "excluded": true
+    },
+    {
+      "id": "insults",
+      "reason": "Flavor-text string list, not a mechanic",
+      "excluded": true
+    },
+    {
+      "id": "international_organization_land_ownership_rules",
+      "reason": "Internal rules plumbing, covered conceptually by international_organizations",
+      "excluded": true
+    },
+    {
+      "id": "join_war_rules",
+      "reason": "Internal rules plumbing",
+      "excluded": true
+    },
+    {
+      "id": "mission_task_defs",
+      "reason": "Internal mission-scripting plumbing",
+      "excluded": true
+    },
+    {
+      "id": "music_player_tracks",
+      "reason": "Audio asset listing, not gameplay reference",
+      "excluded": true
+    },
+    {
+      "id": "on_action",
+      "reason": "Internal scripted event-hook plumbing",
+      "excluded": true
+    },
+    {
+      "id": "persistent_dna",
+      "reason": "Internal character-generation data",
+      "excluded": true
+    },
+    {
+      "id": "rival_criteria",
+      "reason": "Internal AI rivalry-scoring plumbing",
+      "excluded": true
+    },
+    {
+      "id": "script_values",
+      "reason": "Internal scripting constants",
+      "excluded": true
+    },
+    {
+      "id": "scriptable_hints",
+      "reason": "Internal UI tooltip-hint plumbing",
+      "excluded": true
+    },
+    {
+      "id": "scripted_country_names",
+      "reason": "Internal name-generation lists",
+      "excluded": true
+    },
+    {
+      "id": "scripted_diplomatic_objectives",
+      "reason": "Internal AI objective scripting",
+      "excluded": true
+    },
+    {
+      "id": "scripted_effects",
+      "reason": "Internal scripting library",
+      "excluded": true
+    },
+    {
+      "id": "scripted_geography",
+      "reason": "Internal scripting helper definitions",
+      "excluded": true
+    },
+    {
+      "id": "scripted_guis",
+      "reason": "Internal UI scripting",
+      "excluded": true
+    },
+    {
+      "id": "scripted_lists",
+      "reason": "Internal scripting library",
+      "excluded": true
+    },
+    {
+      "id": "scripted_modifiers",
+      "reason": "Internal scripting library",
+      "excluded": true
+    },
+    {
+      "id": "scripted_relations",
+      "reason": "Internal scripting library",
+      "excluded": true
+    },
+    {
+      "id": "scripted_rules",
+      "reason": "Internal scripting library",
+      "excluded": true
+    },
+    {
+      "id": "scripted_triggers",
+      "reason": "Internal scripting library",
+      "excluded": true
+    },
+    {
+      "id": "tests",
+      "reason": "Developer test data, not game content",
+      "excluded": true
+    },
+    {
+      "id": "town_setups",
+      "reason": "Internal city-generation setup data, low standalone reference value",
+      "excluded": true
+    },
+    {
+      "id": "trait_flavor",
+      "reason": "Internal flavor-text variants for traits, covered by the traits category itself",
+      "excluded": true
+    },
+    {
+      "id": "trigger_localization",
+      "reason": "Internal scripting-trigger text templates",
+      "excluded": true
+    },
+    {
+      "id": "tutorial_lesson_chains",
+      "reason": "Internal tutorial sequencing, not reference content",
+      "excluded": true
+    },
+    {
+      "id": "tutorial_lessons",
+      "reason": "Tutorial UI flow content, not an encyclopedia concept",
+      "excluded": true
+    },
+    {
+      "id": "unit_formation_preference",
+      "reason": "AI-internal formation-preference scoring",
+      "excluded": true
+    }
+  ]
+}

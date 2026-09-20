@@ -1,0 +1,17 @@
+.encyclopedia-source-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  background: var(--color-surface-container-high);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  white-space: nowrap;
+}
+
+.encyclopedia-source-badge--dlc {
+  color: var(--color-tertiary-container);
+  border-color: var(--color-tertiary);
+}
