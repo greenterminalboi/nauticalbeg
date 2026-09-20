@@ -61,12 +61,13 @@ client-side/in-browser only; no server-side component is introduced.
 **Project Type**: Single web application (existing `src/` tree) — no new
 top-level project, no backend/service split.
 
-**Performance Goals**: All three graphs render within a couple seconds
-of opening Encyclopedia → Leaderboard for the default (human-played)
+**Performance Goals**: The default Graph view renders within a couple
+seconds of opening Factbook → Leaderboard (renamed from "Encyclopedia"
+2026-09-20 — see tasks.md's addendum) for the default (human-played)
 selection (spec SC-002); adding/removing a country via search updates
-all three graphs with no perceptible delay (spec SC-005); zooming in
-on a graph narrows its visible range in under 1 second, same for reset
-(spec SC-004, FR-013).
+every metric page/view with no perceptible delay (spec SC-005); zooming
+in on a graph narrows its visible range in under 1 second, same for
+reset (spec SC-004, FR-013).
 
 **Constraints**: No new charting/rendering dependency (constitution
 Principle VII, research.md §7); heavy/blocking work must not freeze the

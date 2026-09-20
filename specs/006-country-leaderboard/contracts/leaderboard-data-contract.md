@@ -3,10 +3,12 @@
 Extends `specs/001-save-import-overview/contracts/data-access-contract.md`
 and `specs/005-map-visualization/contracts/map-data-contract.md` rather
 than replacing them — every existing function is unchanged. This
-feature adds two new query functions, one new parser-time population
-step, and one new table, all read-only against the already-open,
-main-thread connection (per 001's `readDbRef` pattern) — nothing here
-ever writes to the save's database after import.
+feature adds three new query functions (a third,
+`listLatestNationMetricArrow`, added post-implementation for the
+Treemap stretch goal — see tasks.md's addendum), one new parser-time
+population step, and one new table, all read-only against the
+already-open, main-thread connection (per 001's `readDbRef` pattern) —
+nothing here ever writes to the save's database after import.
 
 ## Schema additions (see `data-model.md` for full field lists/rationale)
 
@@ -50,6 +52,7 @@ The existing `nationRows` extraction loop (already reading
 |---|---|---|
 | `listLeaderboardCountriesArrow(db: SaveDatabase): Promise<ArrayBuffer>` | Arrow IPC buffer, one row per selectable country: `{ idx, tag, name, color_r, color_g, color_b, is_human_played }` | `SELECT idx, tag, name, color_r, color_g, color_b, is_human_played FROM nations WHERE country_type = 'Real' ORDER BY COALESCE(name, tag)` — same `country_type = 'Real'` filter as the existing nation selector (`queries.ts:155`, research.md §4), extended with the three color columns and the new flag. Backs both the search overlay's list and the initial default-selection computation (client-side: rows where `is_human_played = 1`). |
 | `listNationHistoryArrow(db: SaveDatabase, nationIdxs: number[]): Promise<ArrayBuffer>` | Arrow IPC buffer, one row per `(nation, year, metric)` for the requested countries only: `{ nation_idx, year, metric, value }` | `SELECT nation_idx, year, metric, value FROM nation_history WHERE nation_idx IN (...) ORDER BY nation_idx, metric, year` — scoped to the caller's current selection (unlike `listMapLocationsArrow`'s save-wide load, `nation_history` can be a few-million-row table across the whole save per data-model.md's volume note, so this one is deliberately **not** load-everything-up-front; it's re-queried each time the selected-country set changes). |
+| `listLatestNationMetricArrow(db: SaveDatabase, metric: string): Promise<ArrayBuffer>` | Arrow IPC buffer, one row per **currently-existing** real country for the given metric: `{ nation_idx, value }`, `value` being that country's most-recently-recorded value (`arg_max(value, year)`) | `SELECT nation_history.nation_idx, arg_max(nation_history.value, nation_history.year) as value FROM nation_history JOIN nations ON nations.idx = nation_history.nation_idx WHERE nation_history.metric = ?1 AND nations.country_type = 'Real' AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx) GROUP BY nation_history.nation_idx` — save-wide (every real, currently-existing country, not scoped to a selection), but still cheap: at most one row per country, not per year. **"Currently existing" is checked directly** (the `EXISTS` clause), not assumed from `country_type = 'Real'` alone — that flag alone covers ~2,467 of ~2,470 country slots in a real save (research.md §4), the overwhelming majority long-defunct historical tags that formed and were annexed centuries ago, still carrying a stale value from whenever they were last alive. Added post-implementation, once the Treemap stretch goal's "Other" bucket was found (via real user testing against a real save) to be silently including thousands of these — see tasks.md's addendum for the before/after numbers. Backs the Treemap view only; `LeaderboardTab.tsx` cross-references this against the shared selection to split rows into "gets its own box" vs. "folds into Other." |
 
 ## Consumer contract (what the Leaderboard page may assume)
 
@@ -85,3 +88,13 @@ The existing `nationRows` extraction loop (already reading
   Leaderboard page must show its empty/placeholder state (spec FR-011)
   in that case, the same as the "no save loaded" case, rather than
   erroring.
+- Call `listLatestNationMetricArrow` once per `(save, active metric
+  page)` pair — it is independent of the current country selection (it
+  covers every currently-existing real country, not just selected
+  ones), so it does not need re-querying on every search-overlay
+  add/remove the way `listNationHistoryArrow` does, only when the
+  active metric page changes. A country absent from its result has
+  never recorded a value for that metric at all (not the same as
+  having ceased to exist with a recorded value of `0`) — treat it the
+  same as "no data," never as an implicit zero, consistent with
+  `listNationHistoryArrow`'s own missing-year convention above.

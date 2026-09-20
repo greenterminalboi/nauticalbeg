@@ -150,25 +150,29 @@ exists.
 - **FR-001**: The app MUST provide a Leaderboard page, reachable from
   the app's existing navigation as a real, working page rather than a
   "coming soon" stand-in.
-- **FR-002**: The Leaderboard page MUST display three line graphs, one
-  per metric the save tracks over time — population, economic base, and
-  tax base — all sourced from the currently loaded save's per-country
-  historical data. All three are shown simultaneously; none is selected
-  via a toggle (revised during implementation — see User Story 3's
-  revision note).
-- **FR-003**: All three graphs MUST cover the full historical range
-  available in the loaded save — from the campaign's start through the
-  save's current in-game date — not just a recent window, unless the
-  user has zoomed in (User Story 3), in which case the zoomed range
-  applies to that graph only.
-- **FR-004**: Each graph MUST plot one line per currently selected
-  country, and all three graphs MUST always reflect the same set of
-  selected countries (selection is shared across all three, not
-  independent per graph).
-- **FR-005**: Each country's line MUST be rendered in that country's
-  actual in-game map color. A country with no confirmed in-game color
-  MUST use the app's existing neutral fallback color, never a fabricated
-  one (consistent with the Map Visualization feature's existing rule).
+- **FR-002**: The Leaderboard MUST provide three pages, one per metric
+  the save tracks over time — Population, Economic Base, and Tax Base —
+  reachable via the Leaderboard's own side navigation, all sourced from
+  the currently loaded save's per-country historical data. *(Revised
+  twice during implementation: first from a single page's worth of
+  metric-toggle into three always-visible stacked graphs — see User
+  Story 3's revision note — then, once each page also gained Ranking
+  Table and Treemap views (FR-015), from three stacked graphs into
+  three separate pages, one per metric.)*
+- **FR-003**: Each page's Graph view MUST cover the full historical
+  range available in the loaded save — from the campaign's start
+  through the save's current in-game date — not just a recent window,
+  unless the user has zoomed in (User Story 3), in which case the
+  zoomed range applies to that page's graph only.
+- **FR-004**: Each page's active view (FR-015) MUST reflect the same
+  set of currently selected countries; selection is shared across all
+  three metric pages and all three views within a page — never
+  independent per page or per view.
+- **FR-005**: Each country's line (Graph view) or box (Treemap view)
+  MUST be rendered in that country's actual in-game map color. A
+  country with no confirmed in-game color MUST use the app's existing
+  neutral fallback color, never a fabricated one (consistent with the
+  Map Visualization feature's existing rule).
 - **FR-006**: The Leaderboard page MUST provide a search bar overlay
   that lets the user find countries by name or tag and toggle each one
   on or off both graphs.
@@ -202,6 +206,29 @@ exists.
 - **FR-014**: Each graph's axes MUST show multiple intermediate tick
   labels (not just the range's two endpoints), so intermediate
   years/values can be read directly off the graph.
+- **FR-015**: *(Added during implementation, stretch goal.)* Each
+  metric page MUST offer three interchangeable views — Graph, Ranking
+  Table, and Treemap — switchable via controls on the page; exactly one
+  is shown at a time, defaulting to Graph.
+- **FR-016**: The Ranking Table view MUST list each currently selected
+  country's latest available value for the page's metric, sorted
+  descending, alongside its numeric rank (1, 2, 3, ...). A country with
+  no recorded value ranks last and shows no fabricated rank or value.
+- **FR-017**: The Treemap view MUST show one box per currently selected
+  country that **currently exists** — defined as: has a recorded value
+  for the page's metric as of the save's latest year, AND currently
+  owns at least one location (a country that has been annexed/destroyed
+  no longer counts, even if `country_type` still marks it "Real" —
+  research.md §4/tasks.md's post-implementation addendum found this
+  distinction necessary: most of a save's country records are
+  long-defunct historical tags, not currently-alive nations) — plus one
+  additional box, visually distinct (the app's neutral grey), labeled
+  "Other," summing every other currently-existing real country's latest
+  value. Each box's area MUST be exactly proportional to its value's
+  share of the combined total across every box.
+- **FR-018**: Inspecting a Treemap box MUST reveal that box's country
+  (or "Other"), its value, and its percentage share of the combined
+  total.
 
 ### Key Entities
 
@@ -213,17 +240,23 @@ exists.
   from that country's historical time series in the save. This is the
   data point each graph plots; a full line is this entity across every
   year in the historical range for one country and one metric.
+- **World Metric Total** *(added during implementation, Treemap
+  stretch goal)*: for one metric, the sum of the latest recorded value
+  across every currently-existing real country (FR-017's definition) —
+  the denominator the Treemap's box areas are shares of. Not stored;
+  computed from the same per-country latest values the Treemap already
+  needs for its individual boxes plus the "Other" bucket.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: A user can locate a specific country and have it appear on
-  all three graphs, starting from the search overlay, in under 15
-  seconds.
+- **SC-001**: A user can locate a specific country and have it appear
+  across every metric page and view, starting from the search overlay,
+  in under 15 seconds.
 - **SC-002**: On first opening the Leaderboard page after a save is
-  loaded, all three graphs display historical data spanning the full
-  campaign history without any additional user action.
+  loaded, its default Graph view displays historical data spanning the
+  full campaign history without any additional user action.
 - **SC-003**: Every country listed in the search overlay is a real,
   formed nation in the loaded save — zero placeholder/unformed entries
   appear in search results.
@@ -231,8 +264,13 @@ exists.
   perceptible delay (under 1 second), and resetting returns it to the
   full range just as fast.
 - **SC-005**: Adding or removing a country via the search overlay is
-  reflected on all three graphs simultaneously, with no manual refresh
-  step.
+  reflected across every metric page and view simultaneously, with no
+  manual refresh step.
+- **SC-006** *(added during implementation, Treemap stretch goal)*: A
+  Treemap's box areas sum to exactly the page's World Metric Total —
+  no country's share is over- or under-represented, and a country that
+  has ceased to exist (no longer owns territory) never contributes to
+  "Other," even if it still has old recorded values in the save.
 
 ## Assumptions
 
@@ -252,9 +290,12 @@ exists.
   (revised during implementation from an earlier toggle-based design —
   see User Story 3's revision note).
 - "Landing page" refers to the app's existing "Leaderboard" navigation
-  item (under its Encyclopedia section), which today renders only a
-  "coming soon" placeholder — this feature is what fills that reserved
-  slot in with a real page, not a new top-level navigation section.
+  item (under its Encyclopedia section, since renamed to "Factbook" on
+  2026-09-20 — the section now literally called "Encyclopedia" is a
+  different, separate one, added at the same time), which today renders
+  only a "coming soon" placeholder — this feature is what fills that
+  reserved slot in with a real page, not a new top-level navigation
+  section.
 - Line color reuses each country's in-game map color as already
   resolved and stored by the app's existing Map Visualization feature,
   including its neutral-fallback rule for countries with no confirmed

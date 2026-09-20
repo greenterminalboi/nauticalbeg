@@ -108,5 +108,26 @@ interface LeaderboardCountry {
 }
 ```
 
+**Treemap-specific shape** (added post-implementation, stretch goal —
+`listLatestNationMetricArrow` decoded by `leaderboardData.ts`'s
+`loadLatestNationMetric` into a plain `Map<number, number>`, nation idx
+→ latest value; `LeaderboardTab.tsx` then cross-references that map
+against the shared selection to build):
+
+```ts
+interface LeaderboardTreemapEntry {
+  id: number | "other";
+  label: string;
+  color: [number, number, number] | null; // "Other" uses the same neutral fallback constant, not a special case
+  value: number;
+}
+```
+
+One entry per selected country present in the latest-metric map, plus
+(when non-empty) one synthetic `id: "other"` entry summing every
+present-but-unselected country's value — spec's **World Metric Total**
+entity is simply the sum of every entry's `value` here, computed
+client-side, never stored.
+
 See `contracts/leaderboard-data-contract.md` for the exact query
 functions and SQL.
