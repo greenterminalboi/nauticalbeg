@@ -379,17 +379,22 @@ export function FileLoader() {
   // Overview/placeholders) uses the full main content width — see
   // Shell.css's `--full-width` modifier doc comment. Extend this
   // condition as more Perspective tabs get built (Characters/Markets
-  // are still ComingSoonPlaceholder for now). Leaderboard
-  // (specs/006-country-leaderboard) is real now too, but isn't
-  // Perspective-backed — its own CSS bounds its width instead.
+  // are still ComingSoonPlaceholder for now).
   const isTableTab =
     (isFactbook && encyclopediaTab === "wars" && isReady) ||
     (showCountriesNav && status.kind === "ready" && status.activeTab === "provinces");
   // The Encyclopedia section (008) wants the full main content width too
   // — same reasoning as the table tabs above (a lot of browsable content,
   // not the bounded/centered default), even though it isn't
-  // Perspective-backed either (same as Leaderboard's own case).
+  // Perspective-backed either.
   const isEncyclopediaSection = activeSection === "encyclopedia";
+  // Leaderboard (006) opted out of full-width originally (its own CSS
+  // bounded it instead), but 2026-09-20 decision: give it the same
+  // treatment as everything else — its charts are viewBox-scaled SVG
+  // (`width: 100%` in LeaderboardChart.css/LeaderboardTreemap.css), so
+  // the extra width renders bigger, more legible charts, not empty
+  // padding. LeaderboardTab.css's own `max-width` cap is removed to match.
+  const isLeaderboardTab = isFactbook && encyclopediaTab === "leaderboard" && isReady;
   // The Map tab (once a save is actually loaded — the pre-load "select a
   // save" message stays in the normal padded/centered layout) wants the
   // full remaining viewport edge-to-edge, not just the full width
@@ -399,7 +404,7 @@ export function FileLoader() {
   const mainClassName = isMapTab ? "shell__main shell__main--flush" : "shell__main";
   const mainInnerClassName = isMapTab
     ? "shell__main-inner shell__main-inner--full-width shell__main-inner--flush"
-    : isTableTab || isEncyclopediaSection
+    : isTableTab || isEncyclopediaSection || isLeaderboardTab
       ? "shell__main-inner shell__main-inner--full-width"
       : "shell__main-inner";
 

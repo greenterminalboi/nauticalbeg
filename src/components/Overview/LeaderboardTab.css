@@ -1,8 +1,11 @@
+/* 2026-09-20: the max-width cap this used to have is gone — FileLoader.tsx
+   now gives Leaderboard the shared --full-width treatment (like Wars/
+   Provinces/Encyclopedia), and the charts inside are viewBox-scaled SVG
+   (width: 100%), so the extra room renders bigger charts, not padding. */
 .leaderboard-tab {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  max-width: 48rem;
 }
 
 .leaderboard-tab__controls {
