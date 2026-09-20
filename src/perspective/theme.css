@@ -72,4 +72,16 @@ perspective-viewer [theme] {
   --psp-charts--legend--color: var(--color-on-surface);
 
   font-family: var(--font-body);
+
+  /* Decision 2026-09-19: bigger, more easily readable data tables across
+   * every Perspective-backed tab (Wars, Provinces, and any future one) —
+   * both values are read by @perspective-dev/viewer-datagrid's own CSS
+   * (regular_table's `td`/`th` height and `table { font-size: 1em }`,
+   * which inherits this element's font-size across the shadow boundary
+   * the same way the color variables above already do). Only the
+   * font-size/row-height are bumped here — everything else (borders,
+   * palette, zebra striping) inherits Pro Light's own proportions, which
+   * already scale off these two. */
+  --psp-datagrid--row--height: 34px;
+  font-size: 18px;
 }

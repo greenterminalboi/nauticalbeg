@@ -1,8 +1,9 @@
 /* "Illuminated Cards & Folios" framing (design.md §Components 2, echoing
- * OverviewCard.css) applied to the Perspective datagrid's container — a
- * portolan-style multi-ruled border around the table itself. Internal
- * cell/header colors are themed separately, in perspective/theme.css. */
-.provinces-tab {
+ * OverviewCard.css/ProvincesTab.css) applied to the Perspective
+ * datagrid's container — a portolan-style multi-ruled border around the
+ * table itself. Internal cell/header colors are themed separately, in
+ * perspective/theme.css. */
+.wars-tab {
   border: 3px solid var(--color-on-surface);
   box-shadow:
     0 0 0 1px var(--color-tertiary),
@@ -11,7 +12,7 @@
   margin: var(--space-lg) 0;
 }
 
-.provinces-tab__viewer {
+.wars-tab__viewer {
   display: block;
   /* Decision 2026-09-19: taller panel to match theme.css's bigger row
    * height/font-size — otherwise a taller row just means fewer visible

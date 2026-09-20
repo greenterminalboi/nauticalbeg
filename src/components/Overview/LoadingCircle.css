@@ -1,0 +1,101 @@
+/* "Imperial Illuminator" framing for the global loading state: a large
+ * centered ring in the brass/gold accent color, filling as real progress
+ * milestones are reached (see LoadingCircle.tsx's doc comment). */
+.loading-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  min-height: 60vh;
+  margin: var(--space-lg) auto;
+}
+
+.loading-circle__ring-wrapper {
+  position: relative;
+  width: min(24rem, 80vw);
+  height: min(24rem, 80vw);
+}
+
+.loading-circle__ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.loading-circle__ring--spin {
+  animation: loading-circle-spin 1.4s linear infinite;
+}
+
+.loading-circle__track {
+  fill: none;
+  stroke: var(--color-outline-variant);
+  stroke-width: 14;
+}
+
+.loading-circle__progress {
+  fill: none;
+  stroke: var(--color-tertiary);
+  stroke-width: 14;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.loading-circle__progress--pulsing {
+  animation: loading-circle-pulse 1.8s ease-in-out infinite;
+}
+
+.loading-circle__progress--indeterminate {
+  stroke: var(--color-tertiary);
+}
+
+.loading-circle__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-circle__percent {
+  font-family: var(--font-display);
+  font-size: min(4.5rem, 14vw);
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.loading-circle__label {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-on-surface-variant);
+  margin: 0;
+  text-align: center;
+}
+
+@keyframes loading-circle-spin {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+@keyframes loading-circle-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-circle__ring--spin,
+  .loading-circle__progress--pulsing {
+    animation: none;
+  }
+}

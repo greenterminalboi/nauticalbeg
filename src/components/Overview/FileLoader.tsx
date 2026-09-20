@@ -23,12 +23,15 @@ import {
 } from "../../storage/queries";
 import { ComingSoonPlaceholder } from "./ComingSoonPlaceholder";
 import { CountryViewerNav } from "./CountryViewerNav";
+import { EncyclopediaNav } from "./EncyclopediaNav";
 import { ErrorMessage } from "./ErrorMessage";
 import { KeptSaveOffer } from "./KeptSaveOffer";
+import { LoadingCircle } from "./LoadingCircle";
 import { OverviewCard } from "./OverviewCard";
 import { ProvincesTab } from "./ProvincesTab";
-import type { AppSection, TabId } from "./tabs";
+import type { AppSection, EncyclopediaTab, TabId } from "./tabs";
 import { TopBar } from "./TopBar";
+import { WarsTab } from "./WarsTab";
 import "./Shell.css";
 
 type ReadyStatus = {
@@ -37,16 +40,18 @@ type ReadyStatus = {
   selectedNationIdx: number;
   overview: NationOverview;
   inGameDate: string;
+  filename: string;
   kept: boolean;
   keepPending: boolean;
   keepError: string | null;
   /** plan.md Technical Context — which side-nav category is displayed
-   * within Country Viewer; component state, not routing (research.md
-   * §4). Defaults to "overview" and is never reset by a nation change
-   * (FR-003). Meaningless outside Country Viewer, but kept here (not on
-   * `AppSection` state) since it's really "the save session's current
-   * view," which persists across section switches (e.g. checking Map
-   * then coming back to Country Viewer shouldn't reset it). */
+   * within Encyclopedia's "Countries" sub-tab; component state, not
+   * routing (research.md §4). Defaults to "overview" and is never reset
+   * by a nation change (FR-003). Meaningless outside Countries, but kept
+   * here (not on `AppSection`/`EncyclopediaTab` state) since it's really
+   * "the save session's current view," which persists across section
+   * switches (e.g. checking Map then coming back to Encyclopedia
+   * shouldn't reset it). */
   activeTab: TabId;
 };
 
@@ -74,11 +79,14 @@ type Status =
 
 /**
  * File picker + worker orchestration, plus the app-level section switch
- * (NauticalBot / Map / Country Viewer / Settings — decision 2026-09-18).
- * The save/keep controls (TopBar) are global — a loaded save stays
- * loaded regardless of which section is active. The nation
- * selector/category tabs (CountryViewerNav) only render within Country
- * Viewer, since they're meaningless anywhere else.
+ * (NauticalBot / Map / Encyclopedia / Settings — decision 2026-09-18,
+ * renamed 2026-09-19) and Encyclopedia's own sub-tab switch (Countries /
+ * Wars, decision 2026-09-19). The save/keep controls (TopBar) are
+ * global — a loaded save stays loaded regardless of which section is
+ * active. The nation selector/category tabs (CountryViewerNav) only
+ * render within Encyclopedia's "Countries" sub-tab, since they're
+ * meaningless anywhere else (including Encyclopedia's own "Wars"
+ * sub-tab, which spans multiple countries rather than belonging to one).
  *
  * Once parsing succeeds, this opens the one connection to the save that
  * stays open for the rest of the "ready" session (see `readDbRef`) —
@@ -95,7 +103,8 @@ type Status =
  * `keepSave` doc comment), so there's no worker round-trip for this.
  */
 export function FileLoader() {
-  const [activeSection, setActiveSection] = useState<AppSection>("country-viewer");
+  const [activeSection, setActiveSection] = useState<AppSection>("encyclopedia");
+  const [encyclopediaTab, setEncyclopediaTab] = useState<EncyclopediaTab>("countries");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const workerRef = useRef<Worker | null>(null);
   // Tracks the most recently ready save's id so the beforeunload handler
@@ -212,6 +221,7 @@ export function FileLoader() {
         selectedNationIdx: overview.idx,
         overview,
         inGameDate: meta.inGameDate ?? message.inGameDate,
+        filename: meta.filename,
         kept: meta.kept,
         keepPending: false,
         keepError: null,
@@ -257,15 +267,41 @@ export function FileLoader() {
 
     setStatus({ ...status, keepPending: true, keepError: null });
 
-    // Both keep and forget run directly on the main thread now — DuckDB
-    // has no SQLite-style restriction requiring writes to originate from
-    // a dedicated Worker (see queries.ts's keepSave doc comment).
-    const action = status.kept ? forgetKeptSave(saveId) : keepSave(db, saveId);
-    action
+    if (status.kept) {
+      // Forgetting the currently active save deletes its OPFS data
+      // outright (FR-013 — "its persisted data is removed from local
+      // storage"), so the live connection to that exact file must be
+      // closed first: DuckDB-Wasm holds an OPFS file open exclusively for
+      // as long as a connection to it lives, and deleting the file out
+      // from under that open connection throws a real
+      // "InvalidModificationError" (confirmed against a real kept save —
+      // this path is untestable in the unit-test harness, since
+      // deleteSaveDatabase no-ops there with no real OPFS to delete from).
+      // There's nothing left to browse once the data is actually gone, so
+      // this returns to idle rather than trying to keep showing a save
+      // whose connection was just closed out from under it.
+      closeSaveDatabase(db)
+        .then(() => forgetKeptSave(saveId))
+        .then(() => {
+          readDbRef.current = null;
+          currentSaveIdRef.current = null;
+          setStatus({ kind: "idle" });
+        })
+        .catch((err) => {
+          readDbRef.current = null;
+          currentSaveIdRef.current = null;
+          setStatus({
+            kind: "error",
+            errorKind: "unknown",
+            message: err instanceof Error ? err.message : "Failed to forget this save.",
+          });
+        });
+      return;
+    }
+
+    keepSave(db, saveId)
       .then(() => {
-        setStatus((prev) =>
-          prev.kind === "ready" ? { ...prev, kept: !status.kept, keepPending: false } : prev,
-        );
+        setStatus((prev) => (prev.kind === "ready" ? { ...prev, kept: true, keepPending: false } : prev));
       })
       .catch((err) => {
         setStatus((prev) =>
@@ -273,10 +309,7 @@ export function FileLoader() {
             ? {
                 ...prev,
                 keepPending: false,
-                keepError:
-                  err instanceof Error
-                    ? err.message
-                    : `Failed to ${status.kept ? "forget" : "keep"} this save.`,
+                keepError: err instanceof Error ? err.message : "Failed to keep this save.",
               }
             : prev,
         );
@@ -316,18 +349,38 @@ export function FileLoader() {
   }
 
   const isReady = status.kind === "ready";
-  const showCountryViewerNav = activeSection === "country-viewer" && isReady;
+  const isLoadingSave = isLoadingStatus(status);
+  const isEncyclopedia = activeSection === "encyclopedia";
+  const showCountriesNav = isEncyclopedia && encyclopediaTab === "countries" && isReady;
+  const shellClassName = showCountriesNav
+    ? "shell shell--with-nav"
+    : isEncyclopedia
+      ? "shell shell--with-subnav"
+      : "shell";
+  // Decision 2026-09-19: every Perspective-backed data table (not
+  // Overview/placeholders) uses the full main content width — see
+  // Shell.css's `--full-width` modifier doc comment. Extend this
+  // condition as more Perspective tabs get built (Leaderboard/
+  // Characters/Markets are still ComingSoonPlaceholder for now).
+  const isTableTab =
+    (isEncyclopedia && encyclopediaTab === "wars" && isReady) ||
+    (showCountriesNav && status.kind === "ready" && status.activeTab === "provinces");
+  const mainInnerClassName = isTableTab
+    ? "shell__main-inner shell__main-inner--full-width"
+    : "shell__main-inner";
 
   return (
-    <div className={showCountryViewerNav ? "shell shell--with-nav" : "shell"}>
+    <div className={shellClassName}>
       <TopBar
         activeSection={activeSection}
         onSelectSection={setActiveSection}
         onFileSelected={handleFileSelected}
         keepState={isReady ? { kept: status.kept, pending: status.keepPending, error: status.keepError } : null}
         onKeepToggle={handleKeepToggle}
+        loadedFilename={isReady ? status.filename : null}
       />
-      {showCountryViewerNav && (
+      {isEncyclopedia && <EncyclopediaNav activeTab={encyclopediaTab} onSelectTab={setEncyclopediaTab} />}
+      {showCountriesNav && (
         <CountryViewerNav
           nations={status.nations}
           selectedNationIdx={status.selectedNationIdx}
@@ -337,17 +390,45 @@ export function FileLoader() {
         />
       )}
       <main className="shell__main">
-        <div className="shell__main-inner">
-          {activeSection === "nauticalbot" && <ComingSoonPlaceholder feature="NauticalBot" />}
-          {activeSection === "map" && <ComingSoonPlaceholder feature="Map" />}
-          {activeSection === "settings" && <ComingSoonPlaceholder feature="Settings" />}
-          {activeSection === "country-viewer" && (
-            <StatusView
-              status={status}
-              db={readDbRef.current}
-              onResumeKeptSave={handleResumeKeptSave}
-              onDismissKeptSaveOffer={handleDismissKeptSaveOffer}
+        <div className={mainInnerClassName}>
+          {isLoadingSave ? (
+            <LoadingCircle
+              percent={computeLoadingPercent(status)}
+              pulsing={isLoadingStagePulsing(status)}
+              label={loadingLabel(status)}
             />
+          ) : (
+            <>
+              {activeSection === "nauticalbot" && <ComingSoonPlaceholder feature="NauticalBot" />}
+              {activeSection === "map" && <ComingSoonPlaceholder feature="Map" />}
+              {activeSection === "settings" && <ComingSoonPlaceholder feature="Settings" />}
+              {isEncyclopedia && encyclopediaTab === "countries" && (
+                <StatusView
+                  status={status}
+                  db={readDbRef.current}
+                  onResumeKeptSave={handleResumeKeptSave}
+                  onDismissKeptSaveOffer={handleDismissKeptSaveOffer}
+                />
+              )}
+              {isEncyclopedia && encyclopediaTab === "wars" && (
+                // Wars is save-wide, not nation-scoped (research.md-style
+                // decision 2026-09-19 — see tabs.ts), so it only needs a
+                // loaded save, not a selected nation. Reuses the same idle
+                // wording StatusView's "idle" case uses, for consistency.
+                isReady && readDbRef.current ? (
+                  <WarsTab db={readDbRef.current} />
+                ) : (
+                  <p>Select a save file above to get started.</p>
+                )
+              )}
+              {isEncyclopedia && encyclopediaTab === "leaderboard" && (
+                <ComingSoonPlaceholder feature="Leaderboard" />
+              )}
+              {isEncyclopedia && encyclopediaTab === "characters" && (
+                <ComingSoonPlaceholder feature="Characters" />
+              )}
+              {isEncyclopedia && encyclopediaTab === "markets" && <ComingSoonPlaceholder feature="Markets" />}
+            </>
           )}
         </div>
       </main>
@@ -378,12 +459,16 @@ function StatusView({
         />
       );
     case "resuming":
-      return <p>Resuming kept save…</p>;
     case "validating":
     case "detecting-version":
     case "parsing":
     case "loading-overview":
-      return <p>{describePhase(status)}</p>;
+      // Unreachable in practice: FileLoader's top-level render checks
+      // isLoadingStatus() and renders the global LoadingCircle instead of
+      // StatusView at all for every one of these kinds (see the render
+      // function below) — kept here only so this switch stays exhaustive
+      // over the full Status union.
+      return null;
     case "ready":
       return db ? <ActiveTabContent status={status} db={db} /> : null;
     case "error":
@@ -410,16 +495,61 @@ function ActiveTabContent({ status, db }: { status: ReadyStatus; db: SaveDatabas
   }
 }
 
-function describePhase(status: Status): string {
-  if (status.kind === "loading-overview") return "Loading overview…";
-  if (status.kind !== "validating" && status.kind !== "detecting-version" && status.kind !== "parsing") {
-    return "";
+// Decision 2026-09-19: every one of these Status kinds means "a save is
+// actively loading" — LoadingCircle takes over the whole main content
+// area (regardless of which app section/tab is selected) for all of
+// them, not just Countries (previously the only tab with any loading
+// feedback at all; every other tab just showed its own "select a save"
+// idle text while a load was clearly already in progress).
+const LOADING_STATUS_KINDS = ["resuming", "validating", "detecting-version", "parsing", "loading-overview"] as const;
+
+function isLoadingStatus(status: Status): boolean {
+  return (LOADING_STATUS_KINDS as readonly string[]).includes(status.kind);
+}
+
+// Ordered, known milestones a normal load passes through ("resuming" a
+// kept save is a separate, single-stage path with no phase breakdown at
+// all, handled separately below). Overall percent = how many of these
+// stages have been *reached* (a real, known event) plus how far real
+// sub-progress has gotten within the current one — never a fabricated
+// estimate of time remaining within a stage that reports no progress of
+// its own (constitution Principle IV).
+const LOADING_STAGE_ORDER = ["validating", "detecting-version", "parsing", "loading-overview"] as const;
+
+function loadingLabel(status: Status): string {
+  switch (status.kind) {
+    case "resuming":
+      return "Resuming kept save…";
+    case "validating":
+      return "Validating file…";
+    case "detecting-version":
+      return "Detecting game version…";
+    case "parsing":
+      return "Parsing save…";
+    case "loading-overview":
+      return "Loading overview…";
+    default:
+      return "";
   }
-  const label: Record<ParsePhase, string> = {
-    validating: "Validating file…",
-    "detecting-version": "Detecting game version…",
-    parsing: "Parsing save…",
-  };
-  const percent = status.percent !== null ? ` (${status.percent}%)` : "";
-  return `${label[status.kind]}${percent}`;
+}
+
+/** null only for "resuming" (no phase-progress events exist for that
+ * path at all) — every other loading kind always resolves to a real
+ * milestone-based number, per LOADING_STAGE_ORDER's doc comment. */
+function computeLoadingPercent(status: Status): number | null {
+  if (status.kind === "resuming") return null;
+  const idx = LOADING_STAGE_ORDER.indexOf(status.kind as (typeof LOADING_STAGE_ORDER)[number]);
+  if (idx === -1) return null;
+  const withinStage =
+    status.kind === "validating" && "percent" in status && status.percent !== null ? status.percent / 100 : 0;
+  return ((idx + withinStage) / LOADING_STAGE_ORDER.length) * 100;
+}
+
+/** True whenever the current stage has no real sub-progress of its own
+ * to show — i.e. always, except partway through "validating"'s real
+ * byte-read progress — so LoadingCircle can add a gentle pulse instead
+ * of looking frozen while a long stage (e.g. parsing a large save) with
+ * no granular signal is genuinely still working. */
+function isLoadingStagePulsing(status: Status): boolean {
+  return !(status.kind === "validating" && "percent" in status && status.percent !== null);
 }

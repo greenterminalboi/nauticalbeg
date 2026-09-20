@@ -6,13 +6,16 @@ describe("KeepSaveToggle", () => {
   it("shows a keep action when not kept", () => {
     render(<KeepSaveToggle kept={false} pending={false} error={null} onToggle={() => {}} />);
     expect(screen.getByRole("button", { name: "Keep This Save" })).toBeInTheDocument();
-    expect(screen.queryByText("[ kept ]")).not.toBeInTheDocument();
+    // The "[ kept ]" marker stays mounted (visibility hidden, not removed)
+    // so its width is always reserved and toggling "kept" never reflows
+    // the surrounding top bar — see KeepSaveToggle.tsx's doc comment.
+    expect(screen.getByText("[ kept ]")).toHaveAttribute("aria-hidden", "true");
   });
 
   it("shows a forget action and the kept marker when kept", () => {
     render(<KeepSaveToggle kept={true} pending={false} error={null} onToggle={() => {}} />);
     expect(screen.getByRole("button", { name: "Forget This Save" })).toBeInTheDocument();
-    expect(screen.getByText("[ kept ]")).toBeInTheDocument();
+    expect(screen.getByText("[ kept ]")).not.toHaveAttribute("aria-hidden");
   });
 
   it("disables the button and shows pending text while pending", () => {

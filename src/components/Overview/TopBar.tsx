@@ -11,7 +11,7 @@ interface KeepState {
 const SECTIONS: { id: AppSection; label: string }[] = [
   { id: "nauticalbot", label: "NauticalBot" },
   { id: "map", label: "Map" },
-  { id: "country-viewer", label: "Country Viewer" },
+  { id: "encyclopedia", label: "Encyclopedia" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -22,16 +22,25 @@ interface TopBarProps {
   /** null when no save is loaded yet — the keep/forget controls aren't shown at all. */
   keepState: KeepState | null;
   onKeepToggle: () => void;
+  /** The currently loaded save's filename, or null/undefined when none is
+   * loaded. Drives the file picker's own status text (see the doc comment
+   * on `top-bar__file-picker` below) instead of relying on the native
+   * `<input type="file">` label, which the onChange handler immediately
+   * resets to blank so the same file can be re-selected later — left
+   * alone, that native reset makes the picker always read "No file
+   * chosen" even while a save is actively loaded. */
+  loadedFilename?: string | null;
 }
 
 /**
  * The one piece of the shell present in every state and every section,
  * visible from the very first render (before any save is loaded). Holds
- * the app-level section nav (NauticalBot / Map / Country Viewer /
- * Settings — decision 2026-09-18) and the save/keep controls, which are
- * global (a loaded save stays loaded regardless of which section is
- * active). The nation selector is NOT here — it only makes sense within
- * Country Viewer, so it lives there instead (see FileLoader.tsx).
+ * the app-level section nav (NauticalBot / Map / Encyclopedia /
+ * Settings — decision 2026-09-18, renamed 2026-09-19) and the save/keep
+ * controls, which are global (a loaded save stays loaded regardless of
+ * which section is active). The nation selector is NOT here — it only
+ * makes sense within Encyclopedia's "Countries" sub-tab, so it lives
+ * there instead (see FileLoader.tsx).
  */
 export function TopBar({
   activeSection,
@@ -39,6 +48,7 @@ export function TopBar({
   onFileSelected,
   keepState,
   onKeepToggle,
+  loadedFilename,
 }: TopBarProps) {
   return (
     <header className="top-bar">
@@ -61,15 +71,22 @@ export function TopBar({
       </nav>
       <div className="top-bar__save-controls">
         <label className="top-bar__file-picker">
-          Select an EU5 save file
+          <span className="top-bar__file-picker-label">
+            {loadedFilename ? "Load a different save" : "Select an EU5 save file"}
+          </span>
           <input
             type="file"
+            className="top-bar__file-input"
             onChange={(event) => {
               const file = event.target.files?.[0];
               event.target.value = ""; // allow re-selecting the same file later
               if (file) onFileSelected(file);
             }}
           />
+          {/* App-controlled status text, not the input's own native label
+              (see loadedFilename's doc comment above) — this is what
+              actually reflects whether a save is loaded. */}
+          <span className="top-bar__file-status">{loadedFilename ?? "No file chosen"}</span>
         </label>
         {keepState && (
           <KeepSaveToggle

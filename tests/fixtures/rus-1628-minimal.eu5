@@ -15,6 +15,10 @@ countries={
 		2=MER
 		3=SCA
 		2025=RUS
+		33556892=PLC
+		1961=KIE
+		50332944=AAA13
+		1141=FRA
 	}
 	database={
 		0={
@@ -232,13 +236,126 @@ war_manager={
 				}
 			}
 			war_name={
+				name=AGRESSION_WAR_NAME
 			}
+			original_attacker=2025
+			original_defenders={ 33556892 1961 }
 			start_date=1627.12.13
+			defender_score=8
+			attacker_losses={
+				losses={
+					army_light_infantry={
+						Battle=16895
+						Attrition=2580
+						Capture=297
+					}
+					army_heavy_infantry={
+						Battle=3903
+						Attrition=2018
+					}
+					army_light_cavalry={
+						Battle=2778
+						Attrition=793
+					}
+					army_heavy_cavalry={
+						Battle=807
+						Attrition=76
+					}
+					army_artillery={
+						Attrition=260
+					}
+					army_auxiliary={
+						Attrition=67
+					}
+				}
+			}
+			defender_losses={
+				losses={
+					army_light_infantry={
+						Battle=41949
+						Attrition=1032
+						Capture=2700
+					}
+					army_heavy_infantry={
+						Battle=1474
+						Attrition=58
+						Capture=900
+					}
+					army_light_cavalry={
+						Battle=770
+						Attrition=38
+						Capture=480
+					}
+					army_heavy_cavalry={
+						Battle=1390
+						Attrition=59
+						Capture=360
+					}
+					army_artillery={
+						Battle=951
+						Attrition=23
+						Capture=264
+					}
+					army_auxiliary={
+						Battle=422
+						Attrition=28
+						Capture=334
+					}
+				}
+			}
+		}
+		1879048200={
+			original_attacker=50332944
+			original_defenders={ 1141 }
+			start_date=1628.2.1
+			end_date=1628.4.15
+			war_name={
+				name=CIVIL_WAR_NAME
+			}
+			attacker_losses={
+				losses={
+					army_light_infantry={
+						Attrition=79
+					}
+					army_heavy_cavalry={
+						Attrition=11
+					}
+				}
+			}
+			defender_losses={
+				losses={ }
+			}
 		}
 	}
 }
 cheats={
 	cheat_type={ }
+}
+population={
+	database={
+		943={
+			type=peasants
+			estate=peasants_estate
+			culture=873
+			religion=18
+			size=0.22409
+			literacy=39.1474
+		}
+		14016={
+			type=tribesmen
+			estate=tribes_estate
+			culture=1019
+			status=Primary
+			religion=186
+			satisfaction=0.78336
+			size=1.80333
+			literacy=10
+			missing={
+				demand=pop_demand
+			}
+			owner=2065
+		}
+	}
 }
 played_country={
 	name="amjugan"

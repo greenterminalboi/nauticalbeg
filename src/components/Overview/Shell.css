@@ -1,7 +1,15 @@
-/* research.md §1: plain CSS Grid for the 3-region shell — a full-width
-   top bar, with side nav + main content as two columns below it once a
-   save is loaded (research.md §3: pre-load, there's no side nav column
-   at all, just the top bar and a single main-content row). */
+/* research.md §1: plain CSS Grid for the shell. Three states (decision
+   2026-09-19 added the middle one, for Encyclopedia's sub-nav):
+   - bare: just a full-width top bar + main content row (every section
+     except Encyclopedia, and Encyclopedia's own pre-load state).
+   - with-subnav: adds Encyclopedia's full-width sub-nav row (Countries
+     | Wars) below the top bar — used whenever Encyclopedia is active
+     but there's no side nav to show yet (e.g. the "Wars" sub-tab, or
+     "Countries" before a save is loaded).
+   - with-nav: with-subnav's three rows, plus a side nav + main content
+     column split on the last row — Encyclopedia's "Countries" sub-tab,
+     once a save is loaded (research.md §3: no side nav column at all
+     before that). */
 .shell {
   display: grid;
   grid-template-columns: 1fr;
@@ -10,10 +18,20 @@
   min-height: 100vh;
 }
 
+.shell--with-subnav {
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas:
+    "topbar"
+    "subnav"
+    "main";
+}
+
 .shell--with-nav {
   grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   grid-template-areas:
     "topbar topbar"
+    "subnav subnav"
     "sidenav main";
 }
 
@@ -30,4 +48,16 @@
 .shell__main-inner {
   max-width: 64rem;
   margin: 0 auto;
+}
+
+/* Decision 2026-09-19: Perspective-backed data tables (Wars, Provinces,
+ * and any future one) opt out of FR-019's centered/bounded width — the
+ * only left-side limiter they should have left is the side nav's own
+ * grid column where one is present (`.shell--with-nav`'s "sidenav main"
+ * area already does that structurally); everywhere else they should use
+ * the full main content width. Non-table content (Overview, placeholders)
+ * keeps the original centered/bounded default. */
+.shell__main-inner--full-width {
+  max-width: none;
+  margin: 0;
 }

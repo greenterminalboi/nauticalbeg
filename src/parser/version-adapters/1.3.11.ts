@@ -48,6 +48,7 @@ const STRUCTURED_KEYS = new Set([
   "locations",
   "war_manager",
   "played_country",
+  "population",
 ]);
 
 /** jomini narrows an unquoted date-like token (e.g. `1628.8.14`) to a
@@ -73,6 +74,23 @@ function asNumberOrNull(value: unknown): number | null {
 
 function asStringOrNull(value: unknown): string | null {
   return typeof value === "string" ? value : null;
+}
+
+/** Sums a war's `attacker_losses`/`defender_losses` field (shape:
+ * `{ losses: { <unit_type>: { Battle?, Attrition?, Capture? } } }`) into
+ * one total. Returns `null` — not `0` — when the field never appeared
+ * at all (unknown, per constitution Principle IV), distinct from a
+ * present-but-empty `losses` map, which is a real, confirmed zero. */
+function sumLosses(lossesField: unknown): number | null {
+  const outer = asRecord(lossesField);
+  if (!("losses" in outer)) return null;
+  let total = 0;
+  for (const unitLosses of Object.values(asRecord(outer.losses))) {
+    for (const amount of Object.values(asRecord(unitLosses))) {
+      if (typeof amount === "number") total += amount;
+    }
+  }
+  return total;
 }
 
 export async function parseAndStore(
@@ -191,6 +209,110 @@ export async function parseAndStore(
       db,
       "INSERT INTO war_participants (nation_idx, status) VALUES (?1, ?2)",
       warRows,
+    );
+  }
+
+  // war_manager.database, again: one row per war for Encyclopedia's
+  // Wars tab (specs/004-full-schema-mapping's schema-mapping tool
+  // confirmed these fields against a real save — see schema.sql's
+  // comment on the `wars` table for the full rationale). `duration_days`
+  // is computed here, not stored raw — for a still-ongoing war (no
+  // `end_date`), the reference point is the save's own current in-game
+  // date (`metadata.date`), never real wall-clock time.
+  const warsRows: Array<
+    [
+      number,
+      string | null,
+      number | null,
+      number | null,
+      string | null,
+      string | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+    ]
+  > = [];
+  for (const [warIdxStr, warEntry] of Object.entries(warDatabase)) {
+    const war = asRecord(warEntry);
+    const startDateRaw = war.start_date;
+    if (!(startDateRaw instanceof Date)) continue; // no usable start date — not enough to build a meaningful row
+    const endDateRaw = war.end_date instanceof Date ? war.end_date : null;
+    const referenceEndRaw = endDateRaw ?? (metadata.date instanceof Date ? metadata.date : null);
+    const durationDays = referenceEndRaw
+      ? Math.round((referenceEndRaw.getTime() - startDateRaw.getTime()) / 86_400_000)
+      : null;
+    const originalDefenders = Array.isArray(war.original_defenders) ? war.original_defenders : [];
+    warsRows.push([
+      Number(warIdxStr),
+      asStringOrNull(asRecord(war.war_name).name),
+      asNumberOrNull(war.original_attacker),
+      asNumberOrNull(originalDefenders[0]),
+      formatGameDate(startDateRaw),
+      endDateRaw ? formatGameDate(endDateRaw) : null,
+      durationDays,
+      asNumberOrNull(war.attacker_score),
+      asNumberOrNull(war.defender_score),
+      sumLosses(war.attacker_losses),
+      sumLosses(war.defender_losses),
+    ]);
+  }
+  if (warsRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO wars (idx, war_name_key, attacker_idx, defender_idx, start_date, end_date, duration_days, attacker_score, defender_score, attacker_casualties, defender_casualties) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+      warsRows,
+    );
+  }
+
+  // population.database: one row per population group. Fixed-shape
+  // scalar fields become real columns; `missing` (a variable-keyed
+  // trade-good deficit map — confirmed against a real save via
+  // specs/004-full-schema-mapping's schema-mapping tool) is captured
+  // losslessly as JSON text rather than one column per possible good.
+  const populationDatabase = asRecord(asRecord(root.population).database);
+  const populationRows: Array<
+    [
+      number,
+      string | null,
+      string | null,
+      number | null,
+      number | null,
+      string | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      string | null,
+    ]
+  > = [];
+  for (const [idxStr, value] of Object.entries(populationDatabase)) {
+    const record = asRecord(value);
+    const missing = record.missing;
+    const missingGoods =
+      missing !== null && typeof missing === "object" && !Array.isArray(missing)
+        ? JSON.stringify(missing)
+        : null;
+    populationRows.push([
+      Number(idxStr),
+      asStringOrNull(record.type),
+      asStringOrNull(record.estate),
+      asNumberOrNull(record.culture),
+      asNumberOrNull(record.religion),
+      asStringOrNull(record.status),
+      asNumberOrNull(record.size),
+      asNumberOrNull(record.literacy),
+      asNumberOrNull(record.satisfaction),
+      asNumberOrNull(record.owner),
+      missingGoods,
+    ]);
+  }
+  if (populationRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO population (idx, pop_type, estate, culture, religion, status, size, literacy, satisfaction, owner_idx, missing_goods) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+      populationRows,
     );
   }
 

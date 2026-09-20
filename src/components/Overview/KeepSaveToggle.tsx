@@ -28,7 +28,20 @@ export function KeepSaveToggle({ kept, pending, error, onToggle }: KeepSaveToggl
       >
         {pending ? (kept ? "Forgetting…" : "Keeping…") : kept ? "Forget This Save" : "Keep This Save"}
       </button>
-      {kept && !pending && <span className="keep-save-toggle__status">[ kept ]</span>}
+      {/* Always mounted (visibility toggled, not conditionally rendered)
+          so its width is reserved even while hidden — otherwise the
+          toggle's own width changes when this appears/disappears,
+          reflowing the rest of the top bar around it. */}
+      <span
+        className={
+          kept && !pending
+            ? "keep-save-toggle__status"
+            : "keep-save-toggle__status keep-save-toggle__status--hidden"
+        }
+        aria-hidden={kept && !pending ? undefined : true}
+      >
+        [ kept ]
+      </span>
       {error && (
         <p className="keep-save-toggle__error" role="alert">
           {error}

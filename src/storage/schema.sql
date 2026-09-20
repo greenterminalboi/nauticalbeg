@@ -75,6 +75,75 @@ CREATE TABLE IF NOT EXISTS war_participants (
   status TEXT NOT NULL
 );
 
+-- One row per war (`war_manager.database` entry — Encyclopedia's Wars
+-- tab). `war_name_key` is the save's own raw localization key (e.g.
+-- "AGRESSION_WAR_NAME") — NOT a display name; this project has no
+-- access to the game's localization strings, so it's surfaced as-is
+-- rather than fabricating a prettified name (constitution Principle
+-- IV). `defender_idx` is only the FIRST of `original_defenders` (a war
+-- can have more than one) — good enough for a demo's "who's fighting
+-- whom" at a glance; a future pass could normalize the full defender
+-- list into its own table. `duration_days` is DERIVED (computed by the
+-- adapter from `start_date` to `end_date`, or to the save's own current
+-- in-game date for a still-ongoing war) — not a raw save field.
+-- `attacker_casualties`/`defender_casualties` are also derived: the sum
+-- of every unit type's Battle+Attrition+Capture losses. Both stay NULL
+-- when the corresponding `*_losses` field never appeared for that war
+-- (unknown), never fabricated as 0 — a war whose `*_losses.losses` map
+-- was present but empty gets a real 0 instead, which is a different,
+-- confirmed fact. `start_date`/`end_date` are EU5 "Y.M.D" display-format
+-- TEXT, matching `save_meta.in_game_date`'s existing convention (not a
+-- native DATE column — this project has never needed one before).
+--
+-- `idx` is BIGINT, not INTEGER — same real finding as `population.idx`
+-- (schema.sql's comment there has the full story): confirmed via a real
+-- insert failure against the real ~642MB save ("value 2164260865.0...
+-- out of range for... INT32"). War entity indices, like population
+-- ones, use a larger index space than nations'/locations'.
+CREATE TABLE IF NOT EXISTS wars (
+  idx BIGINT PRIMARY KEY,
+  war_name_key TEXT,
+  attacker_idx INTEGER, -- logically REFERENCES nations(idx)
+  defender_idx INTEGER, -- logically REFERENCES nations(idx)
+  start_date TEXT,
+  end_date TEXT, -- NULL while the war is still ongoing
+  duration_days INTEGER,
+  attacker_score DOUBLE,
+  defender_score DOUBLE,
+  attacker_casualties INTEGER,
+  defender_casualties INTEGER
+);
+
+-- One row per population group (a `population.database` entry — see
+-- specs/004-full-schema-mapping). Fixed-shape scalar fields (per
+-- research.md §3's cross-entry key-set comparison, confirmed against a
+-- real save) get real columns; `missing` (a variable-keyed, per-good
+-- trade-deficit map — its keys are trade-good names, not a fixed
+-- vocabulary of this table's own fields) is captured losslessly as JSON
+-- text rather than one column per possible good (FR-006). `owner`,
+-- `status`, `satisfaction`, and `missing` are all optional in the real
+-- save (confirmed: not every population group has them) and stay NULL
+-- rather than a fabricated default when absent.
+--
+-- `idx` is BIGINT, not INTEGER — confirmed necessary by a real insert
+-- failure against the real ~642MB save ("value 2147484004.0 can't be
+-- cast... out of range for... INT32"): population entity indices use a
+-- much larger index space than nations'/locations' (which comfortably
+-- fit INT32), unlike every other `idx` column in this schema so far.
+CREATE TABLE IF NOT EXISTS population (
+  idx BIGINT PRIMARY KEY,
+  pop_type TEXT,
+  estate TEXT,
+  culture INTEGER,
+  religion INTEGER,
+  status TEXT,
+  size DOUBLE,
+  literacy DOUBLE,
+  satisfaction DOUBLE,
+  owner_idx INTEGER, -- logically REFERENCES nations(idx); see dialect note above
+  missing_goods TEXT -- JSON-encoded { <good>: <amount>, ... }, or NULL
+);
+
 -- Catch-all for every top-level save section this feature doesn't yet
 -- understand structurally (~45 of ~50 sections — see
 -- research-save-format.md's top-level key list). Captured as opaque JSON
@@ -98,3 +167,6 @@ CREATE INDEX IF NOT EXISTS idx_locations_owner ON locations(owner_idx);
 CREATE INDEX IF NOT EXISTS idx_locations_province ON locations(province_idx);
 CREATE INDEX IF NOT EXISTS idx_war_participants_nation ON war_participants(nation_idx);
 CREATE INDEX IF NOT EXISTS idx_raw_sections_key ON raw_sections(key);
+CREATE INDEX IF NOT EXISTS idx_population_owner ON population(owner_idx);
+CREATE INDEX IF NOT EXISTS idx_wars_attacker ON wars(attacker_idx);
+CREATE INDEX IF NOT EXISTS idx_wars_defender ON wars(defender_idx);

@@ -18,6 +18,11 @@
   padding: var(--space-xs) var(--space-md);
   border-radius: 0;
   cursor: pointer;
+  /* Fits the longest of "Keep This Save"/"Forget This Save"/"Keeping…"/
+     "Forgetting…" so toggling between them never changes the button's own
+     width and reflows the top bar around it. */
+  min-width: 11rem;
+  text-align: center;
 }
 
 .keep-save-toggle__button:disabled {
@@ -47,6 +52,10 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--color-on-surface-variant);
+}
+
+.keep-save-toggle__status--hidden {
+  visibility: hidden;
 }
 
 .keep-save-toggle__error {

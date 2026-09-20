@@ -1,0 +1,39 @@
+/* Full-width secondary tab row, below the global TopBar — one grid row
+   of its own (Shell.css's "subnav" area) so it reads as "which part of
+   the encyclopedia" rather than a repeat of the app-level section nav. */
+.encyclopedia-nav {
+  grid-area: subnav;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-surface-container);
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.encyclopedia-nav__tab {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--color-on-surface-variant);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: var(--space-xs) var(--space-sm);
+  cursor: pointer;
+}
+
+.encyclopedia-nav__tab:hover {
+  color: var(--color-on-surface);
+}
+
+.encyclopedia-nav__tab:focus-visible {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: -2px;
+}
+
+.encyclopedia-nav__tab--active {
+  color: var(--color-on-surface);
+  border-bottom-color: var(--color-tertiary);
+}

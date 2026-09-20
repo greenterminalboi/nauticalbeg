@@ -38,3 +38,13 @@ Thumbs.db
 # below regardless of extension, once that extension is known.
 /*.sav
 /*.zip
+/*.eu5
+
+# Generated schema-mapping inventories (confirmed via a real run:
+# 100MB+ each for a ~642MB save's full "1-1" inventory — far too large
+# to commit). The fixture-based regression test already asserts the
+# tool's exact output for the small committed fixture, so even that
+# inventory isn't separately committed — every generated inventory here
+# is a local, on-demand artifact.
+/tools/schema-mapping/inventories/*
+!/tools/schema-mapping/inventories/.gitkeep

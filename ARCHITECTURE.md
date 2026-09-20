@@ -443,7 +443,10 @@ real table, stored as opaque JSON in `raw_sections` (see
 choice — made explicitly, not by default — to avoid losing data that
 future features (map visualization, time-series, the AI copilot) will
 likely need, without guessing at schemas for the ~45 sections nobody has
-researched yet (constitution Principle II). Known cost: more parse
+researched yet (constitution Principle II) — see "Full save-schema
+mapping tooling" below for the tool that turns "nobody has researched
+yet" into a repeatable, automated process instead of one section at a
+time by hand. Known cost: more parse
 time/storage than this feature strictly requires; accepted for now,
 revisit if it proves too slow (in practice, ~17s for the full real save,
 comfortably under the 60s target). `jomini`'s own docs note that 95-99% of
@@ -509,3 +512,188 @@ above.
 
 See `specs/001-save-import-overview/data-model.md`'s state-transition
 diagram for the full picture.
+
+## Full save-schema mapping tooling
+
+`tools/schema-mapping/` (`specs/004-full-schema-mapping`) is a
+maintainer-run, offline CLI — mirroring `tools/map-generation/`'s
+pattern exactly — that walks **every** top-level section of a real save
+(not only the handful the app currently interprets) and records every
+field path's observed type(s), presence, and an example value into a
+JSON "Save Inventory," with a generated Markdown summary for review.
+Run via `npm run schema-map -- inventory --save <path>` /
+`... diff --baseline <inv.json> --candidate <inv.json>`. It exists
+because Paradox patches the save format on its own schedule, and
+research-save-format.md-style manual research (read megabytes of raw
+save text by hand, once per section, only when a UI feature needs it)
+doesn't scale to "map everything" — this tool makes that process
+repeatable and automated instead.
+
+**Full scan, not sampling — deliberately.** Both optionality detection
+(does every entry have this field?) and fixed-vs-variable-keyed
+classification (research.md §3 below) require seeing every entry of a
+collection, not a sample: a field that's rare enough to be missed by
+sampling is exactly the kind of thing this tool exists to catch. This
+is safe here in a way it wouldn't be in the app's own browser-side
+parse — it's an offline Node process, not something blocking a UI
+thread (constitution Principle V's "MUST NOT block the main UI thread"
+targets the runtime app, not this tool).
+
+**Fixed-shape vs. variable-keyed classification.** A nested object's
+key-set is classified across every sampled instance, not one: if the
+same bounded vocabulary of keys keeps recurring (allowing a minority of
+per-instance optional keys), it's `fixed_object`, and every key seen
+becomes a candidate real column. If the key-set keeps growing with more
+instances sampled (each instance drawing from a much larger shared
+catalog — e.g. a province's produced trade goods, keyed by good name),
+it's `variable_object`, captured as one lossless JSON column instead of
+one speculative column per possible key. The threshold
+(`NUMERIC_KEY_RATIO_THRESHOLD`/the fixed-vs-variable ratio in
+`classify.ts`) was calibrated against real fixture and real-save data,
+not chosen a priori.
+
+**Real bugs this tool's own real-save run found** (none caught by the
+small committed fixture — see `specs/004-full-schema-mapping/research.md`
+§6 for full detail): (1) `array.push(...hugeArray)` blows V8's
+call-stack argument limit for a real 28,573-entry collection — this
+looked like a stack-overflow-from-recursion-depth crash but wasn't;
+fixed by looping instead of spreading (a genuine max-depth guard for
+real deep nesting was added alongside this, for a separate reason).
+(2) Real save keys aren't always plain integers — some are
+decimal-formatted strings ("0.03388") in the same map as integer keys.
+(3) A numeric-keyed collection can sit directly at a section's own top
+level (`diplomacy_manager`), not only under a named sub-key like
+`countries.database`. (4) A numeric-keyed collection can have a
+minority of named keys mixed in alongside its indexed entries
+(`diplomacy_manager`'s 12 named action-type keys alongside its 2,470
+per-country entries) — needing a ratio-based, not all-or-nothing,
+collection-detection rule. (5) A full "1-1" inventory of the real
+~642MB save produces a 285MB JSON file — far too large to commit, so
+`tools/schema-mapping/inventories/` is gitignored in full; the tool's
+code and its fixture-based regression test are what's committed and
+reviewable, not a specific real-save run's output.
+
+**Applying a finding to real schema** (User Story 2's pattern, first
+used for the `population` table): a section's fixed-shape scalar fields
+become real, individually-typed `schema.sql` columns; anything
+classified `variable_object` (or otherwise too unpredictable — FR-011)
+becomes a single JSON-text column instead, following the exact same
+fixture-first testing discipline (constitution Principle II) as every
+other adapter change in this project — a real, committed fixture
+excerpt and a failing regression test come before the schema/adapter
+change, not after. One real finding from applying this pattern:
+`population`'s entity indices exceed 32-bit `INTEGER` range in the real
+save (unlike `nations`/`provinces`/`locations`, which comfortably fit
+it) — confirmed via a real insert failure against the real save, not
+assumed; `population.idx` uses `BIGINT`.
+
+`wars` (`war_manager.database`) was a second, independent application of
+the same pattern (2026-09-19) — see `specs/004-full-schema-mapping`'s
+research.md §8 for the full real findings, including the same
+`BIGINT`-entity-index issue re-confirmed independently, and a real
+finding specific to this section: most of `war_manager.database`'s raw
+entries (47 of 56, in the designated real save) are inert `"none"`
+placeholder slots, not wars at all.
+
+## Encyclopedia: IA restructuring and the Wars tab (2026-09-19)
+
+The top-level "Country Viewer" section was renamed **Encyclopedia** and
+given its own horizontal sub-nav (`EncyclopediaNav`) with five peer
+tabs: Countries (the previously-built nation selector + side-nav shell,
+unchanged), Wars, Leaderboard, Characters, and Markets (the latter three
+`ComingSoonPlaceholder`s for now). This is a UI/IA decision, not a new
+spec-kit feature — no `specs/NNN-.../` directory exists for it; it's
+recorded here instead, per this file's own "living summary" convention.
+
+Wars is a peer of Countries, not nested under it, because a war belongs
+to no single nation — `Shell.css` gained a third grid state
+(`shell--with-subnav`: top bar + sub-nav + full-width main, no side nav)
+for exactly this case, alongside the existing bare and `with-nav`
+(Countries, once a save is loaded) states.
+
+The Wars tab itself binds `wars` (see above) via `queries.ts`'s
+`listWarsArrow`, joined against `nations` for attacker/defender display
+tags, rendered through the same Perspective-viewer pattern
+`ProvincesTab` established (`WarsTab.tsx`/`.css`). Column selection
+(attacker, defender, ongoing/dates/duration, scores, casualties, war
+type) was direct product input, not a design-system default — a player
+asking "what do I want to know about a war" would ask exactly those
+questions. Selecting a row to open a single-war detail page is a known,
+explicitly deferred future piece, not an oversight.
+
+### Three real bugs found running this against the actual kept save
+
+None of these were caught by the unit/integration test suite, because
+each depends on real browser-only state (a live OPFS connection, or an
+already-existing kept save's on-disk schema) that the test harness
+deliberately no-ops or never accumulates. Found by actually running the
+app against a real, previously-kept ~642MB save — not by inspection.
+
+1. **A kept save predating a new table crashes on resume.**
+   `schema.sql` is only ever applied once, at first parse
+   (`loadSave` in `parser/load-save.ts`) — resuming a kept save
+   (`resumeSave`) just opened a connection and read from it directly.
+   Adding the `wars` table (or any future table) to `schema.sql` did
+   nothing for a save kept *before* that change: resuming it hit a hard
+   `Catalog Error: Table with name wars does not exist!` the first time
+   anything queried it. Fixed by having `resumeSave` re-run
+   `applySchema` too — every statement in `schema.sql` is `CREATE TABLE
+   IF NOT EXISTS`, so this is a no-op for existing tables and just
+   backfills missing ones (empty, since this save was never re-parsed
+   with the adapter that would populate them — the affected tab's
+   existing empty-state handling already covers that gracefully).
+
+2. **Deleting the active save's own OPFS file while its connection is
+   still open throws.** "Forget This Save," clicked while that exact
+   save is the currently loaded one, called `deleteSaveDatabase`
+   without first closing `readDbRef`'s live connection to that same
+   file. DuckDB-Wasm holds an OPFS file open exclusively for as long as
+   a connection lives, so the delete failed with a real
+   `InvalidModificationError: An attempt was made to modify an object
+   where modifications are not allowed`. Fixed in `FileLoader.tsx`:
+   forgetting the active save now closes that connection first, then
+   deletes, then returns the app to the idle "select a save" state
+   (there's nothing left to browse once the data is actually gone).
+   Untestable in the unit-test harness by design — `deleteSaveDatabase`
+   no-ops there with no real OPFS to delete from.
+
+3. **The native `<input type="file">` always read "No file chosen."**
+   Its own `onChange` handler resets `event.target.value = ""`
+   immediately after a selection (needed so the same file can be
+   re-selected later), which also blanks the input's native label —
+   so it looked broken (no file loaded) even with a save actively
+   ready. Fixed by replacing the native label with an app-controlled
+   status line (`TopBar.tsx`) reflecting `save_meta.filename` from the
+   actual loaded save, with the picker's own heading switching to "Load
+   a different save" once something's loaded. Separately, the
+   Keep/Forget button's own width changed between "Keep This Save" and
+   "Forget This Save" (and an appearing/disappearing "[ kept ]" tag),
+   reflowing the top bar on every toggle — fixed by giving the button a
+   fixed `min-width` and always mounting the tag (visibility-toggled,
+   not conditionally rendered) so its width is reserved either way.
+
+## Perspective tables: bigger by default, and a universal load indicator (2026-09-19)
+
+Two further UI passes, also outside any numbered spec-kit feature:
+
+- Every `<perspective-viewer>` in the app (not per-tab — set once in
+  `perspective/theme.css`, inherited across the shadow-DOM boundary the
+  same way the existing color-token overrides already were) now renders
+  with a taller row height and larger base font-size, and the
+  Wars/Provinces containers no longer sit inside the shell's centered
+  `max-width: 64rem` cap (`Shell.css`'s `shell__main-inner--full-width`
+  modifier) — only actual data-table tabs opt into that; Overview cards
+  and placeholders keep the original centered width.
+- A single loading state, previously shown only on the Countries tab,
+  now shows on every tab: `LoadingCircle.tsx`, a large centered
+  circular progress indicator with a percentage in the middle, replaces
+  per-tab content for every `Status` kind that means "a save is
+  actively loading" (resuming, validating, detecting version, parsing,
+  loading overview), regardless of which app section/tab is selected.
+  The percentage is derived only from real known milestones (byte-read
+  progress within "validating," plus which ordered stage has actually
+  been reached) — never a fabricated estimate of progress within a
+  stage that reports none of its own (constitution Principle IV); a
+  stage with no granular signal of its own gets a gentle pulse instead,
+  so a percentage held steady for a while (e.g. parsing a large save)
+  still reads as active rather than stuck.

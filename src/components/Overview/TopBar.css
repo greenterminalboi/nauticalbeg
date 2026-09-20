@@ -61,10 +61,34 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--color-on-primary);
+  cursor: pointer;
 }
 
-.top-bar__file-picker input[type="file"] {
+.top-bar__file-picker:focus-within .top-bar__file-picker-label {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: 2px;
+}
+
+/* Visually hidden, not display:none — clicking anywhere on the label
+   (including the status text below) still opens the native file dialog,
+   which display:none would break in some browsers. The label's own text
+   is what's actually shown; see loadedFilename's doc comment in
+   TopBar.tsx for why the input's native label text isn't used. */
+.top-bar__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.top-bar__file-status {
   font-family: var(--font-body);
+  font-weight: 400;
   color: var(--color-on-primary);
   font-size: 0.85rem;
 }

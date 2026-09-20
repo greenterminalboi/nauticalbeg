@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { loadSave, resumeSave } from "../../src/parser/load-save";
 import * as db from "../../src/storage/db";
-import { applySchema, closeSaveDatabase, openSaveDatabase } from "../../src/storage/db";
+import { applySchema, closeSaveDatabase, openSaveDatabase, queryRows } from "../../src/storage/db";
 import { parseAndStore } from "../../src/parser/version-adapters/1.3.11";
 import { ensureTestDuckDBConfigured } from "../helpers/duckdb-test-env";
 import { toBytes } from "../helpers/encode";
@@ -196,6 +196,32 @@ describe("resumeSave", () => {
       inGameDate: "1628.8.14",
       playerNationTag: "RUS",
     });
+  });
+
+  it("adds a table added by schema.sql after this save was first kept, rather than crashing on resume (real bug: kept saves predating the wars table)", async () => {
+    const dbHandle = await openSaveDatabase("resume-predates-wars");
+    await applySchema(dbHandle);
+    await parseAndStore(dbHandle, "resume-predates-wars", "rus-1628-minimal.eu5", toBytes(textWithRusAsPlayer));
+    // Simulates a save kept before schema.sql had a `wars` table at all —
+    // real kept saves from before that schema change hit exactly this
+    // "Catalog Error: Table with name wars does not exist!" the moment
+    // anything queried it, since resumeSave never used to reapply schema.
+    await dbHandle.conn.query("DROP TABLE wars");
+    await closeSaveDatabase(dbHandle);
+
+    const callbacks = { onReady: vi.fn(), onError: vi.fn() };
+    await resumeSave("resume-predates-wars", callbacks);
+
+    expect(callbacks.onError).not.toHaveBeenCalled();
+    expect(callbacks.onReady).toHaveBeenCalledTimes(1);
+
+    // The table exists again (empty, since this save was never re-parsed
+    // with the adapter that populates it) instead of the resumed session
+    // crashing the first time something queries it.
+    const resumed = await openSaveDatabase("resume-predates-wars");
+    const rows = await queryRows(resumed, "SELECT * FROM wars");
+    expect(rows).toHaveLength(0);
+    await closeSaveDatabase(resumed);
   });
 
   it("reports parse-failed if the save has no data (e.g. parsing never actually ran)", async () => {

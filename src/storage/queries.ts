@@ -301,6 +301,39 @@ export async function listProvincesArrow(db: SaveDatabase, nationIdx: number): P
   );
 }
 
+/**
+ * Encyclopedia's Wars tab: every war in the save (not scoped to a
+ * selected nation — a war belongs to no single country, per the
+ * decision to make "Wars" a peer of "Countries," not nested under it).
+ * `attacker`/`defender` are display names joined from `nations`
+ * (falling back tag -> "Unknown" the same way `listNations` does, since
+ * most non-player nations have no `name` set). `is_ongoing` is computed
+ * here rather than stored (`schema.sql`'s `wars.end_date IS NULL`
+ * already says the same thing unambiguously).
+ */
+export async function listWarsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `SELECT
+       wars.idx as idx,
+       COALESCE(attacker.name, attacker.tag, 'Unknown') as attacker,
+       COALESCE(defender.name, defender.tag, 'Unknown') as defender,
+       wars.start_date as start_date,
+       wars.end_date as end_date,
+       (wars.end_date IS NULL) as is_ongoing,
+       wars.duration_days as duration_days,
+       wars.attacker_score as attacker_score,
+       wars.defender_score as defender_score,
+       wars.attacker_casualties as attacker_casualties,
+       wars.defender_casualties as defender_casualties,
+       wars.war_name_key as war_type
+     FROM wars
+     LEFT JOIN nations attacker ON attacker.idx = wars.attacker_idx
+     LEFT JOIN nations defender ON defender.idx = wars.defender_idx
+     ORDER BY wars.start_date DESC`,
+  );
+}
+
 /** Used on app start to offer resuming a kept save (Acceptance Scenario 2). */
 export async function listKeptSave(): Promise<KeptSaveSummary | null> {
   return readKeptSavePointer();

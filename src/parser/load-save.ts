@@ -170,6 +170,19 @@ export async function resumeSave(
   let db: SaveDatabase | null = null;
   try {
     db = await openSaveDatabase(saveId);
+    // A kept save's OPFS database was only ever schema'd once, at the
+    // moment it was first parsed (see loadSave above) — a save kept
+    // before a later feature added a new table (e.g. `wars`) would
+    // otherwise resume straight into a hard "Catalog Error: Table ...
+    // does not exist" the first time something queried it (a real crash
+    // hit resuming a save kept before the Wars tab's schema addition).
+    // `applySchema`'s statements are all `CREATE TABLE IF NOT EXISTS`, so
+    // rerunning it here is a no-op for tables that already exist and just
+    // adds ones that don't — the new table comes back empty rather than
+    // populated (this save was never re-parsed with the adapter that
+    // would fill it), which the affected tab's existing empty-state
+    // handling already covers gracefully.
+    await applySchema(db);
     const meta = await getSaveMeta(db);
     if (!meta.inGameDate) {
       callbacks.onError(
