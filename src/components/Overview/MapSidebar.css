@@ -1,0 +1,79 @@
+/* specs/005-map-visualization FR-003/FR-004: a floating, translucent
+   overlay panel on top of the map — unlike SideNav.tsx's opaque,
+   full-height, permanent column (mobile out of scope for this project
+   entirely), this panel deliberately gives the map itself the screen
+   space back when collapsed, and stays translucent so the map is never
+   fully hidden behind it even when expanded. Positioned directly here
+   (not via an extra wrapper div in MapTab) against .map-tab, its nearest
+   positioned ancestor — .map-tab has a real, explicit height (the
+   "--flush" layout chain in Shell.css/FileLoader.tsx), so this panel's
+   own max-height below actually resolves against something concrete. */
+.map-sidebar {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: 10;
+  background: color-mix(in srgb, var(--color-surface-container) 85%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 6px;
+  min-width: 12rem;
+  max-width: 16rem;
+  max-height: calc(100% - 2 * var(--space-md));
+  overflow-y: auto;
+}
+
+.map-sidebar__toggle {
+  display: block;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-outline-variant);
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+}
+
+.map-sidebar__toggle:hover {
+  background: var(--color-surface-container-high);
+}
+
+.map-sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-sidebar__item {
+  display: block;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-on-surface);
+  background: none;
+  border: none;
+  border-left: 4px solid transparent;
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+}
+
+.map-sidebar__item:hover {
+  background: var(--color-surface-container-high);
+}
+
+.map-sidebar__item:focus-visible {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: -2px;
+}
+
+.map-sidebar__item--active {
+  border-left-color: var(--color-secondary);
+  background: var(--color-surface-container-high);
+  font-weight: 600;
+}

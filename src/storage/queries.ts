@@ -334,6 +334,65 @@ export async function listWarsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
   );
 }
 
+/**
+ * specs/005-map-visualization: every location in the save, with
+ * everything all four map layers need in one row — loaded once per save
+ * (research.md §7/FR-017), not re-queried on every layer switch. Unlike
+ * every other `list*` function here, this is save-wide (like
+ * `listWarsArrow`), not scoped to a selected nation — the map shows
+ * every country's territory at once.
+ *
+ * `idx` is the join key against the generated map geometry's decoded
+ * `properties.idx` (research.md §1 — `locations.idx` was already this
+ * table's primary key; no new column was needed). `name` is the save's
+ * own rare rename-override field (present on well under 1% of real
+ * locations) — kept for display as a secondary "known in-save as X" hint
+ * where present, never used for joining; the geometry's own
+ * `properties.name` (from the game's static `named_locations/*.txt`,
+ * broadly populated) is the primary display name, read client-side
+ * straight off the decoded feature rather than duplicated into this row.
+ *
+ * Two separate `LEFT JOIN`s to `nations` (once for `owner_idx`, once for
+ * `controller_idx`, which can differ during occupation) mirror
+ * `listWarsArrow`'s attacker/defender double-join, including its
+ * `COALESCE(name, tag, 'Unknown')` display-name fallback. Population is
+ * pre-aggregated per location in a subquery (`location_pops` joined to
+ * `population`, summed) rather than a top-level `GROUP BY` across every
+ * other selected column.
+ */
+export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `SELECT
+       locations.idx as idx,
+       locations.name as name,
+       locations.owner_idx as owner_idx,
+       owner.color_r as owner_color_r,
+       owner.color_g as owner_color_g,
+       owner.color_b as owner_color_b,
+       COALESCE(owner.name, owner.tag, 'Unknown') as owner_name,
+       locations.controller_idx as controller_idx,
+       controller.color_r as controller_color_r,
+       controller.color_g as controller_color_g,
+       controller.color_b as controller_color_b,
+       COALESCE(controller.name, controller.tag, 'Unknown') as controller_name,
+       locations.control as control,
+       locations.raw_material as raw_material,
+       COALESCE(pop_totals.total_population, 0) as total_population
+     FROM locations
+     LEFT JOIN nations owner ON owner.idx = locations.owner_idx
+     LEFT JOIN nations controller ON controller.idx = locations.controller_idx
+     LEFT JOIN (
+       SELECT location_pops.location_idx as location_idx,
+              SUM(population.size) as total_population
+       FROM location_pops
+       JOIN population ON population.idx = location_pops.pop_idx
+       GROUP BY location_pops.location_idx
+     ) pop_totals ON pop_totals.location_idx = locations.idx
+     ORDER BY locations.idx`,
+  );
+}
+
 /** Used on app start to offer resuming a kept save (Acceptance Scenario 2). */
 export async function listKeptSave(): Promise<KeptSaveSummary | null> {
   return readKeptSavePointer();

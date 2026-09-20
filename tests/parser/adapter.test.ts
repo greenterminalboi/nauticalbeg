@@ -126,6 +126,88 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     });
   });
 
+  it("populates locations.name/raw_material/controller_idx/control and nations.color_r/g/b (specs/005-map-visualization)", async () => {
+    const database = await freshDb("adapter-map-fields.db");
+    await parseAndStore(database, "save-13", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    // Location 1: name comes from metadata.compatibility.locations[0]
+    // (the fixture's array position 0 is "stockholm" — research.md §1),
+    // not from any per-location field on the location record itself.
+    const loc1 = await queryAll(database, "SELECT * FROM locations WHERE idx = 1");
+    expect(loc1[0]).toMatchObject({
+      name: "stockholm",
+      raw_material: "clay",
+      controller_idx: 3,
+      control: 1,
+    });
+
+    // Location 3975: name comes from
+    // metadata.compatibility.locations[3974] (the fixture's array
+    // position 3974 is "mazyr").
+    const loc3975 = await queryAll(database, "SELECT * FROM locations WHERE idx = 3975");
+    expect(loc3975[0]).toMatchObject({
+      name: "mazyr",
+      raw_material: "wool",
+      controller_idx: 2025,
+    });
+    expect(loc3975[0].control).toBeCloseTo(0.43119, 5);
+
+    // RUS's in-game color, from countries.database[2025].color.rgb.
+    const rus = await queryAll(database, "SELECT color_r, color_g, color_b FROM nations WHERE idx = 2025");
+    expect(rus[0]).toMatchObject({ color_r: 183, color_g: 136, color_b: 27 });
+
+    // SCA (idx 3) has no `color` field in the fixture — must stay NULL,
+    // never a fabricated default (constitution Principle IV).
+    const sca = await queryAll(database, "SELECT color_r, color_g, color_b FROM nations WHERE idx = 3");
+    expect(sca[0]).toMatchObject({ color_r: null, color_g: null, color_b: null });
+  });
+
+  it("leaves locations.name NULL, without throwing, when metadata.compatibility is absent (specs/005-map-visualization research.md §1)", async () => {
+    // Some saves (e.g. never-multiplayer-flagged ones — unconfirmed
+    // either way against a real singleplayer save) may not carry this
+    // block at all. Constitution Principle IV: never fabricate a name,
+    // never crash — the map's existing neutral "no data" rendering
+    // already covers a NULL name (spec FR-009).
+    const textWithoutCompatibility = fixtureText.replace(
+      /\tcompatibility=\{[\s\S]*?\n\t\}\n/,
+      "",
+    );
+    expect(textWithoutCompatibility).not.toContain("compatibility=");
+
+    const database = await freshDb("adapter-no-compatibility.db");
+    await parseAndStore(database, "save-15", "rus-1628-minimal.eu5", toBytes(textWithoutCompatibility));
+
+    const rows = await queryAll(database, "SELECT idx, name FROM locations ORDER BY idx");
+    expect(rows).toEqual([
+      { idx: 1, name: null },
+      { idx: 3975, name: null },
+    ]);
+  });
+
+  it("populates location_pops from a location's population.pops list (specs/005-map-visualization)", async () => {
+    const database = await freshDb("adapter-location-pops.db");
+    await parseAndStore(database, "save-14", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(
+      database,
+      "SELECT pop_idx FROM location_pops WHERE location_idx = 3975 ORDER BY pop_idx",
+    );
+    // queryAll goes through queryRows, which coerces BIGINT to plain
+    // JS number (db.ts's toPlainRow) — unlike a raw Arrow-decode path.
+    expect(rows).toEqual([{ pop_idx: 943 }, { pop_idx: 14016 }]);
+
+    // Confirms the join actually resolves to the real population rows
+    // (data-model.md's listMapLocationsArrow depends on this).
+    const total = await queryAll(
+      database,
+      `SELECT SUM(population.size) as total
+       FROM location_pops
+       JOIN population ON population.idx = location_pops.pop_idx
+       WHERE location_pops.location_idx = 3975`,
+    );
+    expect(total[0].total).toBeCloseTo(0.22409 + 1.80333, 5);
+  });
+
   it("computes total development and location count for RUS via aggregation, not a stored column", async () => {
     const database = await freshDb("adapter-aggregate.db");
     await parseAndStore(database, "save-6", "rus-1628-minimal.eu5", toBytes(fixtureText));

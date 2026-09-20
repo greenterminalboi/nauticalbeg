@@ -53,10 +53,13 @@ can depend on without needing to know how the asset was generated.
 - **No join exists for locations.** Unlike provinces, `schema.sql`'s
   `locations` table has no `name` column — only a numeric `idx`. A
   decoded `objects.locations` feature's `properties.name` cannot
-  currently be joined against parsed save data at all. A future feature
-  adding a `locations.name` column would close this gap (research.md
-  §9); until then, a consumer can render location borders but not join
-  them to save-derived data (ownership, development, etc.).
+  currently be joined against parsed save data at all. This gap was
+  later closed by `specs/005-map-visualization` — entirely on the save-
+  parsing side (a save's own `metadata.compatibility.locations` array
+  gives each location's name; no change to this asset or this feature
+  was needed) — see that feature's `research.md` §1 for the full story,
+  including an idx-on-geometry approach that was tried here first and
+  reverted after being found unreliable across game versions.
 - No promise that every `provinces.name` a save produces has a matching
   feature in the asset (e.g. a save from a different game version than
   the asset was generated from) — a consumer MUST handle a lookup miss

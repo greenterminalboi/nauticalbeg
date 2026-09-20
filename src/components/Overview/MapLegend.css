@@ -1,0 +1,107 @@
+/* specs/005-map-visualization FR-012: a compact, translucent, collapsible
+   overlay panel on top of the map — content is entirely data-driven per
+   active layer, no per-layer CSS here. Positioned directly here (not via
+   an extra wrapper div in MapTab) against .map-tab, its nearest
+   positioned ancestor — see MapSidebar.css's matching doc comment for
+   why that matters: a wrapper with only max-height (no explicit height)
+   gives no resolvable percentage basis to a child's own max-height, which
+   is exactly what silently let this panel grow past the canvas bottom
+   edge before being flattened onto one element. The list itself uses CSS
+   multi-column layout (not a single ever-taller column) so a layer with
+   many entries (e.g. RGO's ~50 raw goods) spreads sideways within the
+   panel's bounded height instead of pushing past it — which requires
+   the list to have a genuine bounded height of its own, not just an
+   ancestor with max-height+overflow (a `columns` container with no
+   explicit height just grows one tall column instead of ever starting a
+   second one, letting the ancestor's scrollbar hide the problem instead
+   of fixing it). `.map-legend` is a flex column so `.map-legend__list`'s
+   `flex:1; min-height:0` actually resolves to a real pixel height (the
+   panel's bounded height minus the toggle/title's own height) that the
+   browser can multi-column against. */
+.map-legend {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--color-surface-container-low) 85%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 6px;
+  width: 14rem;
+  max-width: 90vw;
+  max-height: calc(100% - 2 * var(--space-md));
+}
+
+/* MapLegend.tsx's widthClassFor: an explicit width (not just a wider
+ * max-width) is what actually gives the multi-column list below room to
+ * use more than one column — see that function's doc comment. */
+.map-legend--wide-2col {
+  width: min(90vw, 24rem);
+}
+
+.map-legend--wide-3col {
+  width: min(90vw, 38rem);
+}
+
+.map-legend__toggle {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-outline-variant);
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+}
+
+.map-legend__toggle:hover {
+  background: var(--color-surface-container-high);
+}
+
+.map-legend__title {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  margin: 0;
+  padding: var(--space-xs) var(--space-md);
+}
+
+.map-legend__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-md) var(--space-sm);
+  flex: 1 1 auto;
+  min-height: 0;
+  columns: 10rem;
+  column-gap: var(--space-md);
+  overflow-y: auto;
+}
+
+.map-legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-on-surface);
+  padding-bottom: var(--space-xs);
+  break-inside: avoid;
+}
+
+.map-legend__swatch {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 1px solid var(--color-outline-variant);
+  flex-shrink: 0;
+}

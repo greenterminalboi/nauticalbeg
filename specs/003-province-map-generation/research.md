@@ -296,3 +296,11 @@ shipping an unjoinable layer as if it were already usable.
   `objects.provinces` and pruning now-unused arcs*: rejected — TopoJSON
   doesn't make "drop an object and compact the arc array" a cheap/simple
   operation, and building it fresh is just as correct with far less code.
+
+**Update**: the "future feature to add a `locations.name` column" fix
+proposed above is what `specs/005-map-visualization` ultimately did,
+though not from the field this document originally pointed at (see its
+`research.md` §1 for the full story — a save's own
+`metadata.compatibility.locations` array turned out to be the reliable
+source, not the sparse per-location `name` override field). This asset
+and this feature's own code never needed to change either way.

@@ -27,6 +27,7 @@ import { EncyclopediaNav } from "./EncyclopediaNav";
 import { ErrorMessage } from "./ErrorMessage";
 import { KeptSaveOffer } from "./KeptSaveOffer";
 import { LoadingCircle } from "./LoadingCircle";
+import { MapTab } from "./MapTab";
 import { OverviewCard } from "./OverviewCard";
 import { ProvincesTab } from "./ProvincesTab";
 import type { AppSection, EncyclopediaTab, TabId } from "./tabs";
@@ -365,9 +366,18 @@ export function FileLoader() {
   const isTableTab =
     (isEncyclopedia && encyclopediaTab === "wars" && isReady) ||
     (showCountriesNav && status.kind === "ready" && status.activeTab === "provinces");
-  const mainInnerClassName = isTableTab
-    ? "shell__main-inner shell__main-inner--full-width"
-    : "shell__main-inner";
+  // The Map tab (once a save is actually loaded — the pre-load "select a
+  // save" message stays in the normal padded/centered layout) wants the
+  // full remaining viewport edge-to-edge, not just the full width
+  // --full-width alone gives table tabs — see Shell.css's `--flush`
+  // modifier doc comment.
+  const isMapTab = activeSection === "map" && isReady && !!readDbRef.current;
+  const mainClassName = isMapTab ? "shell__main shell__main--flush" : "shell__main";
+  const mainInnerClassName = isMapTab
+    ? "shell__main-inner shell__main-inner--full-width shell__main-inner--flush"
+    : isTableTab
+      ? "shell__main-inner shell__main-inner--full-width"
+      : "shell__main-inner";
 
   return (
     <div className={shellClassName}>
@@ -389,7 +399,7 @@ export function FileLoader() {
           onSelectTab={handleSelectTab}
         />
       )}
-      <main className="shell__main">
+      <main className={mainClassName}>
         <div className={mainInnerClassName}>
           {isLoadingSave ? (
             <LoadingCircle
@@ -400,7 +410,14 @@ export function FileLoader() {
           ) : (
             <>
               {activeSection === "nauticalbot" && <ComingSoonPlaceholder feature="NauticalBot" />}
-              {activeSection === "map" && <ComingSoonPlaceholder feature="Map" />}
+              {activeSection === "map" &&
+                // Save-wide, not nation-scoped, like Wars above — same
+                // isReady + readDbRef.current gate and idle wording.
+                (isReady && readDbRef.current ? (
+                  <MapTab db={readDbRef.current} />
+                ) : (
+                  <p>Select a save file above to get started.</p>
+                ))}
               {activeSection === "settings" && <ComingSoonPlaceholder feature="Settings" />}
               {isEncyclopedia && encyclopediaTab === "countries" && (
                 <StatusView

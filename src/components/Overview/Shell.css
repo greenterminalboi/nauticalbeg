@@ -45,6 +45,14 @@
   box-sizing: border-box;
 }
 
+/* specs/005-map-visualization: the Map tab wants the full remaining
+ * viewport, edge-to-edge up to the top bar/nav rows above it — its own
+ * floating overlay panels (sidebar/legend/tooltip) replace the padding's
+ * usual job of keeping content off the edges. */
+.shell__main--flush {
+  padding: 0;
+}
+
 .shell__main-inner {
   max-width: 64rem;
   margin: 0 auto;
@@ -60,4 +68,13 @@
 .shell__main-inner--full-width {
   max-width: none;
   margin: 0;
+}
+
+/* Pairs with .shell__main--flush above: the map needs its inner box to
+ * actually fill the available height too, not just lose its width bound
+ * (Perspective tables using --full-width alone size to their own content
+ * height, which the map — a canvas that fills whatever box it's given —
+ * does not). */
+.shell__main-inner--flush {
+  height: 100%;
 }

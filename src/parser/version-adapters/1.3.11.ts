@@ -76,6 +76,42 @@ function asStringOrNull(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+/** specs/005-map-visualization research.md §1: a save's own
+ * `metadata.compatibility.locations` is a flat, save-embedded array of
+ * every location's name, in the same order as that save's own
+ * `locations.locations` numeric keys (1-indexed: array position `idx -
+ * 1` is location `idx`'s name) — the canonical join key against the
+ * generated map geometry's `properties.name`. This array is baked into
+ * the save at creation time, so — unlike reading a static game-install
+ * file — it stays correct regardless of which game version/DLC set
+ * produced the save. Two earlier approaches were tried and rejected
+ * first (see research.md §1's full history): a per-location `name`
+ * override field (present on ~0.02% of real locations, not usable at
+ * all) and a numeric `idx` baked into the map geometry from a game-
+ * install file's declaration order (looked promising in aggregate but
+ * had confirmed, real misalignments from game-version drift).
+ * Returns `[]` — not a partial/guessed list — if the array is missing
+ * or malformed (e.g. an older or non-multiplayer-flagged save that may
+ * not carry this block); every location's `name` then falls through to
+ * `null`, which this feature's map already renders as neutral "no
+ * data" (spec FR-009), never a fabricated identifier. */
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+}
+
+/** specs/005-map-visualization research.md §3: a Clausewitz `rgb { r g b
+ * }` color literal parses via jomini as `{ rgb: [r, g, b] }`. Returns
+ * null (not a partial/fabricated triple) unless all three components are
+ * confirmed numbers, per constitution Principle IV. */
+function asRgbOrNull(value: unknown): [number, number, number] | null {
+  const rgb = asRecord(value).rgb;
+  if (!Array.isArray(rgb) || rgb.length !== 3) return null;
+  const [r, g, b] = rgb;
+  return typeof r === "number" && typeof g === "number" && typeof b === "number"
+    ? [r, g, b]
+    : null;
+}
+
 /** Sums a war's `attacker_losses`/`defender_losses` field (shape:
  * `{ losses: { <unit_type>: { Battle?, Attrition?, Capture? } } }`) into
  * one total. Returns `null` — not `0` — when the field never appeared
@@ -106,6 +142,9 @@ export async function parseAndStore(
   const inGameDate = formatGameDate(metadata.date);
   const version = asStringOrNull(metadata.version);
   const playerCountryName = asStringOrNull(metadata.player_country_name);
+  // specs/005-map-visualization research.md §1: this save's own
+  // location-name ordering, used below to name every location by idx.
+  const compatibilityLocations = asStringArray(asRecord(metadata.compatibility).locations);
   if (!inGameDate || !version) {
     throw new Error(
       "metadata.date/metadata.version missing — not a parseable save",
@@ -132,12 +171,27 @@ export async function parseAndStore(
   const countryDatabase = asRecord(countriesSection.database);
 
   const nationRows: Array<
-    [number, string, null, string | null, number, number | null, number | null, string | null]
+    [
+      number,
+      string,
+      null,
+      string | null,
+      number,
+      number | null,
+      number | null,
+      string | null,
+      number | null,
+      number | null,
+      number | null,
+    ]
   > = [];
   for (const [idxStr, tag] of Object.entries(tags)) {
     const record = asRecord(countryDatabase[idxStr]);
     const currencyData = asRecord(record.currency_data);
     const government = asRecord(record.government);
+    // specs/005-map-visualization research.md §3: the country's in-game
+    // map color, for the Political/Control layers.
+    const rgb = asRgbOrNull(record.color);
     nationRows.push([
       Number(idxStr),
       tag,
@@ -147,11 +201,14 @@ export async function parseAndStore(
       asNumberOrNull(currencyData.gold),
       asNumberOrNull(currencyData.stability),
       asStringOrNull(government.type),
+      rgb ? rgb[0] : null,
+      rgb ? rgb[1] : null,
+      rgb ? rgb[2] : null,
     ]);
   }
   await insertRows(
     db,
-    "INSERT INTO nations (idx, tag, name, country_type, is_player, treasury, stability, government_type) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+    "INSERT INTO nations (idx, tag, name, country_type, is_player, treasury, stability, government_type, color_r, color_g, color_b) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
     nationRows,
   );
 
@@ -175,21 +232,57 @@ export async function parseAndStore(
   // Note the doubled key: locations={ locations={ ... } } — the outer
   // object's only content this adapter needs is the inner `locations` map.
   const locationDatabase = asRecord(asRecord(root.locations).locations);
-  const locationRows: Array<[number, number | null, number | null, number | null]> = [];
+  const locationRows: Array<
+    [
+      number,
+      number | null,
+      number | null,
+      number | null,
+      string | null,
+      string | null,
+      number | null,
+      number | null,
+    ]
+  > = [];
+  // specs/005-map-visualization research.md §2: each location's
+  // `population.pops` list references individual `population.database`
+  // entries — materialized here as one location_pops row per id, since
+  // it's the only place this reverse link exists (population entries
+  // carry no location field of their own).
+  const locationPopRows: Array<[number, number]> = [];
   for (const [idxStr, value] of Object.entries(locationDatabase)) {
     const record = asRecord(value);
+    const locationIdx = Number(idxStr);
     locationRows.push([
-      Number(idxStr),
+      locationIdx,
       asNumberOrNull(record.owner),
       asNumberOrNull(record.province),
       asNumberOrNull(record.development),
+      compatibilityLocations[locationIdx - 1] ?? null,
+      asStringOrNull(record.raw_material),
+      asNumberOrNull(record.controller),
+      asNumberOrNull(record.control),
     ]);
+
+    const pops = asRecord(record.population).pops;
+    if (Array.isArray(pops)) {
+      for (const popIdx of pops) {
+        if (typeof popIdx === "number") locationPopRows.push([locationIdx, popIdx]);
+      }
+    }
   }
   await insertRows(
     db,
-    "INSERT INTO locations (idx, owner_idx, province_idx, development) VALUES (?1, ?2, ?3, ?4)",
+    "INSERT INTO locations (idx, owner_idx, province_idx, development, name, raw_material, controller_idx, control) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
     locationRows,
   );
+  if (locationPopRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO location_pops (location_idx, pop_idx) VALUES (?1, ?2)",
+      locationPopRows,
+    );
+  }
 
   const warDatabase = asRecord(asRecord(root.war_manager).database);
   const warRows: Array<[number, string]> = [];

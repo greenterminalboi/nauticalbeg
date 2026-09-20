@@ -44,6 +44,16 @@ CREATE TABLE IF NOT EXISTS nations (
   -- boolean, not war history.
 );
 
+-- specs/005-map-visualization: the country's in-game map color, for the
+-- Political/Control layers — from countries.database[idx].color.rgb.
+-- Same additive-ALTER reasoning as locations' new columns above. All
+-- three stay NULL together (never a fabricated color) for a country
+-- with no confirmed color in the save (some rebel/dead/unplayed tag
+-- slots).
+ALTER TABLE nations ADD COLUMN IF NOT EXISTS color_r INTEGER;
+ALTER TABLE nations ADD COLUMN IF NOT EXISTS color_g INTEGER;
+ALTER TABLE nations ADD COLUMN IF NOT EXISTS color_b INTEGER;
+
 -- Coarse historical-province groupings. Ownership/development are NOT
 -- authoritative here for aggregate stats — see `locations` below.
 CREATE TABLE IF NOT EXISTS provinces (
@@ -62,6 +72,29 @@ CREATE TABLE IF NOT EXISTS locations (
   province_idx INTEGER, -- logically REFERENCES provinces(idx)
   development DOUBLE
 );
+
+-- specs/005-map-visualization: four fields already sitting on the raw
+-- location record but never extracted before this feature needed them.
+-- The location-to-map-geometry join (specs/003-province-map-generation
+-- originally left open) turned out NOT to need a new column at all —
+-- `idx` (this table's existing primary key) is the join key against the
+-- generated map geometry's `properties.idx` (research.md §1's revision:
+-- an earlier plan to join via `name` was tested against a real save and
+-- found wrong — that field is a rare rename-override, present on well
+-- under 1% of real locations, not a general identifier). `name` below is
+-- kept only as that rare secondary display hint, never for joining.
+-- Added via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` rather than
+-- folded into the `CREATE TABLE` above (research.md §6): `CREATE TABLE
+-- IF NOT EXISTS` is a no-op against a database whose `locations` table
+-- already exists (true for any save kept before this feature shipped —
+-- see `resumeSave`'s existing rerun-on-open comment in
+-- src/parser/load-save.ts), so without an explicit `ALTER`, a kept
+-- save's `locations` table would silently keep lacking these columns
+-- forever, not just until its next re-parse.
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS name TEXT; -- from metadata.compatibility.locations[idx-1] (save-embedded, per-save-stable) — join key against public/map/*.topojson's properties.name
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS raw_material TEXT; -- from locations.locations[idx].raw_material — drives the RGO map layer
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS controller_idx INTEGER; -- from locations.locations[idx].controller; logically REFERENCES nations(idx) — may differ from owner_idx during occupation
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS control DOUBLE; -- from locations.locations[idx].control — drives the Control map layer's shading strength
 
 -- Minimal war participation data: only enough to answer "is this nation
 -- currently at war" (FR-006's war-status stat). One row per country per
@@ -155,6 +188,16 @@ CREATE TABLE IF NOT EXISTS population (
 -- `played_country`, once per human player) — those are handled specially
 -- by the adapter and never reach this table, but nothing here assumes a
 -- key is unique in case a future save version has other repeats.
+-- specs/005-map-visualization: materializes each location's
+-- `population.pops` list (research.md §2) — one row per (location, pop
+-- group) pair. A real new table (`CREATE TABLE IF NOT EXISTS` is
+-- sufficient here, unlike the ALTERs above), since no prior feature had
+-- a locations<->population link at all.
+CREATE TABLE IF NOT EXISTS location_pops (
+  location_idx INTEGER NOT NULL, -- logically REFERENCES locations(idx)
+  pop_idx BIGINT NOT NULL -- logically REFERENCES population(idx); BIGINT for the same reason population.idx is (see that table's comment)
+);
+
 CREATE SEQUENCE IF NOT EXISTS raw_sections_id_seq;
 CREATE TABLE IF NOT EXISTS raw_sections (
   id INTEGER PRIMARY KEY DEFAULT nextval('raw_sections_id_seq'),
@@ -170,3 +213,5 @@ CREATE INDEX IF NOT EXISTS idx_raw_sections_key ON raw_sections(key);
 CREATE INDEX IF NOT EXISTS idx_population_owner ON population(owner_idx);
 CREATE INDEX IF NOT EXISTS idx_wars_attacker ON wars(attacker_idx);
 CREATE INDEX IF NOT EXISTS idx_wars_defender ON wars(defender_idx);
+CREATE INDEX IF NOT EXISTS idx_locations_controller ON locations(controller_idx);
+CREATE INDEX IF NOT EXISTS idx_location_pops_location ON location_pops(location_idx);

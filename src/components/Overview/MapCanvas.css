@@ -1,0 +1,16 @@
+/* specs/005-map-visualization: fills its container (MapTab.css sizes
+   that container); the canvas backing store is sized in device pixels
+   by MapCanvas.tsx itself (devicePixelRatio), so this only needs to
+   claim the CSS box. */
+.map-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--color-surface-container-lowest);
+  cursor: grab;
+  touch-action: none;
+}
+
+.map-canvas:active {
+  cursor: grabbing;
+}

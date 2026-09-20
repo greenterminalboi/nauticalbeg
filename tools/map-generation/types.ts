@@ -56,11 +56,14 @@ export interface ProvinceProperties {
 }
 
 /**
- * Per-location properties. Name-keyed only (matching the game's own
- * named_locations convention, per research.md §2's naming decision for
- * provinces) — see research.md §9 for why there's no numeric idx here
- * either, and the resulting join gap against the save schema (no
- * `locations.name` column exists yet).
+ * Per-location properties. Name-keyed only, matching the game's own
+ * named_locations convention (research.md §2's naming decision for
+ * provinces). specs/005-map-visualization closes the location join gap
+ * (research.md §9) entirely on the save-parsing side — a save's own
+ * `metadata.compatibility.locations` array gives each location's name —
+ * rather than by adding anything here; see that feature's research.md
+ * §1 for the full story, including an idx-on-geometry approach that was
+ * tried and reverted after being found unreliable across game versions.
  */
 export interface LocationProperties {
   name: string;

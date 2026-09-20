@@ -697,3 +697,67 @@ Two further UI passes, also outside any numbered spec-kit feature:
   stage with no granular signal of its own gets a gentle pulse instead,
   so a percentage held steady for a while (e.g. parsing a large save)
   still reads as active rather than stuck.
+
+## Map Visualization (005) ships; the location join needed two attempts (2026-09-20)
+
+`specs/005-map-visualization` landed the Map tab: four layers (Political,
+Location Population, RGO, Control) rendered on a `<canvas>` over
+feature 003's generated geometry, with a collapsible sidebar and legend.
+The interesting part wasn't the layers — it was getting a location's
+save data to actually join against its map shape, which took two wrong
+turns before the real mechanism turned up. Full blow-by-blow in
+`specs/005-map-visualization/research.md` §1; summary here since it's
+exactly the kind of only-discoverable-against-a-real-save finding this
+log exists for:
+
+1. The save's per-location `name` field (`locations.locations[idx]
+   .name`) — the obvious-looking join key at spec time — is a rename-
+   override, present on ~0.02% of a real save's 28,573 locations. Not
+   usable at all.
+2. The first real fix baked a numeric `idx` into the map geometry,
+   computed from `location_templates.txt`'s file order in the game
+   install (briefly reopening 003 to do it). Looked right in aggregate
+   (~83% cross-check match) but was **wrong for real, visible reasons**
+   once actually run against the app: sea tiles rendered with owner
+   colors, and specific countries appeared to own land that wasn't
+   theirs (Venice "owning" a gulf near the Baltic, etc. — turned out to
+   be `krosno_odrzanskie`, a real Polish town, misassigned by drift
+   between the save's original game version and the currently-installed
+   one's `location_templates.txt`). Fully reverted — 003 is back to its
+   original shape, no geometry-side idx.
+3. The actual fix: every save embeds its own authoritative location
+   ordering at `metadata.compatibility.locations` (there for multiplayer
+   data-sync checking), immune to the version-drift problem that broke
+   attempt 2 since it travels with the save itself, not the currently-
+   installed game. `locations.name` is populated from
+   `compatibilityLocations[idx - 1]` at parse time; the join is name-
+   based again, like provinces already worked. Validated at 99.92%+
+   accuracy and 100% end-to-end resolution against a real 642MB save.
+
+Two lessons worth keeping: an aggregate cross-check metric (raw_material
+match rate) can look convincing while still hiding a real, localized
+bug — the thing that actually caught attempt 2 was eyeballing the
+running app, not a better percentage. And this project's "derive static
+data from the local game install, commit the result" pattern (003's
+whole approach) is only sound when the *save* being analyzed can't have
+been created on a different install-file version than whatever produced
+the committed asset — true for provinces (parser reads `province_
+definition` directly off the save), false for a geometry-side idx
+computed from a install file whose declaration order isn't guaranteed
+stable across game patches.
+
+A live UI refinement pass followed once the fix was confirmed working in
+a real browser (dev server + the user's own OPFS-kept save, no file
+upload needed): a horizontal map-wraparound render was built, confirmed
+mechanically correct, and then removed again after it measurably hurt
+pan/zoom performance at this feature's scale; a real CSS bug let the
+legend grow past the map's own bottom edge once a layer had enough
+entries (a wrapper `div` had `max-height` with no explicit `height`,
+which a child's own percentage `max-height` can't resolve against) —
+fixed by flattening the wrapper and giving the legend's list a genuine
+flex-bounded height for its CSS `columns` layout to size against; the
+RGO layer's colors were switched from a generated palette to the game's
+own real colors (traced through `common/goods/*.txt` + `common/
+named_colors/02_map.txt` into a committed static table, `rgoGameColors
+.ts`); and the hover tooltip now follows the cursor instead of sitting
+fixed in a corner.
