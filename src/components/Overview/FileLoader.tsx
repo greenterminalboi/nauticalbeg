@@ -609,6 +609,16 @@ function loadingLabel(status: Status): string {
   }
 }
 
+/** Stages that report real sub-progress of their own within a single
+ * stage — "validating" (bytes read) and "parsing" (the adapter's own
+ * extraction milestones, 1.3.11.ts's PARSE_MILESTONES). Every other
+ * stage has no finer signal than "reached." */
+const STAGES_WITH_SUB_PROGRESS = new Set<Status["kind"]>(["validating", "parsing"]);
+
+function hasKnownSubProgress(status: Status): boolean {
+  return STAGES_WITH_SUB_PROGRESS.has(status.kind) && "percent" in status && status.percent !== null;
+}
+
 /** null only for "resuming" (no phase-progress events exist for that
  * path at all) — every other loading kind always resolves to a real
  * milestone-based number, per LOADING_STAGE_ORDER's doc comment. */
@@ -616,16 +626,16 @@ function computeLoadingPercent(status: Status): number | null {
   if (status.kind === "resuming") return null;
   const idx = LOADING_STAGE_ORDER.indexOf(status.kind as (typeof LOADING_STAGE_ORDER)[number]);
   if (idx === -1) return null;
-  const withinStage =
-    status.kind === "validating" && "percent" in status && status.percent !== null ? status.percent / 100 : 0;
+  const withinStage = hasKnownSubProgress(status) && "percent" in status ? status.percent! / 100 : 0;
   return ((idx + withinStage) / LOADING_STAGE_ORDER.length) * 100;
 }
 
 /** True whenever the current stage has no real sub-progress of its own
- * to show — i.e. always, except partway through "validating"'s real
- * byte-read progress — so LoadingCircle can add a gentle pulse instead
- * of looking frozen while a long stage (e.g. parsing a large save) with
- * no granular signal is genuinely still working. */
+ * to show — so LoadingCircle can add a gentle pulse instead of looking
+ * frozen while a long stage with no granular signal is genuinely still
+ * working. Stops pulsing once a stage's own real percent (validating's
+ * byte-read progress, or parsing's extraction milestones) is available —
+ * the moving percent itself is the "still working" signal at that point. */
 function isLoadingStagePulsing(status: Status): boolean {
-  return !(status.kind === "validating" && "percent" in status && status.percent !== null);
+  return !hasKnownSubProgress(status);
 }

@@ -152,14 +152,47 @@ function sumLosses(lossesField: unknown): number | null {
   return total;
 }
 
+// Real, reached milestones through this function's own extraction
+// passes — not a time estimate (constitution Principle IV forbids
+// fabricating one). Equal-weighted, same convention `FileLoader.tsx`'s
+// outer `LOADING_STAGE_ORDER` already uses for the 4 top-level phases:
+// each milestone is worth 1/N of the "parsing" stage's own progress,
+// regardless of that section's real relative cost, since that cost
+// varies by save and was never measured. Added once market_manager
+// (007) and province_good_production (009) turned "parsing" — previously
+// reported once, with no update until the whole function returned —
+// into a phase long enough on a real large save that its own static,
+// merely-pulsing loading indicator read as stuck.
+const PARSE_MILESTONES = [
+  "parsed",
+  "nations",
+  "provinces",
+  "locations",
+  "wars",
+  "population",
+  "markets",
+  "market-price-history", // split from "markets" -- typically this feature's single largest table
+  "world-goods",
+  "raw-sections",
+  "done",
+] as const;
+
 export async function parseAndStore(
   db: SaveDatabase,
   saveId: string,
   filename: string,
   data: Uint8Array,
+  onProgress?: (percent: number) => void,
 ): Promise<ParsedSaveSummary> {
+  let milestonesReached = 0;
+  function reportMilestone(): void {
+    milestonesReached += 1;
+    onProgress?.(Math.round((milestonesReached / PARSE_MILESTONES.length) * 100));
+  }
+
   const parser = await Jomini.initialize();
   const root = asRecord(parser.parseText(data, { typeNarrowing: "unquoted" }));
+  reportMilestone(); // "parsed"
 
   const metadata = asRecord(root.metadata);
   const inGameDate = formatGameDate(metadata.date);
@@ -267,6 +300,7 @@ export async function parseAndStore(
     "INSERT INTO nation_history (nation_idx, year, metric, value) VALUES (?1, ?2, ?3, ?4)",
     nationHistoryRows,
   );
+  reportMilestone(); // "nations"
 
   const provinceDatabase = asRecord(asRecord(root.provinces).database);
   const provinceRows: Array<[number, string | null, number | null, number | null]> = [];
@@ -305,6 +339,7 @@ export async function parseAndStore(
       provinceGoodProductionRows,
     );
   }
+  reportMilestone(); // "provinces"
 
   // Note the doubled key: locations={ locations={ ... } } — the outer
   // object's only content this adapter needs is the inner `locations` map.
@@ -360,6 +395,7 @@ export async function parseAndStore(
       locationPopRows,
     );
   }
+  reportMilestone(); // "locations"
 
   const warDatabase = asRecord(asRecord(root.war_manager).database);
   const warRows: Array<[number, string]> = [];
@@ -435,6 +471,7 @@ export async function parseAndStore(
       warsRows,
     );
   }
+  reportMilestone(); // "wars"
 
   // population.database: one row per population group. Fixed-shape
   // scalar fields become real columns; `missing` (a variable-keyed
@@ -485,6 +522,7 @@ export async function parseAndStore(
       populationRows,
     );
   }
+  reportMilestone(); // "population"
 
   // market_manager.database: one row per market (specs/007-production-
   // trade-markets data-model.md). No name field exists in the save at
@@ -593,6 +631,7 @@ export async function parseAndStore(
       marketGoodRows,
     );
   }
+  reportMilestone(); // "markets"
   if (marketGoodPriceHistoryRows.length > 0) {
     await insertRows(
       db,
@@ -600,6 +639,7 @@ export async function parseAndStore(
       marketGoodPriceHistoryRows,
     );
   }
+  reportMilestone(); // "market-price-history"
 
   // market_manager.produced_goods: the save's own world-total snapshot
   // per good — read directly, never summed client-side from
@@ -616,6 +656,7 @@ export async function parseAndStore(
       worldGoodProductionRows,
     );
   }
+  reportMilestone(); // "world-goods"
 
   // Every other top-level section: no real schema yet, so capture as
   // opaque JSON rather than guess at columns for structure nobody has
@@ -641,6 +682,7 @@ export async function parseAndStore(
       rawRows,
     );
   }
+  reportMilestone(); // "raw-sections"
 
   await insertRows(
     db,
@@ -659,6 +701,7 @@ export async function parseAndStore(
       );
     }
   }
+  reportMilestone(); // "done"
 
   return { inGameDate, playerNationTag: playerTag };
 }

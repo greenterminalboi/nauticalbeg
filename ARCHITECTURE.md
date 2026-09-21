@@ -1046,3 +1046,24 @@ the side nav by this project's convention, not a `MarketsTab`-local
 toggle (that idiom is reserved for a secondary axis, like
 `LeaderboardTab.tsx`'s own graph/ranking/treemap toggle underneath its
 side-nav-selected metric).
+
+**Post-ship bug fix, same day: the loading screen's "Parsing save…"
+step reported progress exactly once, then went silent until the whole
+adapter call returned.** `computeLoadingPercent` pinned that stage at a
+static 50% (with a gentle pulse) for its entire duration regardless of
+how long it actually took — harmless while it was short, but 007/009
+between them added real, substantial extraction work to that same
+phase (market price history — up to ~184 markets × ~80 goods ×
+100+ monthly points each, potentially over a million rows — plus
+province-level good production, thousands of provinces × up to 52
+goods) with zero added feedback. A real user report ("parsing takes
+forever") traced to exactly this: not a hang, but a now-materially-longer
+phase with no progress signal at all, indistinguishable from one from
+the loading screen. Fixed by threading a real milestone-based progress
+callback through `1.3.11.ts`'s own extraction passes
+(`PARSE_MILESTONES`, 11 steps — each a genuine "reached this point"
+signal, equal-weighted like the outer `LOADING_STAGE_ORDER` already is,
+never a fabricated time estimate per constitution Principle IV) up
+through `load-save.ts` to the existing `onProgress("parsing", percent)`
+channel `FileLoader.tsx` already consumed for "validating"'s byte-read
+progress — the same mechanism, just previously unused for "parsing."

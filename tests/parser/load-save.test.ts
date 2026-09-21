@@ -53,6 +53,25 @@ describe("loadSave", () => {
     expect(phases).toContain("validating");
     expect(phases).toContain("detecting-version");
     expect(phases).toContain("parsing");
+
+    // "parsing" itself must report real, increasing sub-progress through
+    // the adapter's own extraction milestones (1.3.11.ts's
+    // PARSE_MILESTONES) -- not just once with a null percent. Found via
+    // a real user report: once 007/009 made this phase long enough on a
+    // real large save, reporting it exactly once (with no update until
+    // the whole adapter call returned) read as the load being stuck.
+    const parsingPercents = callbacks.onProgress.mock.calls
+      .filter((c) => c[0] === "parsing")
+      .map((c) => c[1] as number | null);
+    // The very first "parsing" call (before the adapter runs at all)
+    // still legitimately reports null -- the milestones only start once
+    // the adapter itself begins.
+    const nonNull = parsingPercents.filter((p): p is number => p !== null);
+    expect(nonNull.length).toBeGreaterThan(1);
+    for (let i = 1; i < nonNull.length; i++) {
+      expect(nonNull[i]).toBeGreaterThan(nonNull[i - 1]);
+    }
+    expect(nonNull.at(-1)).toBe(100);
   });
 
   it("reports not-a-save for a file with no recognizable header", async () => {

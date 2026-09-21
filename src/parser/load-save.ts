@@ -119,7 +119,14 @@ export async function loadSave(
     saveId = crypto.randomUUID();
     db = await openSaveDatabase(saveId);
     await applySchema(db);
-    const summary = await adapter(db, saveId, file.name, data);
+    // Real, reached-milestone progress through the adapter's own
+    // extraction passes (see 1.3.11.ts's PARSE_MILESTONES) — added once
+    // 007/009 made "parsing" long enough on a real large save that
+    // reporting it exactly once, with no update until the whole function
+    // returned, read as stuck rather than merely pulsing-but-working.
+    const summary = await adapter(db, saveId, file.name, data, (percent) =>
+      callbacks.onProgress("parsing", percent),
+    );
 
     // Close before signaling ready — see this function's doc comment.
     await closeSaveDatabase(db);
