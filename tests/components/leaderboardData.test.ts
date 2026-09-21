@@ -98,4 +98,34 @@ describe("leaderboardData loadRulerHistory (Ruler History stretch goal)", () => 
     expect(byNation.size).toBe(1);
     expect(byNation.has(2025)).toBe(false);
   });
+
+  // Regression: SQL's `ORDER BY start_date` sorts that TEXT column
+  // lexicographically, which is only coincidentally chronological — EU5
+  // dates aren't zero-padded, so "1400.12.1" sorts *before* "1400.2.1"
+  // ('1' < '2'). Found live: this inverted-order pair, fed straight into
+  // RulerHistoryChart's time-weighted average, produced a nation whose
+  // "average skill" exceeded 300 -- mathematically impossible, since
+  // every real ruler's own score is already capped at that range.
+  it("returns reigns in true chronological order even when the SQL text-sort of start_date would invert two same-year, different-digit-count months", async () => {
+    db = await openSaveDatabase("ruler-history-lexicographic-sort-bug.db");
+    await applySchema(db);
+    // Three reigns for nation 500, inserted in an order that would
+    // already defeat a naive "insertion order" assumption, with two of
+    // them sharing 1400 as their year but on opposite sides of the
+    // single-vs-double-digit-month boundary (Feb vs Dec).
+    await db.conn.query(`
+      INSERT INTO ruler_history (nation_idx, start_date, regnal_number, adm, dip, mil) VALUES
+        (500, '1400.12.1', 3, 30, 30, 30),
+        (500, '1337.11.11', 1, 10, 10, 10),
+        (500, '1400.2.1', 2, 20, 20, 20)
+    `);
+
+    const byNation = await loadRulerHistory(db, [500]);
+    const reigns = byNation.get(500)!;
+    // True chronological order: 1337, then 1400.2 (Feb), then 1400.12
+    // (Dec) -- never the SQL text-sort's "1400.12.1" before "1400.2.1".
+    expect(reigns.map((r) => r.regnalNumber)).toEqual([1, 2, 3]);
+    expect(reigns[0].year).toBeLessThan(reigns[1].year);
+    expect(reigns[1].year).toBeLessThan(reigns[2].year);
+  });
 });

@@ -241,11 +241,21 @@
       "decision": "Ruler History Ranking view shows time-weighted average skill (from first recorded reign to now) plus current rulers skill as a secondary column on LeaderboardRankingTable",
       "why": "explicit user request: a ranking table with both average and current ruler history, viewable through a tab",
       "rejected": "a single-value ranking table with only the average"
+    },
+    {
+      "decision": "Sort ruler_history reigns client-side by parsed decimal year in loadRulerHistory instead of trusting SQLs ORDER BY start_date",
+      "why": "real bug found live: start_date is TEXT and not zero-padded, so SQL text-sort put same-year reigns with double-digit months before single-digit ones, corrupting reign order fed into the time-weighted average and producing impossible averages over 300",
+      "rejected": "reformatting start_date to a zero-padded/sortable string at parse time (more invasive, touches the adapter and every other date-text column)"
+    },
+    {
+      "decision": "LeaderboardRankingTables value columns use explicit value-header/value classes on both th and td instead of a :last-child selector",
+      "why": "user-observed bug: adding the secondary (Current Ruler Skill) column silently retargeted :last-child from the 3rd to the 4th column, right-aligning only the value cell and leaving its header left-aligned, a visible misalignment",
+      "rejected": "keeping :last-child and adding a :nth-last-child(2) rule for the primary column (still positional and fragile to future column count changes)"
     }
   ],
   "step_summaries": {
     "implement": {
-      "summary": "Post-ship stretch goal (2026-09-21, end of session): Ruler History Leaderboard page - step chart of adm+dip+mil per nation, real ruler names via a new game-files scraping tool, step-aware hover tooltip, standardized AddCountryInput search across Leaderboard, and a Ranking view with average+current skill."
+      "summary": "Fixed two real bugs found live in Ruler History: reign ordering corrupted by lexicographic TEXT date sort (impossible >300 averages), and the ranking tables secondary-column header misaligned from its values."
     }
   }
 }

@@ -54,8 +54,14 @@ export function LeaderboardRankingTable({ title, entries, secondaryTitle }: Lead
         <tr>
           <th scope="col">#</th>
           <th scope="col">Country</th>
-          <th scope="col">{title}</th>
-          {secondaryTitle && <th scope="col">{secondaryTitle}</th>}
+          <th scope="col" className="leaderboard-ranking-table__value-header">
+            {title}
+          </th>
+          {secondaryTitle && (
+            <th scope="col" className="leaderboard-ranking-table__value-header">
+              {secondaryTitle}
+            </th>
+          )}
         </tr>
       </thead>
       <tbody>
@@ -74,9 +80,11 @@ export function LeaderboardRankingTable({ title, entries, secondaryTitle }: Lead
                 />
                 {entry.label}
               </td>
-              <td>{entry.value === null ? "—" : formatValue(entry.value)}</td>
+              <td className="leaderboard-ranking-table__value">
+                {entry.value === null ? "—" : formatValue(entry.value)}
+              </td>
               {secondaryTitle && (
-                <td>
+                <td className="leaderboard-ranking-table__value">
                   {entry.secondaryValue == null ? "—" : formatValue(entry.secondaryValue)}
                 </td>
               )}

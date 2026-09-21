@@ -1254,3 +1254,35 @@ reign through the save's current date, alongside its current ruler's
 own skill — `LeaderboardRankingTable` gained an optional
 `secondaryValue`/`secondaryTitle` for this second column, driven by
 neither column for sort order except the primary (average).
+
+**Two real bugs, found live against a real save, same day.**
+
+- **A "mathematically impossible" average (>300) traced to
+  `ruler_history.start_date` being sorted as TEXT.** EU5's date strings
+  aren't zero-padded ("1400.2.1" vs "1400.12.1"), so two reigns
+  starting in the same year sort lexicographically ("1400.12.1" before
+  "1400.2.1", since `'1' < '2'`) whenever their months/days differ in
+  digit count — the SQL `ORDER BY start_date` that `listRulerHistoryArrow`
+  relies on is therefore only *coincidentally* chronological. An
+  inverted pair fed straight into the time-weighted average computed a
+  wildly wrong per-segment duration, producing an "average skill" over
+  300 for a real nation (Byzantium, ~543 years of reigns) — impossible,
+  since every individual ruler's own score is already capped there.
+  Fixed in `loadRulerHistory` (leaderboardData.ts): re-sort each
+  nation's points by the already-correctly-parsed decimal `year` after
+  decoding, rather than trusting the SQL order. This also fixed the
+  step chart line itself (same underlying data), not just the ranking
+  table. A regression test reproduces the exact adversarial ordering
+  (same year, single- vs double-digit months) directly against the DB.
+- **The Ranking view's secondary column header didn't line up with its
+  own values.** `LeaderboardRankingTable`'s value-column alignment used
+  a `td:last-child { text-align: right }` rule with no matching header
+  rule — harmless while there were only 3 columns (the header's default
+  left-align was close enough to unnoticed), but adding the secondary
+  (`Current Ruler Skill`) column silently retargeted `:last-child` from
+  the 3rd column to the 4th, right-aligning only the new column's
+  *values* while its header stayed left-aligned — a visible
+  header/value misalignment the user caught immediately. Fixed with
+  explicit `__value-header`/`__value` classes on both the `<th>` and
+  `<td>` for every value column, replacing the positional selector
+  entirely.

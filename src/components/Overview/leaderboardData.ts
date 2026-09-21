@@ -231,5 +231,18 @@ export async function loadRulerHistory(
       byNation.set(nationIdx, [point]);
     }
   }
+
+  // The query's own `ORDER BY start_date` sorts that column as TEXT,
+  // which is only *coincidentally* chronological — EU5's date strings
+  // aren't zero-padded ("1400.2.1" vs "1400.12.1"), so two reigns
+  // starting in the same year sort lexicographically ("1400.12.1" <
+  // "1400.2.1", since '1' < '2') whenever one month/day is a longer
+  // number than the other. Re-sorted here by the already-correctly-
+  // parsed decimal `year` instead of trusting the SQL order — a real
+  // bug found via a live save: an out-of-order pair inflated a nation's
+  // weighted average (below) past 300, an impossible score.
+  for (const series of byNation.values()) {
+    series.sort((a, b) => a.year - b.year);
+  }
   return byNation;
 }

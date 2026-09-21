@@ -23,7 +23,19 @@
   color: var(--color-on-surface);
 }
 
-.leaderboard-ranking-table td:last-child {
+/* Post-ship, 2026-09-21: explicit classes on both the header and the
+   cell, not `:last-child` — that broke once a second (secondaryValue)
+   numeric column was added, since it silently retargeted from the 3rd
+   column to the 4th, right-aligning the value without its header
+   following, a visible header/value misalignment. */
+/* th.leaderboard-ranking-table__value-header, not just the class alone:
+   needs to out-specificity ".leaderboard-ranking-table th"'s own
+   text-align: left above it. */
+th.leaderboard-ranking-table__value-header {
+  text-align: right;
+}
+
+.leaderboard-ranking-table__value {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
