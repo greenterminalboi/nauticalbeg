@@ -210,5 +210,42 @@
       "at": "2026-09-20T10:07:36.131Z"
     }
   ],
-  "currentTask": "T022"
+  "currentTask": "T022",
+  "decisions": [
+    {
+      "decision": "Added Ruler History as a new Leaderboard page: a step chart of adm+dip+mil per selected nation from rulerterm_manager joined against character_db",
+      "why": "explicit user stretch-goal request, end of a long session",
+      "rejected": "n/a - new feature"
+    },
+    {
+      "decision": "ruler_history table column order must match the adapter row-tuple order exactly, folded directly into CREATE TABLE rather than an ALTER TABLE migration",
+      "why": "discovered insertRows bulk-insert path (db.ts) inserts positionally via DuckDB-Wasm insertArrowTable, not by column name; an ALTER-TABLE-appended column order mismatched the adapters tuple order and silently miscast a string into a DOUBLE column, caught by the test suite",
+      "rejected": "ALTER TABLE ADD COLUMN migration (unnecessary since this table never shipped to a real user)"
+    },
+    {
+      "decision": "Real ruler names resolved via a new tools/ruler-names-scraping/generate.ts that reuses encyclopedia-scrapings parseLocalization, committed to src/components/Overview/rulerNames.json (~4670 entries)",
+      "why": "explicit user request for actual names, not Ruler #N; save only stores a raw localization key (first_name), never display text",
+      "rejected": "showing regnal-number-only labels permanently (kept only as the graceful fallback for an unresolvable key)"
+    },
+    {
+      "decision": "Custom tooltipFormatter + axisPointer snap:false for step charts, doing our own step-lookup instead of trusting ECharts default nearest-point tooltip",
+      "why": "user-observed bug: ECharts axis-trigger tooltip snaps to whichever of two flanking points is pixel-nearest, wrong on one side of a steps own boundary",
+      "rejected": "leaving default axis-trigger tooltip behavior"
+    },
+    {
+      "decision": "AddCountryInput (originally World Goods-only) generalized with an optional placeholder prop and adopted as the standard country-selection control for LeaderboardTab and RulerHistoryChart, replacing the old Search countries toggle button + CountrySearchOverlay panel",
+      "why": "explicit user request: that pattern should be the standard across all graphs and charts",
+      "rejected": "keeping CountrySearchOverlay + toggle button, or building a separate near-duplicate component"
+    },
+    {
+      "decision": "Ruler History Ranking view shows time-weighted average skill (from first recorded reign to now) plus current rulers skill as a secondary column on LeaderboardRankingTable",
+      "why": "explicit user request: a ranking table with both average and current ruler history, viewable through a tab",
+      "rejected": "a single-value ranking table with only the average"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Post-ship stretch goal (2026-09-21, end of session): Ruler History Leaderboard page - step chart of adm+dip+mil per nation, real ruler names via a new game-files scraping tool, step-aware hover tooltip, standardized AddCountryInput search across Leaderboard, and a Ranking view with average+current skill."
+    }
+  }
 }

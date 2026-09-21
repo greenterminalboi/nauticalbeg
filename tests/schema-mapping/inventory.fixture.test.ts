@@ -30,6 +30,10 @@ describe("buildSaveInventory against the committed fixture", () => {
     expect(sectionKeys).toEqual(
       [
         "cheats",
+        // ruler_history stretch goal (specs/006-country-leaderboard,
+        // post-ship 2026-09-21): rulerterm_manager/character_db added to
+        // the fixture for that feature's own extraction tests.
+        "character_db",
         "countries",
         "locations",
         "market_manager",
@@ -37,6 +41,7 @@ describe("buildSaveInventory against the committed fixture", () => {
         "played_country",
         "population",
         "provinces",
+        "rulerterm_manager",
         "war_manager",
       ].sort(),
     );

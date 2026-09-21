@@ -13,6 +13,7 @@ import {
   listLatestNationMetricArrow,
   listLeaderboardCountriesArrow,
   listNationHistoryArrow,
+  listRulerHistoryArrow,
 } from "../../src/storage/queries";
 import { ensureTestDuckDBConfigured } from "../helpers/duckdb-test-env";
 import { toBytes } from "../helpers/encode";
@@ -164,5 +165,46 @@ describe("storage/queries listLeaderboardCountriesArrow + listNationHistoryArrow
     // Re-running applySchema again (e.g. a second resume) must stay a
     // no-op, not error on an already-added column/table.
     await applySchema(db);
+  });
+
+  it("listRulerHistoryArrow scopes strictly to the requested nation indices, in reign order (Ruler History stretch goal)", async () => {
+    db = await openSaveDatabase("leaderboard-ruler-history.db");
+    await applySchema(db);
+    await parseAndStore(db, "save-4", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    // Only RUS's (2025) rows come back, even though SCA (3) also has
+    // ruler_history rows in this database.
+    const rows = decodeRows(await listRulerHistoryArrow(db, [2025]));
+    expect(rows).toEqual([
+      {
+        nation_idx: 2025,
+        start_date: "1337.11.11",
+        regnal_number: 1,
+        first_name_key: "name_test_ruler_a",
+        nickname: null,
+        adm: 80,
+        dip: 60,
+        mil: 50,
+      },
+      {
+        nation_idx: 2025,
+        start_date: "1400.1.1",
+        regnal_number: 2,
+        first_name_key: "name_test_ruler_b",
+        nickname: null,
+        adm: 40,
+        dip: 30,
+        mil: 20,
+      },
+    ]);
+  });
+
+  it("listRulerHistoryArrow returns an empty result for an empty idx list, never every nation's rows", async () => {
+    db = await openSaveDatabase("leaderboard-ruler-history-empty.db");
+    await applySchema(db);
+    await parseAndStore(db, "save-5", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = decodeRows(await listRulerHistoryArrow(db, []));
+    expect(rows).toEqual([]);
   });
 });

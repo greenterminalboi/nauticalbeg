@@ -8,7 +8,7 @@ import * as leaderboardData from "../../src/components/Overview/leaderboardData"
 import * as chartHook from "../../src/components/Overview/charts/useEChartsInstance";
 import type {
   LeaderboardCountry,
-  LeaderboardMetric,
+  LeaderboardPage,
 } from "../../src/components/Overview/leaderboardData";
 import type { SaveDatabase } from "../../src/storage/db";
 
@@ -22,21 +22,29 @@ vi.mock("../../src/components/Overview/charts/useEChartsInstance", () => ({
   useEChartsInstance: vi.fn(),
 }));
 
+// Post-ship, 2026-09-21: Ruler History is its own self-contained,
+// separately-tested component (RulerHistoryChart.test.tsx) — mocked
+// here so these tests can assert LeaderboardTab's own page-branching
+// logic without re-mocking RulerHistoryChart's own data dependencies.
+vi.mock("../../src/components/Overview/RulerHistoryChart", () => ({
+  RulerHistoryChart: vi.fn(() => <div data-testid="ruler-history-chart" />),
+}));
+
 function latestChartOption(): EChartsOption | null {
   const calls = vi.mocked(chartHook.useEChartsInstance).mock.calls;
   return calls[calls.length - 1]?.[1] ?? null;
 }
 
-// Mirrors how FileLoader.tsx actually composes these two: `activeMetric`
+// Mirrors how FileLoader.tsx actually composes these two: `activePage`
 // lives in the shell (here, a tiny local wrapper), LeaderboardSideNav
 // renders in the shell's `sidenav` grid area, LeaderboardTab just
 // receives the current value as a prop.
 function LeaderboardWithNav({ db }: { db: SaveDatabase }) {
-  const [activeMetric, setActiveMetric] = useState<LeaderboardMetric>("population");
+  const [activePage, setActivePage] = useState<LeaderboardPage>("population");
   return (
     <>
-      <LeaderboardSideNav activeMetric={activeMetric} onSelectMetric={setActiveMetric} />
-      <LeaderboardTab db={db} activeMetric={activeMetric} />
+      <LeaderboardSideNav activePage={activePage} onSelectPage={setActivePage} />
+      <LeaderboardTab db={db} activePage={activePage} />
     </>
   );
 }
@@ -72,16 +80,16 @@ describe("LeaderboardTab", () => {
     vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue(countries);
     vi.spyOn(leaderboardData, "loadNationHistory").mockResolvedValue(new Map());
 
-    render(<LeaderboardTab db={fakeDb} activeMetric="population" />);
+    render(<LeaderboardTab db={fakeDb} activePage="population" />);
 
     await waitFor(() =>
       expect(leaderboardData.loadNationHistory).toHaveBeenCalledWith(fakeDb, [1, 2]),
     );
 
-    // Open the search overlay to inspect selection state: every human-
+    // Open the search input to inspect selection state: every human-
     // played country's checkbox is checked, the non-human-played one is
     // not.
-    fireEvent.click(screen.getByRole("button", { name: "Search countries" }));
+    fireEvent.focus(screen.getByPlaceholderText("Search countries…"));
     expect((screen.getByLabelText("RUS") as HTMLInputElement).checked).toBe(true);
     expect((screen.getByLabelText("SCA") as HTMLInputElement).checked).toBe(true);
     expect((screen.getByLabelText("FRA") as HTMLInputElement).checked).toBe(false);
@@ -95,7 +103,7 @@ describe("LeaderboardTab", () => {
     vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue(countries);
     vi.spyOn(leaderboardData, "loadNationHistory").mockResolvedValue(new Map());
 
-    render(<LeaderboardTab db={fakeDb} activeMetric="population" />);
+    render(<LeaderboardTab db={fakeDb} activePage="population" />);
 
     await waitFor(() => expect(leaderboardData.loadNationHistory).toHaveBeenCalled());
     const [, calledIdxs] = vi.mocked(leaderboardData.loadNationHistory).mock.calls[0];
@@ -110,12 +118,12 @@ describe("LeaderboardTab", () => {
     vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue(countries);
     vi.spyOn(leaderboardData, "loadNationHistory").mockResolvedValue(new Map());
 
-    render(<LeaderboardTab db={fakeDb} activeMetric="population" />);
+    render(<LeaderboardTab db={fakeDb} activePage="population" />);
     await waitFor(() =>
       expect(leaderboardData.loadNationHistory).toHaveBeenCalledWith(fakeDb, [1]),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Search countries" }));
+    fireEvent.focus(screen.getByPlaceholderText("Search countries…"));
     fireEvent.click(screen.getByLabelText("FRA"));
 
     await waitFor(() =>
@@ -187,7 +195,7 @@ describe("LeaderboardTab", () => {
       ]),
     );
 
-    render(<LeaderboardTab db={fakeDb} activeMetric="population" />);
+    render(<LeaderboardTab db={fakeDb} activePage="population" />);
     fireEvent.click(await screen.findByRole("button", { name: "Treemap" }));
 
     // specs/007-production-trade-markets: the treemap is ECharts-rendered
@@ -202,5 +210,41 @@ describe("LeaderboardTab", () => {
     expect(nodes.map((n) => n.itemStyle?.color)).toEqual(
       expect.arrayContaining(["rgb(183, 136, 27)", "rgb(200, 200, 200)"]),
     );
+  });
+
+  it("renders RulerHistoryChart for the ruler_history page, issuing none of the metric-scoped queries", async () => {
+    const countries = makeCountries([{ idx: 1, tag: "RUS", isHumanPlayed: true }]);
+    vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue(countries);
+    const loadNationHistory = vi.spyOn(leaderboardData, "loadNationHistory").mockResolvedValue(new Map());
+
+    render(<LeaderboardTab db={fakeDb} activePage="ruler_history" />);
+
+    await waitFor(() => expect(screen.getByTestId("ruler-history-chart")).toBeInTheDocument());
+    expect(loadNationHistory).not.toHaveBeenCalled();
+    expect(leaderboardData.loadLatestNationMetric).not.toHaveBeenCalled();
+  });
+
+  it("switching pages via the side nav moves between Ruler History and a metric's own graph/ranking/treemap", async () => {
+    const countries = makeCountries([{ idx: 1, tag: "RUS", isHumanPlayed: true }]);
+    vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue(countries);
+    vi.spyOn(leaderboardData, "loadNationHistory").mockResolvedValue(new Map());
+
+    render(<LeaderboardWithNav db={fakeDb} />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Population" })).toHaveAttribute(
+        "aria-current",
+        "page",
+      ),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Ruler History" }));
+    await waitFor(() => expect(screen.getByTestId("ruler-history-chart")).toBeInTheDocument());
+    expect(screen.queryByPlaceholderText("Search countries…")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Population" }));
+    await waitFor(() =>
+      expect(screen.queryByTestId("ruler-history-chart")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByPlaceholderText("Search countries…")).toBeInTheDocument();
   });
 });

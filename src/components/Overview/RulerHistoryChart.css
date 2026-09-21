@@ -1,29 +1,22 @@
-/* 2026-09-20: the max-width cap this used to have is gone — FileLoader.tsx
-   now gives Leaderboard the shared --full-width treatment (like Wars/
-   Provinces/Encyclopedia), and the charts inside are viewBox-scaled SVG
-   (width: 100%), so the extra room renders bigger charts, not padding. */
-.leaderboard-tab {
+.ruler-history-chart {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
-.leaderboard-tab__controls {
+.ruler-history-chart__controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Post-ship, 2026-09-21: the country search became a standard,
-   always-visible AddCountryInput next to the page title, replacing the
-   old "Search countries" toggle button + expand/collapse panel. */
-.leaderboard-tab__title-row {
+.ruler-history-chart__title-row {
   display: flex;
   align-items: center;
   gap: var(--space-md);
 }
 
-.leaderboard-tab__title {
+.ruler-history-chart__title {
   font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 600;
@@ -32,14 +25,14 @@
   margin: 0;
 }
 
-.leaderboard-tab__view-toggle {
+.ruler-history-chart__view-toggle {
   display: inline-flex;
   border: 1px solid var(--color-outline-variant);
   border-radius: 4px;
   overflow: hidden;
 }
 
-.leaderboard-tab__view-button {
+.ruler-history-chart__view-button {
   font-family: var(--font-body);
   font-size: 0.8rem;
   padding: var(--space-xs) var(--space-sm);
@@ -49,8 +42,7 @@
   cursor: pointer;
 }
 
-.leaderboard-tab__view-button--active {
+.ruler-history-chart__view-button--active {
   background: var(--color-primary);
   color: var(--color-on-primary);
 }
-

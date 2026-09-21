@@ -8,6 +8,7 @@ import {
   listLatestNationMetricArrow,
   listLeaderboardCountriesArrow,
   listNationHistoryArrow,
+  listRulerHistoryArrow,
 } from "../../storage/queries";
 import type { SaveDatabase } from "../../storage/db";
 
@@ -21,15 +22,76 @@ export interface LeaderboardCountry {
 
 export type LeaderboardMetric = "population" | "tax_base" | "economical_base";
 
+/** Post-ship, 2026-09-21: the Leaderboard side nav's full set of pages —
+ * the three `nation_history`-backed metrics above, plus Ruler History,
+ * a fundamentally different data shape (`ruler_history`, not
+ * `nation_history`) that reuses the same side nav/page-switch UI. */
+export type LeaderboardPage = LeaderboardMetric | "ruler_history";
+
 export interface LeaderboardSeriesPoint {
   year: number;
   value: number;
+}
+
+/** Post-ship, 2026-09-21 (Ruler History stretch goal): one ruler term,
+ * decoded from `listRulerHistoryArrow`. `score` is `adm + dip + mil`
+ * (0-300) — `null`, never a fabricated partial sum, unless all three
+ * are confirmed numbers (constitution Principle IV). */
+export interface RulerHistoryPoint {
+  /** Decimal year (e.g. `1337.86` for a reign starting 1337.11.11) —
+   * for the chart's numeric x-axis; not calendar-precise, just enough
+   * to place a reign-start within its year. */
+  year: number;
+  regnalNumber: number | null;
+  /** Raw `character_db.first_name` localization key (e.g.
+   * "name_birger"), not display text — resolve via
+   * `rulerNames.ts`'s `resolveRulerFirstName`. */
+  firstNameKey: string | null;
+  /** Already real display text in the save when present (e.g.
+   * "Ladulas"), never a localization key — unlike `firstNameKey`. */
+  nickname: string | null;
+  adm: number | null;
+  dip: number | null;
+  mil: number | null;
+  score: number | null;
+}
+
+/** 'YYYY.M.D' (no zero-padding, matching the save's own date format,
+ * `formatGameDate` in 1.3.11.ts) -> a decimal year for chart x-axis
+ * positioning. Returns null for anything that doesn't match — never a
+ * guessed year. */
+function parseGameDateToDecimalYear(dateStr: string): number | null {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(dateStr);
+  if (!match) return null;
+  const [, yearStr, monthStr, dayStr] = match;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  return year + (month - 1) / 12 + (day - 1) / 365;
 }
 
 function rgbOrNull(r: unknown, g: unknown, b: unknown): [number, number, number] | null {
   return typeof r === "number" && typeof g === "number" && typeof b === "number"
     ? [r, g, b]
     : null;
+}
+
+// spec FR-008: on first open, pre-select every human-played country. If
+// the save has no human-played country recorded at all, fall back to
+// some other non-empty, meaningful default (an implementation choice
+// per spec's Assumptions) — the first few countries in the already-
+// loaded, alphabetically-sorted list, rather than issuing an extra
+// save-wide history query just to rank by population (which would
+// contradict listNationHistoryArrow's deliberately-scoped design,
+// contracts/leaderboard-data-contract.md).
+const FALLBACK_SELECTION_SIZE = 5;
+
+/** Shared by `LeaderboardTab` and `RulerHistoryChart` (post-ship,
+ * 2026-09-21) — both default their country selection the same way. */
+export function computeDefaultSelection(countries: readonly LeaderboardCountry[]): number[] {
+  const humanPlayed = countries.filter((c) => c.isHumanPlayed).map((c) => c.idx);
+  if (humanPlayed.length > 0) return humanPlayed;
+  return countries.slice(0, FALLBACK_SELECTION_SIZE).map((c) => c.idx);
 }
 
 /** Decodes `listLeaderboardCountriesArrow`'s Arrow IPC buffer directly
@@ -125,6 +187,49 @@ export async function loadLatestNationMetric(
     const nationIdx = typeof r.nation_idx === "number" ? r.nation_idx : -1;
     const value = typeof r.value === "number" ? r.value : Number(r.value);
     byNation.set(nationIdx, value);
+  }
+  return byNation;
+}
+
+/** Post-ship, 2026-09-21 (Ruler History stretch goal): decodes
+ * `listRulerHistoryArrow`'s Arrow IPC buffer into series points grouped
+ * by nation, already in reign order (the query's own `ORDER BY
+ * nation_idx, start_date`). A row whose `start_date` doesn't parse is
+ * dropped rather than plotted at a guessed year. */
+export async function loadRulerHistory(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<Map<number, RulerHistoryPoint[]>> {
+  const buffer = await listRulerHistoryArrow(db, nationIdxs);
+  const rows = tableFromIPC(new Uint8Array(buffer)).toArray();
+
+  const byNation = new Map<number, RulerHistoryPoint[]>();
+  for (const row of rows) {
+    const r = row.toJSON();
+    const nationIdx = typeof r.nation_idx === "number" ? r.nation_idx : -1;
+    const year = parseGameDateToDecimalYear(String(r.start_date));
+    if (year === null) continue;
+
+    const adm = typeof r.adm === "number" ? r.adm : null;
+    const dip = typeof r.dip === "number" ? r.dip : null;
+    const mil = typeof r.mil === "number" ? r.mil : null;
+    const point: RulerHistoryPoint = {
+      year,
+      regnalNumber: typeof r.regnal_number === "number" ? r.regnal_number : null,
+      firstNameKey: typeof r.first_name_key === "string" ? r.first_name_key : null,
+      nickname: typeof r.nickname === "string" ? r.nickname : null,
+      adm,
+      dip,
+      mil,
+      score: adm !== null && dip !== null && mil !== null ? adm + dip + mil : null,
+    };
+
+    const series = byNation.get(nationIdx);
+    if (series) {
+      series.push(point);
+    } else {
+      byNation.set(nationIdx, [point]);
+    }
   }
   return byNation;
 }

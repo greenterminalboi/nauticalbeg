@@ -516,6 +516,35 @@ export async function listLatestNationMetricArrow(
 }
 
 /**
+ * specs/006-country-leaderboard, post-ship 2026-09-21 (Ruler History
+ * stretch goal): one row per ruler term for exactly the requested
+ * countries, in reign order — same deliberately-scoped-per-call shape
+ * as `listNationHistoryArrow`, for the same reason (never load every
+ * country's whole ruler history just to chart a handful of player
+ * nations).
+ */
+export async function listRulerHistoryArrow(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<ArrayBuffer> {
+  if (nationIdxs.length === 0) {
+    return queryArrowIPC(
+      db,
+      "SELECT nation_idx, start_date, regnal_number, first_name_key, nickname, adm, dip, mil FROM ruler_history WHERE FALSE",
+    );
+  }
+  const placeholders = nationIdxs.map((_, i) => `?${i + 1}`).join(", ");
+  return queryArrowIPC(
+    db,
+    `SELECT nation_idx, start_date, regnal_number, first_name_key, nickname, adm, dip, mil
+     FROM ruler_history
+     WHERE nation_idx IN (${placeholders})
+     ORDER BY nation_idx, start_date`,
+    nationIdxs,
+  );
+}
+
+/**
  * specs/007-production-trade-markets contracts/query-functions.md:
  * every tradeable good's save-wide total production, straight from the
  * save's own snapshot (`world_good_production`) — never summed

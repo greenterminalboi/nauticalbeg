@@ -50,6 +50,8 @@ const STRUCTURED_KEYS = new Set([
   "played_country",
   "population",
   "market_manager",
+  "rulerterm_manager",
+  "character_db",
 ]);
 
 /** jomini narrows an unquoted date-like token (e.g. `1628.8.14`) to a
@@ -159,6 +161,7 @@ const PARSE_MILESTONES = [
   "population",
   "markets",
   "world-goods",
+  "ruler-history",
   "raw-sections",
   "done",
 ] as const;
@@ -636,6 +639,66 @@ export async function parseAndStore(
     );
   }
   reportMilestone(); // "world-goods"
+
+  // rulerterm_manager.database: one row per historical reign, joined
+  // in-JS against character_db.database for that ruler's adm/dip/mil
+  // (denormalized at parse time — simpler than adding a separate
+  // `characters` table and joining in SQL, since both maps are already
+  // in memory here). Ruler History stretch goal (specs/006-country-
+  // leaderboard) — see schema.sql's comment on `ruler_history` for the
+  // exact filtering/simplification rules.
+  const characterDatabase = asRecord(asRecord(root.character_db).database);
+  const rulerTermDatabase = asRecord(asRecord(root.rulerterm_manager).database);
+  const rulerHistoryRows: Array<
+    [
+      number,
+      string,
+      number | null,
+      string | null,
+      string | null,
+      number | null,
+      number | null,
+      number | null,
+    ]
+  > = [];
+  for (const value of Object.values(rulerTermDatabase)) {
+    const term = asRecord(value);
+    if (asStringOrNull(term.ruled_type) !== "Country") continue;
+    if (asStringOrNull(term.ruler_type) !== "Character") continue;
+    const nationIdx = asNumberOrNull(term.ruled);
+    const startDateRaw = term.start_date;
+    if (nationIdx === null || !(startDateRaw instanceof Date)) continue;
+
+    const characters = asRecord(term.ruler).characters;
+    const firstCharacter = asRecord(Array.isArray(characters) ? characters[0] : undefined);
+    const characterIdx = asNumberOrNull(firstCharacter.character);
+    if (characterIdx === null) continue; // interregnum/regency term — no character to score
+
+    const character = asRecord(characterDatabase[String(characterIdx)]);
+    rulerHistoryRows.push([
+      nationIdx,
+      formatGameDate(startDateRaw)!,
+      asNumberOrNull(firstCharacter.regnal_number),
+      // first_name is a localization key (e.g. "name_birger"), resolved
+      // client-side against rulerNames.json — never localized here.
+      // nickname, when present, is already real display text in the
+      // save (e.g. "Ladulas"), not a key — stored as-is.
+      asStringOrNull(character.first_name),
+      asStringOrNull(character.nickname),
+      asNumberOrNull(character.adm),
+      asNumberOrNull(character.dip),
+      asNumberOrNull(character.mil),
+    ]);
+  }
+  if (rulerHistoryRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO ruler_history (nation_idx, start_date, regnal_number, first_name_key, nickname, adm, dip, mil) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+      rulerHistoryRows,
+      (inserted, total) => reportWithinMilestone(inserted / total),
+    );
+  }
+  reportMilestone(); // "ruler-history"
 
   // Every other top-level section: no real schema yet, so capture as
   // opaque JSON rather than guess at columns for structure nobody has

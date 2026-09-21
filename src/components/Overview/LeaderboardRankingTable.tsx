@@ -7,13 +7,23 @@ export interface LeaderboardRankingEntry {
   color: [number, number, number] | null;
   /** The country's latest available value for the active metric, or
    * `null` if it has no data at all for it (e.g. formed too recently to
-   * have a recorded year yet) — ranked last, not as a fabricated 0. */
+   * have a recorded year yet) — ranked last, not as a fabricated 0.
+   * Drives rank order; `secondaryValue` never does. */
   value: number | null;
+  /** Post-ship, 2026-09-21 (Ruler History, explicit user request): an
+   * optional second value column shown alongside the primary ranked
+   * one — e.g. Ruler History's current ruler's skill next to its
+   * primary average-skill ranking. Ignored unless the table is also
+   * given `secondaryTitle`. */
+  secondaryValue?: number | null;
 }
 
 interface LeaderboardRankingTableProps {
   title: string;
   entries: readonly LeaderboardRankingEntry[];
+  /** Post-ship, 2026-09-21: renders a second value column headed by
+   * this title when provided (see `secondaryValue` above). */
+  secondaryTitle?: string;
 }
 
 function formatValue(value: number): string {
@@ -30,7 +40,7 @@ function formatValue(value: number): string {
  * same country identity (label, in-game color) `LeaderboardChart` plots
  * with, so a row's swatch always matches its line on the graph above.
  */
-export function LeaderboardRankingTable({ title, entries }: LeaderboardRankingTableProps) {
+export function LeaderboardRankingTable({ title, entries, secondaryTitle }: LeaderboardRankingTableProps) {
   const ranked = [...entries].sort((a, b) => {
     if (a.value === null && b.value === null) return 0;
     if (a.value === null) return 1;
@@ -45,6 +55,7 @@ export function LeaderboardRankingTable({ title, entries }: LeaderboardRankingTa
           <th scope="col">#</th>
           <th scope="col">Country</th>
           <th scope="col">{title}</th>
+          {secondaryTitle && <th scope="col">{secondaryTitle}</th>}
         </tr>
       </thead>
       <tbody>
@@ -64,6 +75,11 @@ export function LeaderboardRankingTable({ title, entries }: LeaderboardRankingTa
                 {entry.label}
               </td>
               <td>{entry.value === null ? "—" : formatValue(entry.value)}</td>
+              {secondaryTitle && (
+                <td>
+                  {entry.secondaryValue == null ? "—" : formatValue(entry.secondaryValue)}
+                </td>
+              )}
             </tr>
           );
         })}

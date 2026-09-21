@@ -1,27 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SaveDatabase } from "../../storage/db";
 import {
+  computeDefaultSelection,
   loadLatestNationMetric,
   loadLeaderboardCountries,
   loadNationHistory,
   type LeaderboardCountry,
   type LeaderboardMetric,
+  type LeaderboardPage,
 } from "./leaderboardData";
 import { LeaderboardChart, type LeaderboardChartSeries } from "./LeaderboardChart";
 import { LEADERBOARD_PAGES } from "./LeaderboardSideNav";
 import { LeaderboardRankingTable, type LeaderboardRankingEntry } from "./LeaderboardRankingTable";
 import { ShareTreemap, type ShareTreemapEntry } from "./ShareTreemap";
-import { CountrySearchOverlay } from "./CountrySearchOverlay";
+import { AddCountryInput } from "./AddCountryInput";
+import { RulerHistoryChart } from "./RulerHistoryChart";
 import { NEUTRAL_COLOR } from "./mapLayers";
 import "./LeaderboardTab.css";
 
 interface LeaderboardTabProps {
   db: SaveDatabase;
-  /** Which metric's page is active — owned by `FileLoader.tsx` and
-   * rendered via `LeaderboardSideNav` in the shell's `sidenav` grid
-   * area, the same way Country Viewer's `activeTab`/`SideNav` split
-   * works (state lives in the shell, not in this content component). */
-  activeMetric: LeaderboardMetric;
+  /** Which page is active — owned by `FileLoader.tsx` and rendered via
+   * `LeaderboardSideNav` in the shell's `sidenav` grid area, the same
+   * way Country Viewer's `activeTab`/`SideNav` split works (state lives
+   * in the shell, not in this content component). */
+  activePage: LeaderboardPage;
 }
 
 type ActiveView = "graph" | "table" | "treemap";
@@ -32,27 +35,11 @@ const VIEWS: { id: ActiveView; label: string }[] = [
   { id: "treemap", label: "Treemap" },
 ];
 
-// spec FR-008: on first open, pre-select every human-played country. If
-// the save has no human-played country recorded at all, fall back to
-// some other non-empty, meaningful default (an implementation choice
-// per spec's Assumptions) — the first few countries in the already-
-// loaded, alphabetically-sorted list, rather than issuing an extra
-// save-wide history query just to rank by population (which would
-// contradict listNationHistoryArrow's deliberately-scoped design,
-// contracts/leaderboard-data-contract.md).
-const FALLBACK_SELECTION_SIZE = 5;
-
-function computeDefaultSelection(countries: LeaderboardCountry[]): number[] {
-  const humanPlayed = countries.filter((c) => c.isHumanPlayed).map((c) => c.idx);
-  if (humanPlayed.length > 0) return humanPlayed;
-  return countries.slice(0, FALLBACK_SELECTION_SIZE).map((c) => c.idx);
-}
-
 function countryLabel(country: LeaderboardCountry): string {
   return country.name ?? country.tag;
 }
 
-export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
+export function LeaderboardTab({ db, activePage }: LeaderboardTabProps) {
   const [countries, setCountries] = useState<LeaderboardCountry[] | null>(null);
   const [selectedIdxs, setSelectedIdxs] = useState<number[]>([]);
   const [history, setHistory] = useState<Map<
@@ -61,7 +48,6 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
   > | null>(null);
   const [latestMetric, setLatestMetric] = useState<Map<number, number> | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [activeView, setActiveView] = useState<ActiveView>("graph");
 
   useEffect(() => {
@@ -89,6 +75,9 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
   }, [db]);
 
   useEffect(() => {
+    // Ruler History (below) owns its own countries/history loading —
+    // this metric-scoped history query would just be wasted work there.
+    if (activePage === "ruler_history") return;
     if (selectedIdxs.length === 0) {
       setHistory(new Map());
       return;
@@ -106,7 +95,7 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
     return () => {
       cancelled = true;
     };
-  }, [db, selectedIdxs]);
+  }, [db, selectedIdxs, activePage]);
 
   // Treemap stretch goal: every real country's latest-recorded value
   // for the active metric — the "world total" the treemap's box areas
@@ -115,9 +104,13 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
   // to just always keep current, rather than gating it behind actually
   // switching to the Treemap view.
   useEffect(() => {
+    if (activePage === "ruler_history") {
+      setLatestMetric(null);
+      return;
+    }
     let cancelled = false;
     setLatestMetric(null);
-    loadLatestNationMetric(db, activeMetric)
+    loadLatestNationMetric(db, activePage)
       .then((loaded) => {
         if (!cancelled) setLatestMetric(loaded);
       })
@@ -129,7 +122,7 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
     return () => {
       cancelled = true;
     };
-  }, [db, activeMetric]);
+  }, [db, activePage]);
 
   const countryByIdx = useMemo(() => {
     const map = new Map<number, LeaderboardCountry>();
@@ -167,7 +160,17 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
     return <p>Loading leaderboard…</p>;
   }
 
-  const activePage = LEADERBOARD_PAGES.find((p) => p.metric === activeMetric) ?? LEADERBOARD_PAGES[0];
+  // Post-ship, 2026-09-21: Ruler History is a fundamentally different
+  // data shape (ruler_history, not nation_history) — its own
+  // self-contained component, not this tab's graph/ranking/treemap
+  // machinery. Everything below this point is narrowed to
+  // LeaderboardMetric.
+  if (activePage === "ruler_history") {
+    return <RulerHistoryChart db={db} />;
+  }
+
+  const activeMetric = activePage;
+  const activePageInfo = LEADERBOARD_PAGES.find((p) => p.page === activeMetric) ?? LEADERBOARD_PAGES[0];
   const activeSeries = seriesFor(activeMetric);
   const rankingEntries: LeaderboardRankingEntry[] = activeSeries.map((s) => ({
     nationIdx: s.nationIdx,
@@ -210,14 +213,15 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
   return (
     <div className="leaderboard-tab">
       <div className="leaderboard-tab__controls">
-        <button
-          type="button"
-          className="leaderboard-tab__search-toggle"
-          aria-expanded={searchOpen}
-          onClick={() => setSearchOpen((open) => !open)}
-        >
-          {searchOpen ? "Close search" : "Search countries"}
-        </button>
+        <div className="leaderboard-tab__title-row">
+          <p className="leaderboard-tab__title">{activePageInfo.title}</p>
+          <AddCountryInput
+            countries={countries}
+            selectedIdxs={selectedIdxs}
+            onToggle={toggleCountry}
+            placeholder="Search countries…"
+          />
+        </div>
         <div className="leaderboard-tab__view-toggle" role="group" aria-label="View">
           {VIEWS.map((v) => (
             <button
@@ -236,16 +240,9 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
           ))}
         </div>
       </div>
-      {searchOpen && (
-        <CountrySearchOverlay
-          countries={countries}
-          selectedIdxs={selectedIdxs}
-          onToggle={toggleCountry}
-        />
-      )}
-      {activeView === "graph" && <LeaderboardChart title={activePage.title} series={activeSeries} />}
+      {activeView === "graph" && <LeaderboardChart series={activeSeries} />}
       {activeView === "table" && (
-        <LeaderboardRankingTable title={activePage.title} entries={rankingEntries} />
+        <LeaderboardRankingTable title={activePageInfo.title} entries={rankingEntries} />
       )}
       {activeView === "treemap" &&
         (latestMetric ? (

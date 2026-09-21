@@ -78,4 +78,33 @@ describe("LeaderboardChart", () => {
     const { getByText } = render(<LeaderboardChart title="Population" series={series} />);
     expect(getByText("Population")).toBeInTheDocument();
   });
+
+  it("defaults to no step (undefined) and auto-scaled axes when step/yAxisRange/xAxisRange aren't passed", () => {
+    render(<LeaderboardChart title="Population" series={series} />);
+
+    const option = latestOption();
+    const echartsSeries = option.series as Array<{ step?: unknown }>;
+    expect(echartsSeries[0].step).toBeUndefined();
+    expect(option.yAxis).toMatchObject({ type: "value", scale: true });
+    expect(option.xAxis).toMatchObject({ type: "value", scale: true });
+  });
+
+  it("renders each series as step: 'end' when step is true (Ruler History stretch goal)", () => {
+    render(<LeaderboardChart title="Ruler History" series={series} step />);
+
+    const echartsSeries = latestOption().series as Array<{ step?: string }>;
+    expect(echartsSeries[0].step).toBe("end");
+  });
+
+  it("uses a fixed y-axis domain when yAxisRange is passed, instead of auto-scaling", () => {
+    render(<LeaderboardChart title="Ruler History" series={series} yAxisRange={[0, 300]} />);
+
+    expect(latestOption().yAxis).toMatchObject({ type: "value", min: 0, max: 300 });
+  });
+
+  it("uses a fixed x-axis domain when xAxisRange is passed, instead of auto-scaling (Ruler History's 'deadset' 1337-current-year range)", () => {
+    render(<LeaderboardChart title="Ruler History" series={series} xAxisRange={[1337, 1628]} />);
+
+    expect(latestOption().xAxis).toMatchObject({ type: "value", min: 1337, max: 1628 });
+  });
 });

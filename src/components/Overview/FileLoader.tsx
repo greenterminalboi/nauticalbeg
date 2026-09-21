@@ -29,7 +29,7 @@ import { ErrorMessage } from "./ErrorMessage";
 import { KeptSaveOffer } from "./KeptSaveOffer";
 import { LeaderboardTab } from "./LeaderboardTab";
 import { LeaderboardSideNav } from "./LeaderboardSideNav";
-import type { LeaderboardMetric } from "./leaderboardData";
+import type { LeaderboardPage } from "./leaderboardData";
 import { LoadingCircle } from "./LoadingCircle";
 import { MapTab } from "./MapTab";
 import { MarketsTab } from "./MarketsTab";
@@ -114,7 +114,7 @@ type Status =
 export function FileLoader() {
   const [activeSection, setActiveSection] = useState<AppSection>("factbook");
   const [encyclopediaTab, setEncyclopediaTab] = useState<EncyclopediaTab>("countries");
-  const [leaderboardMetric, setLeaderboardMetric] = useState<LeaderboardMetric>("population");
+  const [leaderboardPage, setLeaderboardPage] = useState<LeaderboardPage>("population");
   const [marketsView, setMarketsView] = useState<MarketsView>("worldGoods");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const workerRef = useRef<Worker | null>(null);
@@ -438,7 +438,7 @@ export function FileLoader() {
         />
       )}
       {showLeaderboardNav && (
-        <LeaderboardSideNav activeMetric={leaderboardMetric} onSelectMetric={setLeaderboardMetric} />
+        <LeaderboardSideNav activePage={leaderboardPage} onSelectPage={setLeaderboardPage} />
       )}
       {showMarketsNav && (
         <MarketsSideNav activeView={marketsView} onSelectView={setMarketsView} />
@@ -487,7 +487,7 @@ export function FileLoader() {
                 // Save-wide, not nation-scoped, same isReady + readDbRef.current
                 // gate and idle wording as Wars/Map above.
                 isReady && readDbRef.current ? (
-                  <LeaderboardTab db={readDbRef.current} activeMetric={leaderboardMetric} />
+                  <LeaderboardTab db={readDbRef.current} activePage={leaderboardPage} />
                 ) : (
                   <p>Select a save file above to get started.</p>
                 )

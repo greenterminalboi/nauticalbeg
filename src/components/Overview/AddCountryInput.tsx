@@ -6,6 +6,13 @@ interface AddCountryInputProps {
   countries: readonly LeaderboardCountry[];
   selectedIdxs: readonly number[];
   onToggle: (idx: number) => void;
+  /** Defaults to "Add country…" (its original World Goods wording).
+   * Post-ship, 2026-09-21 (explicit user request): this became the
+   * standard country-selection control across every Leaderboard chart
+   * (`LeaderboardTab`, `RulerHistoryChart`) too — those pass "Search
+   * countries…" since they both add and remove through it, not just
+   * add. */
+  placeholder?: string;
 }
 
 function countryLabel(country: LeaderboardCountry): string {
@@ -24,7 +31,12 @@ function countryLabel(country: LeaderboardCountry): string {
  * picks (adding several countries in a row shouldn't need re-opening
  * anything), closing only once focus leaves the whole control.
  */
-export function AddCountryInput({ countries, selectedIdxs, onToggle }: AddCountryInputProps) {
+export function AddCountryInput({
+  countries,
+  selectedIdxs,
+  onToggle,
+  placeholder = "Add country…",
+}: AddCountryInputProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,7 +59,7 @@ export function AddCountryInput({ countries, selectedIdxs, onToggle }: AddCountr
       <input
         type="text"
         className="add-country-input__input"
-        placeholder="Add country…"
+        placeholder={placeholder}
         value={query}
         onFocus={() => setOpen(true)}
         onChange={(e) => setQuery(e.target.value)}

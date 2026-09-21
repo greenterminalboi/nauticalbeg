@@ -550,4 +550,65 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
       { good: "wool", total: 8.47007 },
     ]);
   });
+
+  it("populates ruler_history from rulerterm_manager joined against character_db, scoped to real Country-ruled-by-Character terms (specs/006-country-leaderboard Ruler History stretch goal)", async () => {
+    const database = await freshDb("adapter-ruler-history.db");
+    await parseAndStore(database, "save-17", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(
+      database,
+      "SELECT * FROM ruler_history WHERE nation_idx = 2025 ORDER BY start_date",
+    );
+    // Two real reigns for RUS (2025); the interregnum term between them
+    // (ruler_type=Character but ruler.regency=interregnum, no
+    // `characters` field at all) is excluded — no character to score.
+    expect(rows).toEqual([
+      {
+        nation_idx: 2025,
+        start_date: "1337.11.11",
+        regnal_number: 1,
+        first_name_key: "name_test_ruler_a",
+        nickname: null,
+        adm: 80,
+        dip: 60,
+        mil: 50,
+      },
+      {
+        nation_idx: 2025,
+        start_date: "1400.1.1",
+        regnal_number: 2,
+        first_name_key: "name_test_ruler_b",
+        nickname: null,
+        adm: 40,
+        dip: 30,
+        mil: 20,
+      },
+    ]);
+
+    // SCA's (idx 3) single reign is scoped separately, never mixed with
+    // RUS's rows.
+    const scaRows = await queryAll(
+      database,
+      "SELECT * FROM ruler_history WHERE nation_idx = 3",
+    );
+    expect(scaRows).toEqual([
+      {
+        nation_idx: 3,
+        start_date: "1500.5.20",
+        regnal_number: 1,
+        first_name_key: "name_test_ruler_c",
+        nickname: null,
+        adm: 100,
+        dip: 100,
+        mil: 100,
+      },
+    ]);
+
+    // The two InternationalOrganization-ruled_type terms (one ruler_type
+    // Country, one ruler_type Character with a real character=999) are
+    // both excluded entirely — never surfacing as some other nation's
+    // ruler row.
+    const total = await queryAll(database, "SELECT COUNT(*) as n FROM ruler_history");
+    expect(Number(total[0].n)).toBe(3);
+  });
 });

@@ -1158,3 +1158,99 @@ resolved as one batch.**
   than a separate toggle-button-plus-panel. `buildEntries` re-keyed off
   selection instead of rank, keeping the same "Other producers" vs
   "Unattributed" distinct-bucket rule (FR-008/FR-009).
+
+## Ruler History (specs/006-country-leaderboard stretch goal, 2026-09-21)
+
+A new Leaderboard page: a step chart of each selected player nation's
+combined ruler skill (`adm + dip + mil`, a real 0-300 range by game
+design) across the whole campaign.
+
+**Data source, found not assumed.** `rulerterm_manager.database` has
+one row per historical reign — `ruler_type`, `ruler.characters[0].
+{character, regnal_number}`, `ruled_type`, `ruled` (the nation idx),
+`start_date`, `end_date` — confirmed against a real 642MB save.
+`character_db.database.<character idx>` has that ruler's own `adm`/
+`dip`/`mil`, `first_name` (a localization key, e.g. "name_birger"),
+and optionally `nickname` (already real display text, not a key) and
+`country`. `ruler_history` (schema.sql) is the denormalized join of
+the two, built once at parse time (1.3.11.ts) rather than a second
+table — both maps are already in memory during that pass. Scoped to
+`ruled_type=Country` (excludes International Organization ruler terms,
+e.g. HRE-style elected titles) and `ruler_type=Character` with a
+resolvable character (excludes interregnum/regency terms — no one to
+score). No `end_date` column: a ruler's segment end is derived at
+chart-build time from the *next* row's `start_date` (or the save's
+current date for the last one) — a real, unmodeled interregnum gap
+between two reigns simply carries the earlier ruler's value forward
+rather than showing a gap, a deliberate simplification (not a
+fabrication), documented in schema.sql.
+
+**Column order in `ruler_history` matters beyond readability.**
+`insertRows`' bulk-insert path (db.ts) turned out to insert
+positionally — DuckDB-Wasm's `insertArrowTable` matches the Arrow
+table's field order against the target table's own physical column
+order, not by name, despite both carrying field names. Adding
+`first_name_key`/`nickname` via a separate `ALTER TABLE` (appending
+them at the end) while the adapter's `INSERT INTO ruler_history
+(..., first_name_key, nickname, adm, dip, mil)` listed them earlier
+caused a real, silent type-mismatch insert failure (a string landing
+in a `DOUBLE` column) — caught immediately by the test suite. Fixed by
+folding both columns directly into the original `CREATE TABLE`
+(this table shipped only within this same session, never to a real
+user, so there's no kept-save migration case to preserve) in the same
+order the adapter's row tuples use. Documented in schema.sql as a
+constraint on this table specifically, since it's not obvious from the
+column list alone.
+
+**Real ruler names, not "Ruler #N".** A save's `first_name` is a raw
+localization key, not display text — the save carries no localized
+strings at all. Resolved the same way 008's Encyclopedia already
+solved this exact problem for `game_concepts`: a small dedicated
+scraping tool (`tools/ruler-names-scraping/generate.ts`, `npm run
+generate:ruler-names -- --install <path>`) reuses `tools/encyclopedia-
+scraping/parse-localization.ts`'s existing `parseLocalization` (already
+a full recursive scan of every `*_l_english.yml` under the install) and
+filters its result to base `name_*` keys (dropping regional-script
+variants like `name_birger.greek_language`) into a committed
+`src/components/Overview/rulerNames.json` (~4,670 entries, confirmed
+against a real install, ~135KB). `rulerNames.ts`'s
+`resolveRulerFirstName` falls back to `null` (never a guessed name) for
+an unresolvable key; the UI then falls back to a regnal-number-only
+label (`Ruler #7`) — real data, not a fabrication — rather than hiding
+the ruler entirely.
+
+**Hover tooltip needed its own lookup, not ECharts' default.** A step
+chart's tooltip, left to ECharts' own axis-trigger "nearest data point"
+logic, picks whichever of the two flanking points is pixel-nearest to
+the cursor — wrong on one side of the step's own boundary, since the
+step's actual value holds flat from a point until the *next* point's x,
+not until the midpoint between them. Fixed with `LeaderboardChart`'s
+new `tooltipFormatter` prop (a pass-through to ECharts'
+`tooltip.formatter`) plus `axisPointer: {type: "line", snap: false}`
+when `step` is set, so the axis position fed to the formatter is the
+literal continuous mouse position, not snapped to a data point.
+`RulerHistoryChart`'s own formatter ignores ECharts' per-series
+nearest-point picks entirely and instead scans its own raw per-nation
+reign arrays (already in scope via closure) for the latest reign whose
+`start_date <= axisValue` — the actually-correct step value — and
+formats the ruler's real name from there.
+
+**Country selection standardized on `AddCountryInput`.** Originally
+built for World Goods ("Add country…"), explicit user request made it
+the standard control across every Leaderboard chart: `LeaderboardTab`
+and `RulerHistoryChart` both replaced their old "Search countries"
+toggle-button-plus-`CountrySearchOverlay` panel with this same
+always-visible search input (now takes an optional `placeholder` prop;
+these two pass "Search countries…", framing it as add-or-remove rather
+than add-only), positioned next to the page's own title in a shared
+header row instead of a separate control. `LeaderboardChart`'s own
+`title` became optional so the page-level title isn't shown twice.
+
+**Ranking view, mirroring `LeaderboardTab`'s own Graph/Ranking
+toggle.** Shows each selected nation's time-weighted average ruler
+skill (weighted by each reign's real length — a two-year reign and an
+eighty-year reign should not count equally) from its earliest recorded
+reign through the save's current date, alongside its current ruler's
+own skill — `LeaderboardRankingTable` gained an optional
+`secondaryValue`/`secondaryTitle` for this second column, driven by
+neither column for sort order except the primary (average).

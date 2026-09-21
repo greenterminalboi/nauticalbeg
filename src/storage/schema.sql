@@ -316,6 +316,49 @@ CREATE TABLE IF NOT EXISTS province_good_production (
 CREATE INDEX IF NOT EXISTS idx_province_good_production_good
   ON province_good_production (good, province_idx);
 
+-- specs/006-country-leaderboard, post-ship 2026-09-21 (Ruler History
+-- stretch goal): one row per ruler term from `rulerterm_manager.database`
+-- — real, dated reigns, not fabricated ones. Scoped at extraction time
+-- (1.3.11.ts) to `ruled_type=Country` (excludes International
+-- Organization ruler terms, e.g. HRE-style elected titles) and
+-- `ruler_type=Character` with a resolvable `ruler.characters[0].character`
+-- (excludes interregnum/regency terms, which have no character to
+-- score). `adm`/`dip`/`mil` are that ruler's `character_db` entry's own
+-- stats at save time (a character's stats can change over their life —
+-- these are whatever the save currently records, not a point-in-time
+-- snapshot from the start of the reign). No `end_date` column: the
+-- chart derives each ruler's segment end from the *next* row's
+-- `start_date` (or the save's current date for the last one), which
+-- also means a real but unmodeled interregnum gap simply carries the
+-- previous ruler's value forward rather than showing a gap — a
+-- deliberate simplification, not a fabrication (see ARCHITECTURE.md).
+-- first_name_key: the character's raw `first_name` field, e.g.
+-- "name_birger" — a localization key, not display text (the save
+-- carries no localized strings). Resolved client-side against
+-- src/components/Overview/rulerNames.json (generated from the game's
+-- own install by tools/ruler-names-scraping/generate.ts, the same
+-- key-lookup-from-game-files pattern 008's Encyclopedia already uses)
+-- — never guessed. nickname, in contrast, is real display text
+-- already in the save when present (e.g. "Ladulas"), not a key; stored
+-- and shown as-is, no lookup needed.
+-- Column order here matters beyond readability: insertRows' bulk-insert
+-- path (db.ts) inserts into this table positionally (DuckDB-Wasm's
+-- insertArrowTable matches the Arrow table's field order against this
+-- table's own physical column order, not by name) — it must exactly
+-- match the tuple order 1.3.11.ts builds `rulerHistoryRows` in.
+CREATE TABLE IF NOT EXISTS ruler_history (
+  nation_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  start_date TEXT NOT NULL, -- 'YYYY.M.D', this ruler's reign start
+  regnal_number INTEGER,
+  first_name_key TEXT,
+  nickname TEXT,
+  adm DOUBLE,
+  dip DOUBLE,
+  mil DOUBLE
+);
+CREATE INDEX IF NOT EXISTS idx_ruler_history_nation
+  ON ruler_history (nation_idx, start_date);
+
 CREATE SEQUENCE IF NOT EXISTS raw_sections_id_seq;
 CREATE TABLE IF NOT EXISTS raw_sections (
   id INTEGER PRIMARY KEY DEFAULT nextval('raw_sections_id_seq'),
