@@ -366,6 +366,11 @@
       "decision": "ShareTreemap gained squareRatio: 1 and a per-box shadow/border via itemStyle",
       "why": "user request: more boxy, add a 3D shadow effect to look better",
       "rejected": "a World-Goods-only styled variant instead of changing the shared component"
+    },
+    {
+      "decision": "Removed ShareTreemap title prop entirely and its container padding",
+      "why": "user request: treemap should fill the whole grey container with no margins, and the lowercase title is redundant since the good/metric is already visible from the selection that chose it",
+      "rejected": "keep title but visually hide it, or make it optional per-caller"
     }
   ],
   "step_summaries": {
@@ -377,7 +382,7 @@
       "summary": "18 tasks across 4 phases (Foundational data layer + ShareTreemap rename, US1 World-Goods-as-own-page, US2 production-share treemap, Polish)."
     },
     "implement": {
-      "summary": "Post-ship wrap-up (2026-09-21): removed price history, app-wide country-existence filtering, location-based market naming + owner, Leaderboard x-axis fix, app-wide chart enlargement, World Goods page redesigned around GoodSelect, ShareTreemap boxier+shadowed."
+      "summary": "Post-ship follow-up (2026-09-21, same day): ShareTreemap now fills its container edge-to-edge with no title."
     }
   },
   "approach": "Extend the provinces parser extraction with last_month_produced into a new province_good_production table, add a derived coverage column to listWorldGoodsArrow plus a new per-owner production query, and promote World Goods to its own switchable MarketsTab page reusing the renamed ShareTreemap component and LeaderboardTab's exact Other-bucket pattern.",

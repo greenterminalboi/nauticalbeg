@@ -12,7 +12,6 @@ export interface ShareTreemapEntry {
 }
 
 interface ShareTreemapProps {
-  title: string;
   entries: readonly ShareTreemapEntry[];
 }
 
@@ -47,7 +46,7 @@ function formatShare(value: number, total: number): string {
  * valued entries" shape — the component had no Leaderboard-specific
  * logic to begin with, so this is a mechanical rename, not a rewrite.
  */
-export function ShareTreemap({ title, entries }: ShareTreemapProps) {
+export function ShareTreemap({ entries }: ShareTreemapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const total = useMemo(
@@ -104,15 +103,13 @@ export function ShareTreemap({ title, entries }: ShareTreemapProps) {
   if (total <= 0) {
     return (
       <div className="share-treemap">
-        <p className="share-treemap__title">{title}</p>
-        <p>No data available.</p>
+        <p className="share-treemap__empty">No data available.</p>
       </div>
     );
   }
 
   return (
     <div className="share-treemap">
-      <p className="share-treemap__title">{title}</p>
       <div ref={containerRef} className="share-treemap__canvas" />
     </div>
   );

@@ -174,7 +174,7 @@ export function WorldGoodsPage({ db }: WorldGoodsPageProps) {
             )}
           </div>
           {entries ? (
-            <ShareTreemap title={selectedGood} entries={entries} />
+            <ShareTreemap entries={entries} />
           ) : (
             <p>Loading production share…</p>
           )}

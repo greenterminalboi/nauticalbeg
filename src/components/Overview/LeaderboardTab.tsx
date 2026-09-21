@@ -249,7 +249,7 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
       )}
       {activeView === "treemap" &&
         (latestMetric ? (
-          <ShareTreemap title={activePage.title} entries={treemapEntries} />
+          <ShareTreemap entries={treemapEntries} />
         ) : (
           <p>Loading treemap…</p>
         ))}

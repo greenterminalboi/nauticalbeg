@@ -109,3 +109,11 @@ its canvas sizing to `min(70vh, 44rem)` instead of a fixed `20rem` —
 applied here in the shared component, so Leaderboard's own treemap use
 gets the same visual treatment as World Goods', not a per-caller
 option.
+
+**Post-ship follow-up (2026-09-21, same day)**: `title` prop removed
+entirely. Whatever selected the entries being shown (`GoodSelect` for
+World Goods, the Leaderboard side nav for Leaderboard's treemap) already
+displays that label, so a repeated one inside the treemap box was
+redundant. The container's own padding is gone too — the canvas now
+fills `.share-treemap` edge to edge (`overflow: hidden` clips it to the
+container's rounded corners).

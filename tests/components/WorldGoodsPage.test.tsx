@@ -75,7 +75,6 @@ describe("WorldGoodsPage", () => {
 
     await waitFor(() => expect(screen.getByTestId("share-treemap")).toBeInTheDocument());
     const props = vi.mocked(ShareTreemap).mock.calls.at(-1)![0];
-    expect(props.title).toBe("clay");
     const entries = props.entries as ShareTreemapEntry[];
     expect(entries).toHaveLength(3);
     expect(entries).toContainEqual({ id: 1, label: "RUS", color: [183, 136, 27], value: 60 });

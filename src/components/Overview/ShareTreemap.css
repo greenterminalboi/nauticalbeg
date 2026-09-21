@@ -1,25 +1,27 @@
+/* Post-ship, 2026-09-21: no padding and no title -- the treemap fills
+   this container edge to edge; the good/metric it's showing is already
+   visible from whatever selected it (GoodSelect, the Leaderboard side
+   nav), so a repeated label here was redundant. overflow: hidden clips
+   the canvas to the container's own rounded corners. */
 .share-treemap {
   background: var(--color-surface-container-low);
   border: 1px solid var(--color-outline-variant);
   border-radius: 6px;
-  padding: var(--space-md);
-}
-
-.share-treemap__title {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--color-on-surface-variant);
-  margin: 0 0 var(--space-sm);
-}
-
-/* Post-ship, 2026-09-21: fill most of the viewport's remaining height
-   rather than a small fixed box — same reasoning as
-   LeaderboardChart.css's __canvas. Shared by both Leaderboard's treemap
-   view and the World Goods production-share treemap. */
-.share-treemap__canvas {
-  width: 100%;
+  overflow: hidden;
   height: min(70vh, 44rem);
   min-height: 26rem;
+}
+
+.share-treemap__canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.share-treemap__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin: 0;
+  color: var(--color-on-surface-variant);
 }
