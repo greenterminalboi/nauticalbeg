@@ -37,14 +37,31 @@ function worstRatio(row: readonly number[], side: number): number {
 }
 
 /** Lays out one row of `count` items (by area, already scaled) against
- * the shorter side of `rect`, returning the remaining rect. */
+ * the shorter side of `rect`, returning the remaining rect.
+ *
+ * The row must be laid along the *shorter* side and eat into the
+ * *longer* one — that's what keeps `rect` trending back toward square
+ * as more rows are placed, which is the entire point of "squarified".
+ * Found and fixed 2026-09-20: this used to check `rect.width >=
+ * rect.height` (i.e. lay a horizontal, full-width row whenever width
+ * was already the longer side), which does the opposite — it eats into
+ * whichever side is already shorter, so that side keeps shrinking while
+ * the long side never does. For a moderately wide canvas (e.g. 640x300)
+ * with one dominant item, every row after the first degenerated into a
+ * full-width sliver stacked underneath the last (confirmed against a
+ * real save: one large "Other" box on top, then N countries each as
+ * their own thin horizontal band — not a 2D mosaic at all). Verified
+ * fix against the classic Bruls/Huizing/van Wijk squarify example
+ * ([6,6,4,3,2,2,1] on a 6x4 canvas): every item now lands in a proper
+ * multi-row/multi-column mosaic instead of two boxes followed by five
+ * stacked slivers. */
 function layoutRow<T extends TreemapInput>(
   rowItems: { item: T; area: number }[],
   rect: Rect,
   out: TreemapRect<T>[],
 ): Rect {
   const sum = rowItems.reduce((a, b) => a + b.area, 0);
-  const horizontal = rect.width >= rect.height;
+  const horizontal = rect.width < rect.height;
   if (horizontal) {
     const rowHeight = sum / rect.width;
     let cx = rect.x;

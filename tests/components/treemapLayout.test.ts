@@ -86,4 +86,33 @@ describe("treemapLayout squarify", () => {
     expect(rects).toHaveLength(25);
     expect(totalArea(rects)).toBeCloseTo(640 * 300, 2);
   });
+
+  // Regression: layoutRow's row orientation used to consume the
+  // already-shorter side each row instead of the longer one, so a
+  // dominant "Other" box followed by several smaller countries degenerated
+  // into a stack of full-width slivers (all sharing x=0) rather than a 2D
+  // mosaic — exactly the real "Other" + selected-countries shape.
+  it("produces a genuine 2D mosaic, not a stack of full-width slivers, for one dominant item plus several smaller ones", () => {
+    const items: TreemapInput[] = [
+      { id: "other", value: 60 },
+      { id: "a", value: 20 },
+      { id: "b", value: 12 },
+      { id: "c", value: 8 },
+    ];
+    const rects = squarify(items, 0, 0, 640, 300);
+    const distinctXStarts = new Set(rects.map((r) => Math.round(r.x)));
+    // A degenerate stacked-sliver layout has every box starting at x=0.
+    expect(distinctXStarts.size).toBeGreaterThan(1);
+  });
+
+  it("matches the classic Bruls/Huizing/van Wijk squarify example's shape ([6,6,4,3,2,2,1] on 6x4): a genuine multi-row/column mosaic", () => {
+    const items: TreemapInput[] = [6, 6, 4, 3, 2, 2, 1].map((value, i) => ({ id: i, value }));
+    const rects = squarify(items, 0, 0, 6, 4);
+    const distinctXStarts = new Set(rects.map((r) => Math.round(r.x * 100)));
+    const distinctYStarts = new Set(rects.map((r) => Math.round(r.y * 100)));
+    // A real mosaic varies along both axes — a degenerate layout only
+    // ever varies along one (e.g. every box at x=0, stacked by y).
+    expect(distinctXStarts.size).toBeGreaterThan(1);
+    expect(distinctYStarts.size).toBeGreaterThan(1);
+  });
 });
