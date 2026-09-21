@@ -1,5 +1,5 @@
 # Spec-Driven Development Status
-<!-- spec-status: project=nauticalbeg commit=ffe8e05a10abf1ea4337bc12b179a3543763d9e2 updated=2026-09-21T13:29:21Z -->
+<!-- spec-status: project=nauticalbeg commit=4d9000d045c27666b7a50851d410a3ff4728cadf updated=2026-09-21T14:33:47Z -->
 
 | Feature                      | Specify | Plan | Tasks | Implement |
 |------------------------------|---------|------|-------|-----------|
