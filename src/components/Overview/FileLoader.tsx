@@ -33,6 +33,7 @@ import type { LeaderboardMetric } from "./leaderboardData";
 import { LoadingCircle } from "./LoadingCircle";
 import { MapTab } from "./MapTab";
 import { MarketsTab } from "./MarketsTab";
+import { MarketsSideNav, type MarketsView } from "./MarketsSideNav";
 import { OverviewCard } from "./OverviewCard";
 import { ProvincesTab } from "./ProvincesTab";
 import type { AppSection, EncyclopediaTab, TabId } from "./tabs";
@@ -114,6 +115,7 @@ export function FileLoader() {
   const [activeSection, setActiveSection] = useState<AppSection>("factbook");
   const [encyclopediaTab, setEncyclopediaTab] = useState<EncyclopediaTab>("countries");
   const [leaderboardMetric, setLeaderboardMetric] = useState<LeaderboardMetric>("population");
+  const [marketsView, setMarketsView] = useState<MarketsView>("worldGoods");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const workerRef = useRef<Worker | null>(null);
   // Tracks the most recently ready save's id so the beforeunload handler
@@ -370,8 +372,13 @@ export function FileLoader() {
   // in this file.
   const showLeaderboardNav =
     isFactbook && encyclopediaTab === "leaderboard" && isReady && !!readDbRef.current;
+  // specs/009-world-goods-production (post-ship follow-up, 2026-09-21):
+  // Markets' own side nav (World Goods / Markets), same gating as
+  // showLeaderboardNav.
+  const showMarketsNav =
+    isFactbook && encyclopediaTab === "markets" && isReady && !!readDbRef.current;
   const shellClassName =
-    showCountriesNav || showLeaderboardNav
+    showCountriesNav || showLeaderboardNav || showMarketsNav
       ? "shell shell--with-nav"
       : isFactbook
         ? "shell shell--with-subnav"
@@ -433,6 +440,9 @@ export function FileLoader() {
       {showLeaderboardNav && (
         <LeaderboardSideNav activeMetric={leaderboardMetric} onSelectMetric={setLeaderboardMetric} />
       )}
+      {showMarketsNav && (
+        <MarketsSideNav activeView={marketsView} onSelectView={setMarketsView} />
+      )}
       <main className={mainClassName}>
         <div className={mainInnerClassName}>
           {isLoadingSave ? (
@@ -489,7 +499,7 @@ export function FileLoader() {
                 // Save-wide, not nation-scoped, same isReady + readDbRef.current
                 // gate and idle wording as Wars/Leaderboard/Map above.
                 isReady && readDbRef.current ? (
-                  <MarketsTab db={readDbRef.current} />
+                  <MarketsTab db={readDbRef.current} activeView={marketsView} />
                 ) : (
                   <p>Select a save file above to get started.</p>
                 )

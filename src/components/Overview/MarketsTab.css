@@ -4,30 +4,6 @@
   gap: var(--space-lg);
 }
 
-/* specs/009-world-goods-production: mirrors
- * .leaderboard-tab__view-toggle/.leaderboard-tab__view-button. */
-.markets-tab__view-toggle {
-  display: inline-flex;
-  border: 1px solid var(--color-outline-variant);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.markets-tab__view-button {
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  padding: var(--space-xs) var(--space-sm);
-  border: none;
-  background: var(--color-surface-container-low);
-  color: var(--color-on-surface-variant);
-  cursor: pointer;
-}
-
-.markets-tab__view-button--active {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-}
-
 .markets-tab__heading {
   font-family: var(--font-display);
   font-size: 1.1rem;

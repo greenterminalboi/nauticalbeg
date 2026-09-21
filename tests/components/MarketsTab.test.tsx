@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MarketsTab } from "../../src/components/Overview/MarketsTab";
+import { MarketsSideNav, type MarketsView } from "../../src/components/Overview/MarketsSideNav";
 import * as queries from "../../src/storage/queries";
 import * as marketData from "../../src/components/Overview/marketData";
 import * as perspectiveSetup from "../../src/perspective/setup";
@@ -39,15 +41,32 @@ beforeEach(() => {
 });
 
 // Mirrors FileLoader.tsx's exact gating JSX for the Markets block
-// (`isReady && readDbRef.current ? <MarketsTab db={...} /> : <p>...`) —
-// same idiom LeaderboardTab.test.tsx's `LeaderboardWithNav` wrapper uses
-// for composition it doesn't own. MarketsTab itself always requires a
-// real `db` (contracts/ui-components.md), so FR-010's no-save
+// (`isReady && readDbRef.current ? <MarketsTab db={...} activeView={...} /> :
+// <p>...`) — same idiom LeaderboardTab.test.tsx's `LeaderboardWithNav`
+// wrapper uses for composition it doesn't own. MarketsTab itself always
+// requires a real `db` (contracts/ui-components.md), so FR-010's no-save
 // placeholder is FileLoader's own gate, not internal MarketsTab state;
 // this wrapper verifies that exact gate without pulling in all of
 // FileLoader's file-loading machinery.
 function MarketsPageAsFileLoaderRendersIt({ db }: { db: SaveDatabase | null }) {
-  return db ? <MarketsTab db={db} /> : <p>Select a save file above to get started.</p>;
+  return db ? (
+    <MarketsTab db={db} activeView="worldGoods" />
+  ) : (
+    <p>Select a save file above to get started.</p>
+  );
+}
+
+// specs/009-world-goods-production (post-ship follow-up): the view
+// switch moved from MarketsTab's own top-of-content buttons into the
+// shell's side nav — mirrors LeaderboardTab.test.tsx's LeaderboardWithNav.
+function MarketsWithNav({ db }: { db: SaveDatabase }) {
+  const [activeView, setActiveView] = useState<MarketsView>("worldGoods");
+  return (
+    <>
+      <MarketsSideNav activeView={activeView} onSelectView={setActiveView} />
+      <MarketsTab db={db} activeView={activeView} />
+    </>
+  );
 }
 
 describe("MarketsTab", () => {
@@ -58,39 +77,36 @@ describe("MarketsTab", () => {
     expect(screen.queryByTestId("perspective-viewer")).not.toBeInTheDocument();
   });
 
-  it("defaults to the World Goods view, not the Markets list (specs/009-world-goods-production FR-001)", async () => {
-    render(<MarketsTab db={fakeDb} />);
+  it("renders World Goods when activeView is worldGoods, not the Markets list (FR-001)", async () => {
+    render(<MarketsTab db={fakeDb} activeView="worldGoods" />);
 
     await waitFor(() => expect(queries.listWorldGoodsArrow).toHaveBeenCalledWith(fakeDb));
     expect(queries.listMarketsArrow).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "World Goods" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(screen.getByRole("button", { name: "Markets" })).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
   });
 
-  it("switching to the Markets view shows the market list, and switching back hides it (FR-001, FR-002)", async () => {
-    render(<MarketsTab db={fakeDb} />);
+  it("renders the Markets list when activeView is markets, not World Goods (FR-001, FR-002)", async () => {
+    render(<MarketsTab db={fakeDb} activeView="markets" />);
+
+    await waitFor(() => expect(queries.listMarketsArrow).toHaveBeenCalledWith(fakeDb));
+    expect(queries.listWorldGoodsArrow).not.toHaveBeenCalled();
+  });
+
+  it("MarketsSideNav switches MarketsTab between views end to end", async () => {
+    render(<MarketsWithNav db={fakeDb} />);
     await waitFor(() => expect(queries.listWorldGoodsArrow).toHaveBeenCalledWith(fakeDb));
+    expect(screen.getByRole("button", { name: "World Goods" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Markets" }));
     await waitFor(() => expect(queries.listMarketsArrow).toHaveBeenCalledWith(fakeDb));
-    expect(screen.getByRole("button", { name: "Markets" })).toHaveAttribute("aria-pressed", "true");
-
-    fireEvent.click(screen.getByRole("button", { name: "World Goods" }));
-    expect(screen.getByRole("button", { name: "World Goods" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(screen.getByRole("button", { name: "Markets" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "World Goods" })).not.toHaveAttribute("aria-current");
   });
 
   it("leaves the market-detail section unrendered until a market is selected", async () => {
-    render(<MarketsTab db={fakeDb} />);
-    fireEvent.click(screen.getByRole("button", { name: "Markets" }));
+    render(<MarketsTab db={fakeDb} activeView="markets" />);
 
     await waitFor(() =>
       expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(1),
@@ -102,8 +118,7 @@ describe("MarketsTab", () => {
     vi.spyOn(queries, "listMarketGoodsArrow").mockResolvedValue(fakeArrowBuffer());
 
     const { PerspectiveViewer } = await import("@perspective-dev/react");
-    render(<MarketsTab db={fakeDb} />);
-    fireEvent.click(screen.getByRole("button", { name: "Markets" }));
+    render(<MarketsTab db={fakeDb} activeView="markets" />);
 
     await waitFor(() =>
       expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(1),
@@ -129,8 +144,7 @@ describe("MarketsTab", () => {
     ]);
 
     const { PerspectiveViewer } = await import("@perspective-dev/react");
-    render(<MarketsTab db={fakeDb} />);
-    fireEvent.click(screen.getByRole("button", { name: "Markets" }));
+    render(<MarketsTab db={fakeDb} activeView="markets" />);
 
     await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(1));
     // Identify MarketList's viewer by its columns, since re-renders mean

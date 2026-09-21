@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { SaveDatabase } from "../../storage/db";
+import type { MarketsView } from "./MarketsSideNav";
 import { WorldGoodsPage } from "./WorldGoodsPage";
 import { MarketList } from "./MarketList";
 import { MarketGoodsTable } from "./MarketGoodsTable";
@@ -8,14 +9,12 @@ import "./MarketsTab.css";
 
 interface MarketsTabProps {
   db: SaveDatabase;
+  /** Which view is active — owned by `FileLoader.tsx` and rendered via
+   * `MarketsSideNav` in the shell's `sidenav` grid area, the same way
+   * Leaderboard's `activeMetric`/`LeaderboardSideNav` split works
+   * (state lives in the shell, not in this content component). */
+  activeView: MarketsView;
 }
-
-type MarketsView = "worldGoods" | "markets";
-
-const VIEWS: { id: MarketsView; label: string }[] = [
-  { id: "worldGoods", label: "World Goods" },
-  { id: "markets", label: "Markets" },
-];
 
 /**
  * 007-production-trade-markets: Factbook's Markets page (contracts/
@@ -25,17 +24,17 @@ const VIEWS: { id: MarketsView; label: string }[] = [
  * owns which market/good are selected, and passes plain callback props
  * down rather than each child managing its own selection.
  *
- * specs/009-world-goods-production: World Goods and Markets are two
- * switchable pages (`activeView`), mirroring `LeaderboardTab.tsx`'s
- * exact `activeView`/`VIEWS` button-group pattern, rather than both
- * always stacked on one screen (FR-001). Selecting a market reveals its
+ * specs/009-world-goods-production (post-ship follow-up, 2026-09-21):
+ * World Goods and Markets are two switchable pages, but the switch
+ * itself lives in the shell's side nav (`MarketsSideNav`), not a
+ * top-of-content button group — this component just renders whichever
+ * `activeView` it's handed. Selecting a market reveals its
  * `MarketGoodsTable` (User Story 2, Markets view only); selecting a
  * different market clears any selected good, since a good selection
- * only makes sense within its own market. Selecting a good then reveals
- * its `MarketGoodPriceChart` (User Story 3).
+ * only makes sense within its own market. Selecting a good then
+ * reveals its `MarketGoodPriceChart` (User Story 3).
  */
-export function MarketsTab({ db }: MarketsTabProps) {
-  const [activeView, setActiveView] = useState<MarketsView>("worldGoods");
+export function MarketsTab({ db, activeView }: MarketsTabProps) {
   const [selectedMarketId, setSelectedMarketId] = useState<number | null>(null);
   const [selectedGoodId, setSelectedGoodId] = useState<string | null>(null);
 
@@ -46,23 +45,6 @@ export function MarketsTab({ db }: MarketsTabProps) {
 
   return (
     <div className="markets-tab">
-      <div className="markets-tab__view-toggle" role="group" aria-label="View">
-        {VIEWS.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            className={
-              v.id === activeView
-                ? "markets-tab__view-button markets-tab__view-button--active"
-                : "markets-tab__view-button"
-            }
-            aria-pressed={v.id === activeView}
-            onClick={() => setActiveView(v.id)}
-          >
-            {v.label}
-          </button>
-        ))}
-      </div>
       {activeView === "worldGoods" && (
         <div className="markets-tab__overview">
           <WorldGoodsPage db={db} />

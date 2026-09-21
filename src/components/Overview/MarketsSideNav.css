@@ -1,0 +1,9 @@
+/* Same grid-area/box treatment as LeaderboardSideNav.css/
+   CountryViewerNav.css's wrapper — sits in the shell's `sidenav` grid
+   area (Shell.css's `.shell--with-nav`). */
+.markets-side-nav {
+  grid-area: sidenav;
+  min-width: 14rem;
+  border-right: 1px solid var(--color-outline-variant);
+  background: var(--color-surface-container);
+}
