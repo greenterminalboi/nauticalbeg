@@ -36,6 +36,11 @@ interface MarketsSideNavProps {
 }
 ```
 
+**Post-ship follow-up (2026-09-21, same day)**: the `worldGoods` item's
+visible label is `"Global RGO Production"`, not `"World Goods"` — its
+`id`/type value (`MarketsView["worldGoods"]`) is unchanged, only the
+button text a user reads.
+
 Mirrors `LeaderboardSideNav` exactly (`.side-nav`/`.side-nav__list`/
 `.side-nav__item` styles, `grid-area: sidenav` box treatment). Owned and
 rendered by `FileLoader.tsx` (`showMarketsNav`, same `isFactbook &&
@@ -85,14 +90,46 @@ covered list, the selected good's world total (from the already-loaded
 `goods`, no extra fetch) next to it, and — on selecting a good — fetches
 `listGoodProductionByOwnerArrow(db, selectedGood)` (via
 `decodeGoodProductionByOwner`) and joins against
-`loadLeaderboardCountries`'s result (research.md) to build
-`ShareTreemapEntry[]`, rendering `<ShareTreemap title={selectedGood}
-entries={entries} />`. `buildEntries`'s legibility-at-scale logic
-(FR-009: top 15 individual producers + a distinct "Other producers"
-bucket beyond that, separate from "Unattributed") is unchanged. If no
-good in the save has coverage at all, renders a plain message instead
-of `GoodSelect`/`ShareTreemap` — the only remaining "not available"
-case, now a save-wide edge case rather than a per-selection one.
+`loadLeaderboardCountries`'s result (research.md). If no good in the
+save has coverage at all, renders a plain message instead of
+`GoodSelect`/`ShareTreemap` — the only remaining "not available" case,
+now a save-wide edge case rather than a per-selection one.
+
+**Post-ship follow-up (2026-09-21, same day): the treemap's individual
+boxes are an explicit selection, not an automatic top-N cutoff.** Owns
+`selectedIdxs: number[]`, recomputed to the top `MAX_INDIVIDUAL_PRODUCERS`
+(15) real producers by amount every time `selectedGood` changes (the
+same 15 that used to be an unconditional cap — now just the default
+selection's own size). `AddCountryInput` (below) lets the user add or
+remove any other real country on demand; `buildEntries` now takes that
+`selectedIdxs` and builds one box per *selected* real producer, folding
+every unselected real producer into `"other-producers"` and every
+non-Real/no-owner amount into `"unattributed"` (FR-008/FR-009's
+distinct-buckets requirement is unchanged, just re-keyed off selection
+instead of rank).
+
+## `AddCountryInput` (new, post-ship follow-up)
+
+```ts
+interface AddCountryInputProps {
+  countries: readonly LeaderboardCountry[];
+  selectedIdxs: readonly number[];
+  onToggle: (idx: number) => void;
+}
+```
+
+`WorldGoodsPage`'s way of adding a country to the treemap on demand —
+mirrors Leaderboard's own treemap selection model (`CountrySearchOverlay`
++ `toggleCountry`), but as a plain always-visible search input
+(placeholder `"Add country…"`) instead of a toggle-button-plus-panel:
+no separate "open search" control, the input itself is the control.
+Opens its own filtered results list (same filter-by-name-or-tag,
+case-insensitive substring match as `CountrySearchOverlay`) on focus;
+each result is a checkbox reflecting `selectedIdxs` membership, toggled
+via `onToggle`. The list stays open across multiple picks (`onMouseDown`
+`preventDefault` on the results list, the standard combobox trick, so a
+checkbox click never blurs the input out from under it), closing only
+once focus leaves the whole control.
 
 ## `ShareTreemap` (renamed from `LeaderboardTreemap`)
 

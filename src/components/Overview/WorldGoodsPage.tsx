@@ -8,6 +8,7 @@ import {
 } from "./marketData";
 import { loadLeaderboardCountries, type LeaderboardCountry } from "./leaderboardData";
 import { GoodSelect } from "./GoodSelect";
+import { AddCountryInput } from "./AddCountryInput";
 import { ShareTreemap, type ShareTreemapEntry } from "./ShareTreemap";
 import { NEUTRAL_COLOR } from "./mapLayers";
 import "./WorldGoodsPage.css";
@@ -18,7 +19,8 @@ interface WorldGoodsPageProps {
 
 // specs/009-world-goods-production contracts/ui-components.md: enough
 // to show every major producer of a typical good without degenerating
-// into dozens of illegible slivers (FR-009).
+// into dozens of illegible slivers (FR-009) — now also the size of the
+// default selection below, rather than a hard cap.
 const MAX_INDIVIDUAL_PRODUCERS = 15;
 
 // Post-ship, 2026-09-21: the good the page opens on, per the user's
@@ -26,39 +28,64 @@ const MAX_INDIVIDUAL_PRODUCERS = 15;
 // remains reachable via GoodSelect's search.
 const DEFAULT_GOOD = "wheat";
 
+function realProducers(
+  byOwner: readonly GoodProductionByOwner[],
+  countries: readonly LeaderboardCountry[],
+): { idx: number; amount: number }[] {
+  const countryByIdx = new Map(countries.map((c) => [c.idx, c]));
+  const result: { idx: number; amount: number }[] = [];
+  for (const { ownerIdx, amount } of byOwner) {
+    if (ownerIdx !== null && countryByIdx.has(ownerIdx)) {
+      result.push({ idx: ownerIdx, amount });
+    }
+  }
+  return result;
+}
+
+// Post-ship, 2026-09-21: the treemap's individual boxes are now driven
+// by an explicit selection (mirroring Leaderboard's treemap), not an
+// automatic top-N cutoff. This computes that selection's own starting
+// point whenever the good changes — the top producers by amount — so
+// the page opens on something useful; from there, CountrySearchOverlay
+// lets the user add (or remove) any country on demand.
+function defaultSelection(
+  byOwner: readonly GoodProductionByOwner[],
+  countries: readonly LeaderboardCountry[],
+): number[] {
+  return realProducers(byOwner, countries)
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, MAX_INDIVIDUAL_PRODUCERS)
+    .map((p) => p.idx);
+}
+
 function buildEntries(
   byOwner: readonly GoodProductionByOwner[],
   countries: readonly LeaderboardCountry[],
+  selectedIdxs: readonly number[],
 ): ShareTreemapEntry[] {
   const countryByIdx = new Map(countries.map((c) => [c.idx, c]));
-  const realEntries: ShareTreemapEntry[] = [];
+  const selectedSet = new Set(selectedIdxs);
+  const entries: ShareTreemapEntry[] = [];
+  let otherTotal = 0;
   let unattributed = 0;
 
   for (const { ownerIdx, amount } of byOwner) {
     const country = ownerIdx !== null ? countryByIdx.get(ownerIdx) : undefined;
-    if (country) {
-      realEntries.push({ id: country.idx, label: country.name ?? country.tag, color: country.color, value: amount });
-    } else {
+    if (!country) {
       // No owner at all, or an owner not in the country_type = 'Real'
       // list loadLeaderboardCountries already filters to (Pirates, a
       // rebel faction, etc.) — never dropped, never folded into a real
       // country's own share (FR-008).
       unattributed += amount;
+    } else if (selectedSet.has(country.idx)) {
+      entries.push({ id: country.idx, label: country.name ?? country.tag, color: country.color, value: amount });
+    } else {
+      otherTotal += amount;
     }
   }
 
-  realEntries.sort((a, b) => b.value - a.value);
-  const top = realEntries.slice(0, MAX_INDIVIDUAL_PRODUCERS);
-  const rest = realEntries.slice(MAX_INDIVIDUAL_PRODUCERS);
-
-  const entries = [...top];
-  if (rest.length > 0) {
-    entries.push({
-      id: "other-producers",
-      label: "Other producers",
-      color: NEUTRAL_COLOR,
-      value: rest.reduce((sum, e) => sum + e.value, 0),
-    });
+  if (otherTotal > 0) {
+    entries.push({ id: "other-producers", label: "Other producers", color: NEUTRAL_COLOR, value: otherTotal });
   }
   if (unattributed > 0) {
     entries.push({ id: "unattributed", label: "Unattributed", color: NEUTRAL_COLOR, value: unattributed });
@@ -74,7 +101,8 @@ function formatTotal(value: number): string {
 }
 
 /**
- * specs/009-world-goods-production User Story 2: World Goods' own page.
+ * specs/009-world-goods-production User Story 2: World Goods' own page
+ * ("Global RGO Production" in the side nav).
  *
  * Post-ship, 2026-09-21 (explicit user request): the old always-visible
  * `WorldGoodsOverview` data grid is gone. Picking a good is now a
@@ -85,14 +113,24 @@ function formatTotal(value: number): string {
  * how the page makes that boundary clear, rather than offering every
  * good and rejecting most of them after the fact. Defaults to wheat.
  * The selected good's world total (already loaded with the rest of
- * `decodeWorldGoods`) is shown next to the picker; the treemap below is
- * the same `ShareTreemap` as before.
+ * `decodeWorldGoods`) is shown next to the picker.
+ *
+ * Post-ship, 2026-09-21 (same day): the treemap's individual boxes are
+ * now an explicit selection (`selectedIdxs`), defaulting to the top
+ * `MAX_INDIVIDUAL_PRODUCERS` producers whenever the good changes, with
+ * `AddCountryInput` letting the user add (or remove) any other real
+ * country on demand. Mirrors Leaderboard's own treemap selection model,
+ * including the "a selected country with no recorded value for this
+ * good just doesn't get a box" edge case — just with its own always-
+ * visible search input instead of Leaderboard's toggle-button-plus-
+ * panel (`CountrySearchOverlay`).
  */
 export function WorldGoodsPage({ db }: WorldGoodsPageProps) {
   const [goods, setGoods] = useState<WorldGood[] | null>(null);
   const [selectedGood, setSelectedGood] = useState<string | null>(null);
   const [byOwner, setByOwner] = useState<GoodProductionByOwner[] | null>(null);
   const [countries, setCountries] = useState<LeaderboardCountry[] | null>(null);
+  const [selectedIdxs, setSelectedIdxs] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -132,6 +170,7 @@ export function WorldGoodsPage({ db }: WorldGoodsPageProps) {
         if (cancelled) return;
         setByOwner(ownerRows);
         setCountries(countryList);
+        setSelectedIdxs(defaultSelection(ownerRows, countryList));
       },
     );
     return () => {
@@ -141,8 +180,14 @@ export function WorldGoodsPage({ db }: WorldGoodsPageProps) {
 
   const entries = useMemo(() => {
     if (!byOwner || !countries) return null;
-    return buildEntries(byOwner, countries);
-  }, [byOwner, countries]);
+    return buildEntries(byOwner, countries, selectedIdxs);
+  }, [byOwner, countries, selectedIdxs]);
+
+  function toggleCountry(idx: number) {
+    setSelectedIdxs((current) =>
+      current.includes(idx) ? current.filter((i) => i !== idx) : [...current, idx],
+    );
+  }
 
   if (error) {
     return <p role="alert">{error}</p>;
@@ -167,6 +212,9 @@ export function WorldGoodsPage({ db }: WorldGoodsPageProps) {
         <>
           <div className="world-goods-page__controls">
             <GoodSelect goods={coveredGoods} selectedGood={selectedGood} onSelectGood={setSelectedGood} />
+            {countries && (
+              <AddCountryInput countries={countries} selectedIdxs={selectedIdxs} onToggle={toggleCountry} />
+            )}
             {selectedTotal !== null && (
               <p className="world-goods-page__total">
                 World total: <strong>{formatTotal(selectedTotal)}</strong>

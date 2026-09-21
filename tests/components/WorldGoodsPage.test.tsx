@@ -120,7 +120,7 @@ describe("WorldGoodsPage", () => {
     expect(entries.some((e) => e.id === 2)).toBe(false);
   });
 
-  it("folds real producers beyond the top 15 into one distinct 'other producers' bucket (FR-009)", async () => {
+  it("defaults the selection to the top 15 producers, folding the rest into one distinct 'other producers' bucket (FR-009)", async () => {
     vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([good("iron", 210, true)]);
     const byOwner = Array.from({ length: 20 }, (_, i) => ({ ownerIdx: i + 1, amount: 20 - i }));
     vi.spyOn(marketData, "decodeGoodProductionByOwner").mockResolvedValue(byOwner);
@@ -142,6 +142,58 @@ describe("WorldGoodsPage", () => {
     // smallest 5 of this descending series) sum to 15.
     expect(otherProducers!.value).toBe(15);
     expect(entries.some((e) => e.id === "unattributed")).toBe(false);
+  });
+
+  it("adding a country beyond the default top 15 via search breaks it out into its own box (on demand, mirrors Leaderboard's treemap)", async () => {
+    vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([good("iron", 210, true)]);
+    const byOwner = Array.from({ length: 20 }, (_, i) => ({ ownerIdx: i + 1, amount: 20 - i }));
+    vi.spyOn(marketData, "decodeGoodProductionByOwner").mockResolvedValue(byOwner);
+    vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue(
+      byOwner.map((o) => country(o.ownerIdx, `C${o.ownerIdx}`)),
+    );
+
+    render(<WorldGoodsPage db={fakeDb} />);
+    await waitFor(() => expect(screen.getByTestId("share-treemap")).toBeInTheDocument());
+
+    // C20 (ownerIdx 20, amount 1) is outside the default top 15 -- add it.
+    // Exact accessible name (not a substring search) so it can't also
+    // match "C2" or similar.
+    fireEvent.focus(screen.getByPlaceholderText("Add country…"));
+    fireEvent.click(screen.getByRole("checkbox", { name: "C20" }));
+
+    await waitFor(() => {
+      const entries = vi.mocked(ShareTreemap).mock.calls.at(-1)![0].entries as ShareTreemapEntry[];
+      expect(entries).toContainEqual({ id: 20, label: "C20", color: null, value: 1 });
+      // Other producers drops from 15 (5 countries: 16-20) to 14 (4
+      // countries: 16-19), since C20 is now its own box.
+      expect(entries.find((e) => e.id === "other-producers")).toMatchObject({ value: 14 });
+    });
+  });
+
+  it("removing a default-selected country via search folds it back into 'other producers'", async () => {
+    vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([good("iron", 210, true)]);
+    const byOwner = Array.from({ length: 20 }, (_, i) => ({ ownerIdx: i + 1, amount: 20 - i }));
+    vi.spyOn(marketData, "decodeGoodProductionByOwner").mockResolvedValue(byOwner);
+    vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue(
+      byOwner.map((o) => country(o.ownerIdx, `C${o.ownerIdx}`)),
+    );
+
+    render(<WorldGoodsPage db={fakeDb} />);
+    await waitFor(() => expect(screen.getByTestId("share-treemap")).toBeInTheDocument());
+
+    // C1 (ownerIdx 1, amount 20) is in the default top 15 -- remove it.
+    // Exact accessible name (not a substring search) so it can't also
+    // match "C10"-"C19".
+    fireEvent.focus(screen.getByPlaceholderText("Add country…"));
+    fireEvent.click(screen.getByRole("checkbox", { name: "C1" }));
+
+    await waitFor(() => {
+      const entries = vi.mocked(ShareTreemap).mock.calls.at(-1)![0].entries as ShareTreemapEntry[];
+      expect(entries.some((e) => e.id === 1)).toBe(false);
+      // Other producers grows from 15 (5 countries: 16-20) to 35
+      // (6 countries: 16-20 plus C1's 20).
+      expect(entries.find((e) => e.id === "other-producers")).toMatchObject({ value: 35 });
+    });
   });
 
   it("shows a not-available message, never a picker or a treemap, when no good in the save has coverage", async () => {

@@ -6,7 +6,7 @@ import "./MarketsSideNav.css";
 export type MarketsView = "worldGoods" | "markets";
 
 export const MARKETS_VIEWS: { id: MarketsView; label: string }[] = [
-  { id: "worldGoods", label: "World Goods" },
+  { id: "worldGoods", label: "Global RGO Production" },
   { id: "markets", label: "Markets" },
 ];
 

@@ -1,13 +1,11 @@
-/* Post-ship, 2026-09-21: no padding and no title -- the treemap fills
-   this container edge to edge; the good/metric it's showing is already
-   visible from whatever selected it (GoodSelect, the Leaderboard side
-   nav), so a repeated label here was redundant. overflow: hidden clips
-   the canvas to the container's own rounded corners. */
+/* Post-ship, 2026-09-21: no grey box around the treemap -- it sits
+   directly on the page's own background, no border, no padding. The
+   good/metric it's showing is already visible from whatever selected
+   it (GoodSelect, the Leaderboard side nav), so this component renders
+   no title of its own either; spacing from the controls above comes
+   from the parent's own flex gap (world-goods-page/leaderboard-tab),
+   not from anything in here. */
 .share-treemap {
-  background: var(--color-surface-container-low);
-  border: 1px solid var(--color-outline-variant);
-  border-radius: 6px;
-  overflow: hidden;
   height: min(70vh, 44rem);
   min-height: 26rem;
 }

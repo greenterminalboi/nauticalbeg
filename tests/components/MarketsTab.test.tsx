@@ -93,7 +93,7 @@ describe("MarketsTab", () => {
   it("MarketsSideNav switches MarketsTab between views end to end", async () => {
     render(<MarketsWithNav db={fakeDb} />);
     await waitFor(() => expect(queries.listWorldGoodsArrow).toHaveBeenCalledWith(fakeDb));
-    expect(screen.getByRole("button", { name: "World Goods" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Global RGO Production" })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -101,7 +101,9 @@ describe("MarketsTab", () => {
     fireEvent.click(screen.getByRole("button", { name: "Markets" }));
     await waitFor(() => expect(queries.listMarketsArrow).toHaveBeenCalledWith(fakeDb));
     expect(screen.getByRole("button", { name: "Markets" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("button", { name: "World Goods" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("button", { name: "Global RGO Production" })).not.toHaveAttribute(
+      "aria-current",
+    );
   });
 
   it("leaves the market-detail section unrendered until a market is selected", async () => {

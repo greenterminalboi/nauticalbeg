@@ -371,6 +371,26 @@
       "decision": "Removed ShareTreemap title prop entirely and its container padding",
       "why": "user request: treemap should fill the whole grey container with no margins, and the lowercase title is redundant since the good/metric is already visible from the selection that chose it",
       "rejected": "keep title but visually hide it, or make it optional per-caller"
+    },
+    {
+      "decision": "Renamed World Goods side-nav label to Global RGO Production (view id unchanged)",
+      "why": "explicit user request",
+      "rejected": "renaming the internal worldGoods view id/component names too"
+    },
+    {
+      "decision": "World Goods treemap selection switched from automatic top-15 cutoff to explicit selectedIdxs, defaulting to top 15, with a new AddCountryInput to add/remove any real country on demand",
+      "why": "explicit user request: add the ability to add new countries in the treemap on demand, the same as Leaderboard treemap",
+      "rejected": "keep the automatic top-15-only cutoff with no way to add a smaller producer"
+    },
+    {
+      "decision": "AddCountryInput is a plain always-visible search input (placeholder Add country) opening its results on focus, not a toggle-button-plus-panel like CountrySearchOverlay",
+      "why": "explicit user request: instead of a box that expands, just a search box with placeholder text Add country",
+      "rejected": "reuse CountrySearchOverlay behind a toggle button, matching Leaderboard exactly"
+    },
+    {
+      "decision": "Removed the grey background/border box from ShareTreemap and LeaderboardChart entirely; they sit directly on the page background with spacing from the parent flex gap",
+      "why": "user annotated a screenshot in specs/debug_images/ marking the grey box for removal, explicitly requested for all graphs/treemaps",
+      "rejected": "keep the box but lighten its color"
     }
   ],
   "step_summaries": {
@@ -382,7 +402,7 @@
       "summary": "18 tasks across 4 phases (Foundational data layer + ShareTreemap rename, US1 World-Goods-as-own-page, US2 production-share treemap, Polish)."
     },
     "implement": {
-      "summary": "Post-ship follow-up (2026-09-21, same day): ShareTreemap now fills its container edge-to-edge with no title."
+      "summary": "Post-ship follow-up (2026-09-21, third round): Global RGO Production rename, on-demand AddCountryInput for the treemap selection, grey chart/treemap containers removed."
     }
   },
   "approach": "Extend the provinces parser extraction with last_month_produced into a new province_good_production table, add a derived coverage column to listWorldGoodsArrow plus a new per-owner production query, and promote World Goods to its own switchable MarketsTab page reusing the renamed ShareTreemap component and LeaderboardTab's exact Other-bucket pattern.",

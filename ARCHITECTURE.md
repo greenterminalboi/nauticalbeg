@@ -1129,3 +1129,32 @@ resolved as one batch.**
   `itemStyle`, on explicit request to make it look better — applied to
   the shared component, so Leaderboard's treemap gets the same
   treatment.
+
+**Post-ship follow-up, 2026-09-21 (same day, three more rounds).**
+
+- **`ShareTreemap` fills its container, no title, no grey box.** First
+  round: dropped the `title` prop and the container's padding entirely
+  (canvas fills `.share-treemap` edge to edge) — the good/metric being
+  shown was already visible from whatever selected it (`GoodSelect`,
+  the Leaderboard side nav), so the repeated label was redundant. Third
+  round, from an annotated screenshot in `specs/debug_images/` marking
+  up the grey background/border box the treemap sat inside: removed
+  that background/border/border-radius entirely from both
+  `.share-treemap` and `.leaderboard-chart` — they now sit directly on
+  the page's own background, with spacing from the controls above
+  coming from the parent's own flex `gap`, not a box of their own.
+- **World Goods renamed to "Global RGO Production"** in the side nav
+  (`MarketsSideNav.tsx`'s label only — the `"worldGoods"` view id is
+  unchanged).
+- **World Goods' treemap selection is now on-demand, mirroring
+  Leaderboard's own treemap.** `WorldGoodsPage` replaced the old
+  automatic "top 15 producers, rest folds into Other" cutoff with an
+  explicit `selectedIdxs` selection (still defaulting to the top 15 by
+  amount whenever the good changes), and a new `AddCountryInput`
+  component lets the user add or remove any other real country on
+  demand — same filter-by-name-or-tag matching Leaderboard's
+  `CountrySearchOverlay`, but as a plain always-visible search input
+  (placeholder "Add country…") that opens its results on focus, rather
+  than a separate toggle-button-plus-panel. `buildEntries` re-keyed off
+  selection instead of rank, keeping the same "Other producers" vs
+  "Unattributed" distinct-bucket rule (FR-008/FR-009).

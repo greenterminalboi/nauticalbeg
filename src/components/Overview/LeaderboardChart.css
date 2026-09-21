@@ -1,13 +1,10 @@
 /* specs/006-country-leaderboard: a plain (non-overlay) chart block —
    unlike MapLegend/MapSidebar, this sits inline in LeaderboardTab's
-   normal document flow, not absolutely positioned over anything. */
-.leaderboard-chart {
-  background: var(--color-surface-container-low);
-  border: 1px solid var(--color-outline-variant);
-  border-radius: 6px;
-  padding: var(--space-md);
-}
-
+   normal document flow, not absolutely positioned over anything.
+   Post-ship, 2026-09-21: no grey box -- the chart sits directly on the
+   page's own background, no border, no padding. Spacing from the
+   controls above comes from the parent's own flex gap
+   (leaderboard-tab), not from anything in here. */
 .leaderboard-chart__title {
   font-family: var(--font-display);
   font-size: 0.85rem;
