@@ -111,6 +111,34 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     });
   });
 
+  it("populates province_good_production from provinces.database.*.last_month_produced (specs/009-world-goods-production)", async () => {
+    const database = await freshDb("adapter-province-good-production.db");
+    await parseAndStore(database, "save-4b", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const province0 = await queryAll(
+      database,
+      "SELECT good, amount FROM province_good_production WHERE province_idx = 0 ORDER BY good",
+    );
+    expect(province0).toEqual([
+      { good: "clay", amount: 13.19736 },
+      { good: "fish", amount: 29.89448 },
+      { good: "lumber", amount: 38.39616 },
+      { good: "millet", amount: 9.59808 },
+      { good: "wheat", amount: 24.69544 },
+    ]);
+
+    const province16777289 = await queryAll(
+      database,
+      "SELECT good, amount FROM province_good_production WHERE province_idx = 16777289 ORDER BY good",
+    );
+    expect(province16777289).toEqual([
+      { good: "amber", amount: 10.89009 },
+      { good: "fruit", amount: 8.47007 },
+      { good: "livestock", amount: 7.26006 },
+      { good: "wool", amount: 8.47007 },
+    ]);
+  });
+
   it("populates locations with development, matching the province back-reference", async () => {
     const database = await freshDb("adapter-locations.db");
     await parseAndStore(database, "save-5", "rus-1628-minimal.eu5", toBytes(fixtureText));
@@ -536,6 +564,7 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
       { good: "amber", total: 10.89009 },
       { good: "clay", total: 13.19736 },
       { good: "lumber", total: 38.39616 }, // present in produced_goods even though no market trades it
+      { good: "tools", total: 4.5 }, // specs/009-world-goods-production: no matching last_month_produced anywhere -- the no-coverage fixture case
       { good: "wool", total: 8.47007 },
     ]);
   });

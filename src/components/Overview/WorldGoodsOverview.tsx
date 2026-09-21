@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PerspectiveViewer } from "@perspective-dev/react";
 import type { Table } from "@perspective-dev/client";
+import type { PerspectiveClickEventDetail } from "@perspective-dev/viewer";
 import { getPerspectiveWorker } from "../../perspective/setup";
 import { listWorldGoodsArrow } from "../../storage/queries";
 import type { SaveDatabase } from "../../storage/db";
@@ -10,6 +11,8 @@ import "./WorldGoodsOverview.css";
 
 interface WorldGoodsOverviewProps {
   db: SaveDatabase;
+  selectedGood: string | null;
+  onSelectGood: (good: string, hasProductionCoverage: boolean) => void;
 }
 
 /**
@@ -22,9 +25,15 @@ interface WorldGoodsOverviewProps {
  * every row from `world_good_production` unfiltered, so this component
  * does no additional filtering of its own.
  *
- * No selection — informational only (contracts/ui-components.md).
+ * specs/009-world-goods-production: gains `has_production_coverage`
+ * (FR-005's visible coverage marker) and row-selection-to-callback via
+ * the same `onClick`/`"perspective-click"` pattern `MarketList`/
+ * `MarketGoodsTable` already established. The click payload's own
+ * `has_production_coverage` is passed straight through to
+ * `onSelectGood`, so `WorldGoodsPage` never needs a second fetch just
+ * to answer "is this good covered."
  */
-export function WorldGoodsOverview({ db }: WorldGoodsOverviewProps) {
+export function WorldGoodsOverview({ db, selectedGood, onSelectGood }: WorldGoodsOverviewProps) {
   const [table, setTable] = useState<Table | null>(null);
   const [isEmpty, setIsEmpty] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +72,16 @@ export function WorldGoodsOverview({ db }: WorldGoodsOverviewProps) {
     };
   }, [db]);
 
+  function handleClick(data: PerspectiveClickEventDetail) {
+    const good = data.row.good;
+    if (typeof good === "string" && good.length > 0) {
+      const coverage = data.row.has_production_coverage;
+      const hasProductionCoverage =
+        typeof coverage === "boolean" ? coverage : Number(coverage) === 1;
+      onSelectGood(good, hasProductionCoverage);
+    }
+  }
+
   if (error) {
     return <NotAvailableState subject="world goods production" message={error} />;
   }
@@ -71,15 +90,16 @@ export function WorldGoodsOverview({ db }: WorldGoodsOverviewProps) {
   }
 
   return (
-    <div className="world-goods-overview">
+    <div className="world-goods-overview" data-selected-good={selectedGood ?? undefined}>
       {table ? (
         <PerspectiveViewer
           className="world-goods-overview__viewer"
           client={table}
           config={{
             sort: [["total", "desc"]],
-            columns: ["good", "total"],
+            columns: ["good", "total", "has_production_coverage"],
           }}
+          onClick={handleClick}
         />
       ) : (
         <p>Loading world goods…</p>

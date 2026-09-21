@@ -9,6 +9,7 @@ import {
 } from "../../src/storage/db";
 import { parseAndStore } from "../../src/parser/version-adapters/1.3.11";
 import {
+  decodeGoodProductionByOwner,
   decodeMarketGoodPriceHistory,
   decodeMarketGoods,
   decodeMarkets,
@@ -38,10 +39,18 @@ describe("marketData decode helpers", () => {
     return db;
   }
 
-  it("decodeWorldGoods returns a plain object per good", async () => {
+  it("decodeWorldGoods returns a plain object per good, incl. hasProductionCoverage (specs/009-world-goods-production)", async () => {
     await freshParsedDb("market-data-world-goods.db", "save-1");
     const goods = await decodeWorldGoods(db);
-    expect(goods).toContainEqual({ good: "clay", total: 13.19736 });
+    expect(goods).toContainEqual({ good: "clay", total: 13.19736, hasProductionCoverage: true });
+    // "tools" has a world total but no matching last_month_produced entry.
+    expect(goods).toContainEqual({ good: "tools", total: 4.5, hasProductionCoverage: false });
+  });
+
+  it("decodeGoodProductionByOwner returns one entry per owning country", async () => {
+    await freshParsedDb("market-data-good-production.db", "save-5");
+    const clayByOwner = await decodeGoodProductionByOwner(db, "clay");
+    expect(clayByOwner).toEqual([{ ownerIdx: 3, amount: 13.19736 }]);
   });
 
   it("decodeMarkets returns camelCase fields, including the no-resolvable-center fallback name", async () => {

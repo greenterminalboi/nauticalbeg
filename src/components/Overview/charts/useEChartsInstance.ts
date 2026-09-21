@@ -5,7 +5,7 @@ import type { EChartsOption } from "echarts";
 /**
  * specs/007-production-trade-markets research.md §3: the one shared
  * init/resize/dispose lifecycle for every ECharts-based chart in this
- * app (`MarketGoodPriceChart`, `LeaderboardChart`, `LeaderboardTreemap`)
+ * app (`MarketGoodPriceChart`, `LeaderboardChart`, `ShareTreemap`)
  * — each owns only its own `option` object. `renderer: "svg"` (not the
  * canvas default): keeps every chart testable under this project's jsdom
  * test environment with no canvas polyfill, and mirrors the crisp,

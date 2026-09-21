@@ -299,6 +299,28 @@ CREATE TABLE IF NOT EXISTS world_good_production (
   total DOUBLE NOT NULL
 );
 
+-- specs/009-world-goods-production: one row per (province, good) the
+-- save's own `provinces.database.*.last_month_produced` records —
+-- sparse, only for provinces/goods actually producing something.
+-- Confirmed real and populated (3295 of 4071 provinces in the reference
+-- save) for 52 of the save's 71 tradeable goods — the raw-material/RGO
+-- outputs; the remaining 19 (manufactured/building outputs) have no
+-- per-province figure here (research.md §1) and are out of scope.
+-- `province_idx` is INTEGER, matching `provinces.idx`'s existing type —
+-- no evidence of a larger index space, same reasoning as `markets.idx`.
+-- A good's production-share "coverage" (whether this feature can show
+-- a country breakdown for it) is derived from this table's contents at
+-- query time (`listWorldGoodsArrow`'s `has_production_coverage`
+-- column), never a hardcoded list — self-describing from what the save
+-- actually contains.
+CREATE TABLE IF NOT EXISTS province_good_production (
+  province_idx INTEGER NOT NULL, -- logically REFERENCES provinces(idx)
+  good TEXT NOT NULL,
+  amount DOUBLE NOT NULL -- the save always populates a real number once this entry exists
+);
+CREATE INDEX IF NOT EXISTS idx_province_good_production_good
+  ON province_good_production (good, province_idx);
+
 CREATE SEQUENCE IF NOT EXISTS raw_sections_id_seq;
 CREATE TABLE IF NOT EXISTS raw_sections (
   id INTEGER PRIMARY KEY DEFAULT nextval('raw_sections_id_seq'),

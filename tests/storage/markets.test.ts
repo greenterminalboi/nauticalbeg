@@ -43,15 +43,16 @@ describe("storage/queries listWorldGoodsArrow + listMarketsArrow + listMarketGoo
     return db;
   }
 
-  it("listWorldGoodsArrow returns every good's world-wide production total, sorted by good", async () => {
+  it("listWorldGoodsArrow returns every good's world-wide production total, sorted by good, plus its has_production_coverage flag (specs/009-world-goods-production)", async () => {
     await freshParsedDb("markets-world-goods.db", "save-1");
     const rows = decodeRows(await listWorldGoodsArrow(db));
 
     expect(rows).toEqual([
-      { good: "amber", total: 10.89009 },
-      { good: "clay", total: 13.19736 },
-      { good: "lumber", total: 38.39616 },
-      { good: "wool", total: 8.47007 },
+      { good: "amber", total: 10.89009, has_production_coverage: true },
+      { good: "clay", total: 13.19736, has_production_coverage: true },
+      { good: "lumber", total: 38.39616, has_production_coverage: true },
+      { good: "tools", total: 4.5, has_production_coverage: false },
+      { good: "wool", total: 8.47007, has_production_coverage: true },
     ]);
   });
 

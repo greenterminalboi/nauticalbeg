@@ -12,7 +12,7 @@ import type {
 } from "../../src/components/Overview/leaderboardData";
 import type { SaveDatabase } from "../../src/storage/db";
 
-// specs/007-production-trade-markets: LeaderboardChart/LeaderboardTreemap
+// specs/007-production-trade-markets: LeaderboardChart/ShareTreemap
 // are ECharts-rendered now. Real ECharts layout is meaningless under
 // jsdom's zero-size container (confirmed: a 2-entry treemap only draws
 // the larger box when width/height are 0) — mocked here the same way
@@ -192,7 +192,7 @@ describe("LeaderboardTab", () => {
 
     // specs/007-production-trade-markets: the treemap is ECharts-rendered
     // now — real pixel box layout isn't meaningful under jsdom's
-    // zero-size container (LeaderboardTreemap.test.tsx's own unit tests
+    // zero-size container (ShareTreemap.test.tsx's own unit tests
     // cover exact area-proportion via the option object directly, with
     // the hook mocked the same way). This integration test instead
     // confirms LeaderboardTab computed the right *entries*: RUS's real

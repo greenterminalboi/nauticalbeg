@@ -4,6 +4,7 @@
 // direct-decode-via-apache-arrow pattern.
 import { tableFromIPC } from "apache-arrow";
 import {
+  listGoodProductionByOwnerArrow,
   listMarketGoodPriceHistoryArrow,
   listMarketGoodsArrow,
   listMarketsArrow,
@@ -14,6 +15,18 @@ import type { SaveDatabase } from "../../storage/db";
 export interface WorldGood {
   good: string;
   total: number;
+  /** specs/009-world-goods-production: whether a per-country production-
+   * share breakdown is available for this good (derived from
+   * province_good_production's real contents, never a hardcoded list). */
+  hasProductionCoverage: boolean;
+}
+
+/** specs/009-world-goods-production: one country's (or the unowned/
+ * non-Real "unattributed" case, `ownerIdx: null`) summed production of
+ * one good. */
+export interface GoodProductionByOwner {
+  ownerIdx: number | null;
+  amount: number;
 }
 
 export interface Market {
@@ -70,6 +83,24 @@ export async function decodeWorldGoods(db: SaveDatabase): Promise<WorldGood[]> {
   return rows.map((r) => ({
     good: String(r.good),
     total: numberOrNull(r.total) ?? 0,
+    // Defaults to false (no treemap offered), never true, if somehow
+    // unparseable -- the safe direction for a flag that gates whether a
+    // real breakdown is promised.
+    hasProductionCoverage: flagOrNull(r.has_production_coverage) ?? false,
+  }));
+}
+
+/** specs/009-world-goods-production: decodes `listGoodProductionByOwnerArrow`'s
+ * Arrow IPC buffer into one entry per owning country (or `ownerIdx: null`
+ * for an unowned province's production). */
+export async function decodeGoodProductionByOwner(
+  db: SaveDatabase,
+  good: string,
+): Promise<GoodProductionByOwner[]> {
+  const rows = decodeRows(await listGoodProductionByOwnerArrow(db, good));
+  return rows.map((r) => ({
+    ownerIdx: numberOrNull(r.owner_idx),
+    amount: numberOrNull(r.amount) ?? 0,
   }));
 }
 

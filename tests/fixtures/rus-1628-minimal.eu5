@@ -329,6 +329,7 @@ market_manager={
 		wool=8.47007
 		amber=10.89009
 		lumber=38.39616
+		tools=4.5
 	}
 }
 war_manager={

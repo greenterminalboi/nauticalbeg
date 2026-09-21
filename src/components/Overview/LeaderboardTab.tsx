@@ -10,7 +10,7 @@ import {
 import { LeaderboardChart, type LeaderboardChartSeries } from "./LeaderboardChart";
 import { LEADERBOARD_PAGES } from "./LeaderboardSideNav";
 import { LeaderboardRankingTable, type LeaderboardRankingEntry } from "./LeaderboardRankingTable";
-import { LeaderboardTreemap, type LeaderboardTreemapEntry } from "./LeaderboardTreemap";
+import { ShareTreemap, type ShareTreemapEntry } from "./ShareTreemap";
 import { CountrySearchOverlay } from "./CountrySearchOverlay";
 import { NEUTRAL_COLOR } from "./mapLayers";
 import "./LeaderboardTab.css";
@@ -184,7 +184,7 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
   // country NOT selected that also reported a value that year — every
   // box's area is then its exact share of that combined world total.
   const selectedSet = new Set(selectedIdxs);
-  const treemapEntries: LeaderboardTreemapEntry[] = [];
+  const treemapEntries: ShareTreemapEntry[] = [];
   let otherTotal = 0;
   if (latestMetric) {
     for (const [nationIdx, value] of latestMetric) {
@@ -249,7 +249,7 @@ export function LeaderboardTab({ db, activeMetric }: LeaderboardTabProps) {
       )}
       {activeView === "treemap" &&
         (latestMetric ? (
-          <LeaderboardTreemap title={activePage.title} entries={treemapEntries} />
+          <ShareTreemap title={activePage.title} entries={treemapEntries} />
         ) : (
           <p>Loading treemap…</p>
         ))}

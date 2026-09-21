@@ -393,7 +393,7 @@ export function FileLoader() {
   // Leaderboard (006) opted out of full-width originally (its own CSS
   // bounded it instead), but 2026-09-20 decision: give it the same
   // treatment as everything else — its charts are viewBox-scaled SVG
-  // (`width: 100%` in LeaderboardChart.css/LeaderboardTreemap.css), so
+  // (`width: 100%` in LeaderboardChart.css/ShareTreemap.css), so
   // the extra width renders bigger, more legible charts, not empty
   // padding. LeaderboardTab.css's own `max-width` cap is removed to match.
   const isLeaderboardTab = isFactbook && encyclopediaTab === "leaderboard" && isReady;

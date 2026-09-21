@@ -979,3 +979,61 @@ nothing else. Because the click callback needs a market's numeric `idx`
 (not its display `name`, not guaranteed unique), `idx` is a real,
 visible grid column in `MarketList`, not merely queried-and-hidden —
 Perspective has no such concept.
+
+## World Goods Production Share (009) ships: a second, previously-unread save field, and `LeaderboardTreemap` becomes `ShareTreemap` (2026-09-21)
+
+`specs/009-world-goods-production` promoted World Goods from a block
+always stacked inside `MarketsTab` to its own switchable page (mirroring
+`LeaderboardTab.tsx`'s `activeView`/`VIEWS` button-group pattern rather
+than a new top-level Factbook nav entry), and added a production-share
+treemap: selecting a good with coverage shows one box per producing
+country, sized by its share of that good's summed production.
+
+**Found, not assumed, that per-province production-by-good data already
+exists in the save**: `provinces.database.*.last_month_produced.<good>`
+— a real, populated field (3295 of 4071 provinces in the reference
+save) this app's `1.3.11.ts` adapter had read past but never stored,
+since the `provinces` extraction loop only ever pulled
+`province_definition`/`owner`/`capital`. Its 52-good vocabulary is a
+strict subset of `market_manager.produced_goods`'s 71 (007) — the 19
+goods present only in `produced_goods` (cannons, cloth, firearms,
+tools, furniture, paper, weaponry, masonry, tar, leather, glass,
+jewelry, pottery, liquor, beer, books, naval_supplies, slaves_goods,
+fine_cloth) are manufactured/building outputs with no per-province
+figure here; attributing them per-country would need `building_manager`
+(138,516 rows, already excluded from 007 on size grounds). This
+feature's own scope is deliberately exactly the 52 — the UI makes the
+gap visible (a real, derived `has_production_coverage` column, never a
+hardcoded list) rather than silently pretending the other 19 don't
+exist; extending to them is explicitly a planned future feature, not
+abandoned.
+
+**`LeaderboardTreemap` renamed to `ShareTreemap`**: the component had
+no Leaderboard-specific logic to begin with (`title` + generic
+`entries`), and once this feature needed the exact same "named, colored,
+valued entries" treemap for a second, unrelated purpose, keeping the
+old name would have actively misled a future reader. Mechanical rename
+— component, CSS, test file, `LeaderboardTab.tsx`'s one import — no
+behavior change.
+
+**Implementation-time simplification over the original design**: the
+plan called for `WorldGoodsPage` to hold its own decoded `WorldGood[]`
+list just to look up a selected good's coverage flag. Since
+`WorldGoodsOverview`'s grid already carries `has_production_coverage`
+as a real column, the click payload carries it too — `onSelectGood(good,
+hasProductionCoverage)` — so `WorldGoodsPage` needs neither the extra
+fetch nor the lookup, and a real async race (selecting a good before
+that separate list finished loading) never exists in the first place.
+
+**Unattributed production is a distinct bucket from "many small real
+countries"**: a good's production not attributable to any
+`country_type = 'Real'` owner (an unowned province, or one held by
+Pirates/a rebel faction) is never dropped and never folded into a real
+country's share — it's its own labeled treemap entry, computed
+client-side by reusing `loadLeaderboardCountries`'s existing Real-only
+filter and mirroring `LeaderboardTab.tsx`'s own "selected countries +
+Other" bucket pattern exactly. Separately, real countries beyond the
+top 15 producers (by amount) fold into a second, distinct "Other
+producers" bucket, so a common good's treemap (dozens of real
+producers) stays legible without conflating "no real owner" with "many
+small real owners."

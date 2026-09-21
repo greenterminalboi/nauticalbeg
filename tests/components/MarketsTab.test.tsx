@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MarketsTab } from "../../src/components/Overview/MarketsTab";
 import * as queries from "../../src/storage/queries";
 import * as marketData from "../../src/components/Overview/marketData";
@@ -31,6 +31,11 @@ function fakeTable(size: number) {
 
 beforeEach(() => {
   vi.mocked(perspectiveSetup.getPerspectiveWorker).mockReset();
+  vi.mocked(perspectiveSetup.getPerspectiveWorker).mockResolvedValue({
+    table: vi.fn().mockImplementation(() => Promise.resolve(fakeTable(2))),
+  } as never);
+  vi.spyOn(queries, "listWorldGoodsArrow").mockResolvedValue(fakeArrowBuffer());
+  vi.spyOn(queries, "listMarketsArrow").mockResolvedValue(fakeArrowBuffer());
 });
 
 // Mirrors FileLoader.tsx's exact gating JSX for the Markets block
@@ -53,58 +58,58 @@ describe("MarketsTab", () => {
     expect(screen.queryByTestId("perspective-viewer")).not.toBeInTheDocument();
   });
 
-
-  it("renders both the world goods overview and the market list together with no interaction (FR-002, SC-002)", async () => {
-    vi.mocked(perspectiveSetup.getPerspectiveWorker).mockResolvedValue({
-      table: vi.fn().mockImplementation(() => Promise.resolve(fakeTable(2))),
-    } as never);
-    vi.spyOn(queries, "listWorldGoodsArrow").mockResolvedValue(fakeArrowBuffer());
-    vi.spyOn(queries, "listMarketsArrow").mockResolvedValue(fakeArrowBuffer());
-
+  it("defaults to the World Goods view, not the Markets list (specs/009-world-goods-production FR-001)", async () => {
     render(<MarketsTab db={fakeDb} />);
 
     await waitFor(() => expect(queries.listWorldGoodsArrow).toHaveBeenCalledWith(fakeDb));
-    expect(queries.listMarketsArrow).toHaveBeenCalledWith(fakeDb);
-    await waitFor(() =>
-      expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(2),
+    expect(queries.listMarketsArrow).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "World Goods" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
-    expect(screen.getByText("World Goods")).toBeInTheDocument();
-    expect(screen.getByText("Markets")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Markets" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  it("switching to the Markets view shows the market list, and switching back hides it (FR-001, FR-002)", async () => {
+    render(<MarketsTab db={fakeDb} />);
+    await waitFor(() => expect(queries.listWorldGoodsArrow).toHaveBeenCalledWith(fakeDb));
+
+    fireEvent.click(screen.getByRole("button", { name: "Markets" }));
+    await waitFor(() => expect(queries.listMarketsArrow).toHaveBeenCalledWith(fakeDb));
+    expect(screen.getByRole("button", { name: "Markets" })).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "World Goods" }));
+    expect(screen.getByRole("button", { name: "World Goods" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   it("leaves the market-detail section unrendered until a market is selected", async () => {
-    vi.mocked(perspectiveSetup.getPerspectiveWorker).mockResolvedValue({
-      table: vi.fn().mockImplementation(() => Promise.resolve(fakeTable(2))),
-    } as never);
-    vi.spyOn(queries, "listWorldGoodsArrow").mockResolvedValue(fakeArrowBuffer());
-    vi.spyOn(queries, "listMarketsArrow").mockResolvedValue(fakeArrowBuffer());
-
     render(<MarketsTab db={fakeDb} />);
+    fireEvent.click(screen.getByRole("button", { name: "Markets" }));
 
     await waitFor(() =>
-      expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(2),
+      expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(1),
     );
     expect(screen.queryByTestId("markets-tab-detail")).not.toBeInTheDocument();
   });
 
   it("selecting a market renders MarketGoodsTable (User Story 2), without yet revealing the chart hook point (Phase 5, not built)", async () => {
-    vi.mocked(perspectiveSetup.getPerspectiveWorker).mockResolvedValue({
-      table: vi.fn().mockImplementation(() => Promise.resolve(fakeTable(2))),
-    } as never);
-    vi.spyOn(queries, "listWorldGoodsArrow").mockResolvedValue(fakeArrowBuffer());
-    vi.spyOn(queries, "listMarketsArrow").mockResolvedValue(fakeArrowBuffer());
     vi.spyOn(queries, "listMarketGoodsArrow").mockResolvedValue(fakeArrowBuffer());
 
     const { PerspectiveViewer } = await import("@perspective-dev/react");
     render(<MarketsTab db={fakeDb} />);
+    fireEvent.click(screen.getByRole("button", { name: "Markets" }));
 
     await waitFor(() =>
-      expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(2),
+      expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(1),
     );
 
-    // The second PerspectiveViewer mounted is MarketList's (World Goods
-    // renders first in this component's markup).
-    const marketListProps = vi.mocked(PerspectiveViewer).mock.calls[1][0];
+    const marketListProps = vi.mocked(PerspectiveViewer).mock.calls.at(-1)![0];
     marketListProps.onClick!({
       row: { idx: 7, name: "Location 7", member_count: 1, capacity: 50 },
       column_names: [],
@@ -113,16 +118,11 @@ describe("MarketsTab", () => {
 
     await screen.findByTestId("markets-tab-detail");
     expect(queries.listMarketGoodsArrow).toHaveBeenCalledWith(fakeDb, 7);
-    await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(3));
+    await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(2));
     expect(screen.queryByTestId("markets-tab-chart-placeholder")).not.toBeInTheDocument();
   });
 
   it("selecting a good within the selected market renders MarketGoodPriceChart (User Story 3)", async () => {
-    vi.mocked(perspectiveSetup.getPerspectiveWorker).mockResolvedValue({
-      table: vi.fn().mockImplementation(() => Promise.resolve(fakeTable(2))),
-    } as never);
-    vi.spyOn(queries, "listWorldGoodsArrow").mockResolvedValue(fakeArrowBuffer());
-    vi.spyOn(queries, "listMarketsArrow").mockResolvedValue(fakeArrowBuffer());
     vi.spyOn(queries, "listMarketGoodsArrow").mockResolvedValue(fakeArrowBuffer());
     vi.spyOn(marketData, "decodeMarketGoodPriceHistory").mockResolvedValue([
       { date: "1628-08", price: 1.25 },
@@ -130,8 +130,9 @@ describe("MarketsTab", () => {
 
     const { PerspectiveViewer } = await import("@perspective-dev/react");
     render(<MarketsTab db={fakeDb} />);
+    fireEvent.click(screen.getByRole("button", { name: "Markets" }));
 
-    await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(1));
     // Identify MarketList's viewer by its columns, since re-renders mean
     // mock.calls' index doesn't reliably map to "the Nth mounted viewer".
     function latestCallWithColumn(column: string) {
@@ -149,7 +150,7 @@ describe("MarketsTab", () => {
       config: { filter: [] },
     });
 
-    await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(3));
+    await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(2));
     latestCallWithColumn("good").onClick!({
       row: { good: "clay", price: 1.25 },
       column_names: [],

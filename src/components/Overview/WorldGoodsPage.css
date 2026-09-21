@@ -1,0 +1,10 @@
+.world-goods-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.world-goods-page__not-available {
+  color: var(--color-on-surface-variant);
+  font-style: italic;
+}

@@ -2,18 +2,18 @@ import { useMemo, useRef } from "react";
 import type { EChartsOption } from "echarts";
 import { useEChartsInstance } from "./charts/useEChartsInstance";
 import { NEUTRAL_COLOR } from "./mapLayers";
-import "./LeaderboardTreemap.css";
+import "./ShareTreemap.css";
 
-export interface LeaderboardTreemapEntry {
-  id: number | "other";
+export interface ShareTreemapEntry {
+  id: number | string;
   label: string;
   color: [number, number, number] | null;
   value: number;
 }
 
-interface LeaderboardTreemapProps {
+interface ShareTreemapProps {
   title: string;
-  entries: readonly LeaderboardTreemapEntry[];
+  entries: readonly ShareTreemapEntry[];
 }
 
 function colorString([r, g, b]: readonly [number, number, number]): string {
@@ -26,24 +26,28 @@ function formatShare(value: number, total: number): string {
 }
 
 /**
- * "Share of the world [metric]" treemap, per direct request: one box
- * per currently selected country existing as of the latest recorded
- * year, plus one grey "Other" box summing every other real country
- * that also reported a value that year — every box's area is its exact
- * share of that combined total (`LeaderboardTab.tsx` computes the
- * entries; this component only lays out and renders whatever it's
- * given).
+ * A generic "share of a total" treemap: one box per entry, sized by
+ * its share of the combined total of every entry's (non-negative)
+ * value — the caller computes `entries` (including any "everything
+ * else" bucket, e.g. Leaderboard's "Other" or World Goods'
+ * "Unattributed"/"Other producers"); this component only lays out and
+ * renders whatever it's given.
  *
- * specs/007-production-trade-markets research.md §3: retrofitted from a
- * hand-rolled SVG treemap (`treemapLayout.ts`'s `squarify`) onto
- * ECharts' own `treemap` series, via the shared `useEChartsInstance`
- * hook. This was originally hand-rolled specifically because
- * Perspective's own Treemap plugin has no way to bind a literal RGB per
- * box — ECharts' `itemStyle.color` per data node does support exactly
- * that, confirmed before committing to this retrofit, so the original
- * blocker doesn't apply to ECharts.
+ * specs/007-production-trade-markets research.md §3: originally
+ * `LeaderboardTreemap`, retrofitted from a hand-rolled SVG treemap
+ * (`treemapLayout.ts`'s `squarify`) onto ECharts' own `treemap` series
+ * via the shared `useEChartsInstance` hook — hand-rolled originally
+ * because Perspective's own Treemap plugin has no way to bind a
+ * literal RGB per box, which ECharts' `itemStyle.color` per data node
+ * does support.
+ *
+ * specs/009-world-goods-production research.md: renamed from
+ * `LeaderboardTreemap` once a second, unrelated feature (a good's
+ * production share by country) needed the exact same "named, colored,
+ * valued entries" shape — the component had no Leaderboard-specific
+ * logic to begin with, so this is a mechanical rename, not a rewrite.
  */
-export function LeaderboardTreemap({ title, entries }: LeaderboardTreemapProps) {
+export function ShareTreemap({ title, entries }: ShareTreemapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const total = useMemo(
@@ -84,17 +88,17 @@ export function LeaderboardTreemap({ title, entries }: LeaderboardTreemapProps) 
 
   if (total <= 0) {
     return (
-      <div className="leaderboard-treemap">
-        <p className="leaderboard-treemap__title">{title}</p>
-        <p>No data available for the latest recorded year.</p>
+      <div className="share-treemap">
+        <p className="share-treemap__title">{title}</p>
+        <p>No data available.</p>
       </div>
     );
   }
 
   return (
-    <div className="leaderboard-treemap">
-      <p className="leaderboard-treemap__title">{title}</p>
-      <div ref={containerRef} className="leaderboard-treemap__canvas" />
+    <div className="share-treemap">
+      <p className="share-treemap__title">{title}</p>
+      <div ref={containerRef} className="share-treemap__canvas" />
     </div>
   );
 }

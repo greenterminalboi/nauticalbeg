@@ -270,20 +270,41 @@ export async function parseAndStore(
 
   const provinceDatabase = asRecord(asRecord(root.provinces).database);
   const provinceRows: Array<[number, string | null, number | null, number | null]> = [];
+  // specs/009-world-goods-production: last_month_produced is a
+  // per-province, per-good production quantity (research.md §1 — 52 of
+  // this save's 71 tradeable goods, the raw-material/RGO outputs).
+  // Captured alongside the rest of this same provinces loop rather than
+  // a second pass over provinceDatabase.
+  const provinceGoodProductionRows: Array<[number, string, number]> = [];
   for (const [idxStr, value] of Object.entries(provinceDatabase)) {
     const record = asRecord(value);
+    const provinceIdx = Number(idxStr);
     provinceRows.push([
-      Number(idxStr),
+      provinceIdx,
       asStringOrNull(record.province_definition),
       asNumberOrNull(record.owner),
       asNumberOrNull(record.capital),
     ]);
+
+    const lastMonthProduced = asRecord(record.last_month_produced);
+    for (const [good, amount] of Object.entries(lastMonthProduced)) {
+      if (typeof amount === "number") {
+        provinceGoodProductionRows.push([provinceIdx, good, amount]);
+      }
+    }
   }
   await insertRows(
     db,
     "INSERT INTO provinces (idx, name, owner_idx, capital_location_idx) VALUES (?1, ?2, ?3, ?4)",
     provinceRows,
   );
+  if (provinceGoodProductionRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO province_good_production (province_idx, good, amount) VALUES (?1, ?2, ?3)",
+      provinceGoodProductionRows,
+    );
+  }
 
   // Note the doubled key: locations={ locations={ ... } } — the outer
   // object's only content this adapter needs is the inner `locations` map.
