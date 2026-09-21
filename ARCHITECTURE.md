@@ -1468,3 +1468,16 @@ a live save (screenshots in `specs/debug_images/`):
   (aliased `market_center`), reusing `listMarketsArrow`'s exact
   `COALESCE(name, 'Location ' || idx, 'Market ' || idx)` fallback chain —
   every market is labeled by the real location it's centered on.
+
+**Development went red-to-green, ranked not value-scaled (2026-09-21,
+user request).** The shared `numericLayer(...)` helper (log-normalized
+against the dataset's raw max, same as Population) bunched most
+locations into near-identical shades whenever development was
+skewed — asked to make differences "more visually telling," so
+Development got its own bespoke implementation: each location's color is
+its *percentile rank* among all developed locations (`i / (count - 1)`
+in sorted order), not a function of its raw value at all. Rank spreads
+every location evenly across the full red-green gradient by
+construction, regardless of how skewed the underlying distribution is —
+Tax Base and Soldiers still use the original value-scaled
+`numericLayer` helper, unchanged.

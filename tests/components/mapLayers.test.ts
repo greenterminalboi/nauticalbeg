@@ -420,16 +420,33 @@ describe("mapLayers development layer (specs/011-atlas-map-modes US1)", () => {
     expect(layer.getFill(developed, dataset)).not.toEqual(NEUTRAL_COLOR);
   });
 
-  it("stays outlier-resistant, matching the population layer's approach", () => {
+  it("colors low-to-high development red-to-green, spread evenly by rank regardless of how skewed the raw values are", () => {
     const layer = requireLayer("development");
+    // A deliberately skewed distribution (one huge outlier) — a
+    // value-based scale would bunch small1/small2 into near-identical
+    // shades; rank-based spreads them evenly no matter the skew.
     const small1 = makeRow({ development: 1 });
     const small2 = makeRow({ development: 2 });
+    const mid = makeRow({ development: 3 });
     const outlier = makeRow({ development: 5000 });
-    const dataset = datasetOf([small1, small2, outlier]);
-    expect(layer.getFill(small1, dataset)).not.toEqual(layer.getFill(small2, dataset));
+    const dataset = datasetOf([small1, small2, mid, outlier]);
+
+    const fill1 = layer.getFill(small1, dataset);
+    const fill2 = layer.getFill(small2, dataset);
+    const fillMid = layer.getFill(mid, dataset);
+    const fillOutlier = layer.getFill(outlier, dataset);
+
+    // Every rank gets a visibly distinct color, not just the extremes.
+    expect(fill1).not.toEqual(fill2);
+    expect(fill2).not.toEqual(fillMid);
+    expect(fillMid).not.toEqual(fillOutlier);
+
+    // Lowest rank is pure red, highest rank is pure green.
+    expect(fill1).toEqual([178, 24, 43]);
+    expect(fillOutlier).toEqual([26, 152, 80]);
   });
 
-  it("tooltip surfaces the location's name and development value", () => {
+  it("tooltip surfaces the location's name and raw development value", () => {
     const layer = requireLayer("development");
     const row = makeRow({ name: "Test Location", development: 42 });
     expect(layer.getTooltipFields(row)).toEqual([

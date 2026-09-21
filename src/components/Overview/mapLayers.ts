@@ -310,14 +310,66 @@ function numericLayer(
 
 // --- User Story 1 (specs/011-atlas-map-modes): Development ---------------
 
-const developmentLayer = numericLayer(
-  "development",
-  "Development",
-  "Development",
-  (row) => row.development,
-  [255, 245, 204],
-  [166, 86, 0],
-);
+// post-ship correction (2026-09-21, user request): a red (low) to green
+// (high) gradient, colored by each location's *percentile rank* among
+// every developed location rather than `numericLayer`'s log-normalized
+// value scale. Rank spreads every location evenly across the full
+// gradient by construction (each rank step is exactly 1/N apart), so
+// differences stay visually telling regardless of how skewed the real
+// development values are — value-based normalization (log or linear)
+// unavoidably bunches most locations near one end when the distribution
+// is skewed, which is what "more visually telling" was asking to fix.
+const DEVELOPMENT_LOW: [number, number, number] = [178, 24, 43]; // red
+const DEVELOPMENT_HIGH: [number, number, number] = [26, 152, 80]; // green
+
+const developmentRankCache = new WeakMap<MapLocationDataset, Map<string, number>>();
+function getDevelopmentRanks(dataset: MapLocationDataset): Map<string, number> {
+  const cached = developmentRankCache.get(dataset);
+  if (cached) return cached;
+  const developed = Array.from(dataset.values()).filter(
+    (row) => row.development !== null && row.development > 0,
+  );
+  developed.sort((a, b) => a.development! - b.development!);
+  const ranks = new Map<string, number>();
+  developed.forEach((row, i) => {
+    ranks.set(row.name, developed.length > 1 ? i / (developed.length - 1) : 1);
+  });
+  developmentRankCache.set(dataset, ranks);
+  return ranks;
+}
+
+const developmentLayer: MapLayer = {
+  id: "development",
+  label: "Development",
+  getFill(row, dataset) {
+    const t = getDevelopmentRanks(dataset).get(row.name);
+    if (t === undefined) return NEUTRAL_COLOR;
+    return [
+      lerp(DEVELOPMENT_LOW[0], DEVELOPMENT_HIGH[0], t),
+      lerp(DEVELOPMENT_LOW[1], DEVELOPMENT_HIGH[1], t),
+      lerp(DEVELOPMENT_LOW[2], DEVELOPMENT_HIGH[2], t),
+    ];
+  },
+  getTooltipFields(row) {
+    return [
+      { label: "Location", value: row.name },
+      {
+        label: "Development",
+        value:
+          row.development === null
+            ? "No data"
+            : row.development.toLocaleString(undefined, { maximumFractionDigits: 1 }),
+      },
+    ];
+  },
+  getLegend() {
+    return [
+      { color: NEUTRAL_COLOR, label: "No data" },
+      { color: DEVELOPMENT_LOW, label: "Low (bottom percentile)" },
+      { color: DEVELOPMENT_HIGH, label: "High (top percentile)" },
+    ];
+  },
+};
 MAP_LAYERS.push(developmentLayer);
 
 // --- User Story 2 (specs/011-atlas-map-modes): Location Terrain ----------
