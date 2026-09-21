@@ -43,6 +43,19 @@ export function configureArrowForTesting(fns: {
   tableToIPC = fns.tableToIPC;
 }
 
+/** Test-only seam for `insertRows`' chunk size (see that function) — the
+ * real 50,000-row production value would require tens of thousands of
+ * real rows in a test just to see multi-chunk behavior, adding real
+ * load to the full parallel test run (confirmed: a 120,000-row test
+ * pushed several unrelated, already-marginal tests over their timeouts
+ * under full-suite parallelism, though every one passed cleanly in
+ * isolation). Lets a test exercise the exact same chunking code path
+ * with a handful of rows instead. */
+let chunkSize = 50_000;
+export function configureChunkSizeForTesting(size: number): void {
+  chunkSize = size;
+}
+
 /** A single result row, column name -> value (BigInt already coerced to
  * number — see `toPlainRows` below). */
 export type Row = Record<string, string | number | boolean | null>;
@@ -270,11 +283,26 @@ export async function execSql(db: SaveDatabase, sql: string): Promise<void> {
  * bound parameters with literal values) falls back to the original
  * row-by-row prepared-statement loop — correctness-only, never
  * performance-critical, since both are always exactly one row.
+ *
+ * The Arrow path chunks at `chunkSize` rows (module-level `let` above,
+ * 50,000 in production) per `insertArrowTable` call rather than building
+ * one giant table for the whole `rows` array — added once `007`/`009`
+ * pushed a single table (`market_good_price_history`) past a row count
+ * large enough that one real user report of the loading screen sitting
+ * motionless traced partway to this exact call: with only one Arrow
+ * table built for potentially millions of rows, there was no way to
+ * tell (from outside) whether it was genuinely still working or stuck,
+ * and no way to surface real incremental progress even once
+ * `1.3.11.ts` started reporting its own milestones around this call.
+ * `onChunk`, when given, fires after each chunk lands with real "rows
+ * inserted so far / total" counts — never a fabricated time estimate
+ * (constitution Principle IV).
  */
 export async function insertRows(
   db: SaveDatabase,
   sql: string,
   rows: ReadonlyArray<ReadonlyArray<string | number | null>>,
+  onChunk?: (rowsInserted: number, totalRows: number) => void,
 ): Promise<void> {
   if (rows.length === 0) return;
 
@@ -284,12 +312,16 @@ export async function insertRows(
   if (insertMatch && columns && columns.length === rows[0].length) {
     const tableName = insertMatch[1];
     await withConnectionQueue(db, async () => {
-      const columnArrays: Record<string, Array<string | number | null>> = {};
-      columns.forEach((column, i) => {
-        columnArrays[column] = rows.map((row) => row[i]);
-      });
-      const arrowTable = tableFromArrays(columnArrays);
-      await db.conn.insertArrowTable(arrowTable, { name: tableName, create: false });
+      for (let start = 0; start < rows.length; start += chunkSize) {
+        const chunk = rows.slice(start, start + chunkSize);
+        const columnArrays: Record<string, Array<string | number | null>> = {};
+        columns.forEach((column, i) => {
+          columnArrays[column] = chunk.map((row) => row[i]);
+        });
+        const arrowTable = tableFromArrays(columnArrays);
+        await db.conn.insertArrowTable(arrowTable, { name: tableName, create: false });
+        onChunk?.(Math.min(start + chunkSize, rows.length), rows.length);
+      }
     });
     return;
   }

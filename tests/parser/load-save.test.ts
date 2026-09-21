@@ -68,8 +68,14 @@ describe("loadSave", () => {
     // the adapter itself begins.
     const nonNull = parsingPercents.filter((p): p is number => p !== null);
     expect(nonNull.length).toBeGreaterThan(1);
+    // Non-decreasing, not strictly increasing: a table small enough to
+    // fit in one insertRows chunk reports "100% of this chunk" (via
+    // reportWithinMilestone) immediately followed by "milestone fully
+    // reached" (reportMilestone) at the identical rounded percentage —
+    // legitimate, harmless, and expected on this tiny fixture, where
+    // every table fits in a single chunk.
     for (let i = 1; i < nonNull.length; i++) {
-      expect(nonNull[i]).toBeGreaterThan(nonNull[i - 1]);
+      expect(nonNull[i]).toBeGreaterThanOrEqual(nonNull[i - 1]);
     }
     expect(nonNull.at(-1)).toBe(100);
   });

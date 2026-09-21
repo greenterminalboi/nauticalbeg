@@ -189,6 +189,13 @@ export async function parseAndStore(
     milestonesReached += 1;
     onProgress?.(Math.round((milestonesReached / PARSE_MILESTONES.length) * 100));
   }
+  // Real sub-progress *within* the milestone about to be reached, for a
+  // single insert big enough that waiting for its own milestone would
+  // otherwise be one long silent gap — `insertRows`' own chunk callback
+  // (db.ts) feeds this a real "rows inserted so far / total" ratio.
+  function reportWithinMilestone(fraction: number): void {
+    onProgress?.(Math.round(((milestonesReached + fraction) / PARSE_MILESTONES.length) * 100));
+  }
 
   const parser = await Jomini.initialize();
   const root = asRecord(parser.parseText(data, { typeNarrowing: "unquoted" }));
@@ -299,6 +306,7 @@ export async function parseAndStore(
     db,
     "INSERT INTO nation_history (nation_idx, year, metric, value) VALUES (?1, ?2, ?3, ?4)",
     nationHistoryRows,
+    (inserted, total) => reportWithinMilestone(inserted / total),
   );
   reportMilestone(); // "nations"
 
@@ -337,6 +345,7 @@ export async function parseAndStore(
       db,
       "INSERT INTO province_good_production (province_idx, good, amount) VALUES (?1, ?2, ?3)",
       provinceGoodProductionRows,
+      (inserted, total) => reportWithinMilestone(inserted / total),
     );
   }
   reportMilestone(); // "provinces"
@@ -629,6 +638,7 @@ export async function parseAndStore(
       db,
       "INSERT INTO market_goods (market_idx, good, price, supply, demand, stockpile, is_importing, is_exporting, supply_raw_materials, supply_buildings, supply_trade, demand_population, demand_trade, demand_building_upkeep, demand_unit_upkeep, demand_construction) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
       marketGoodRows,
+      (inserted, total) => reportWithinMilestone(inserted / total),
     );
   }
   reportMilestone(); // "markets"
@@ -637,6 +647,7 @@ export async function parseAndStore(
       db,
       "INSERT INTO market_good_price_history (market_idx, good, date, price) VALUES (?1, ?2, ?3, ?4)",
       marketGoodPriceHistoryRows,
+      (inserted, total) => reportWithinMilestone(inserted / total),
     );
   }
   reportMilestone(); // "market-price-history"
