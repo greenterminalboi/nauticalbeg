@@ -77,6 +77,20 @@ CREATE TABLE IF NOT EXISTS nation_history (
 CREATE INDEX IF NOT EXISTS idx_nation_history_nation_metric
   ON nation_history (nation_idx, metric, year);
 
+-- specs/010-societal-values-compass: one row per (nation, axis) for
+-- every Societal Value axis currently applicable to that country, from
+-- countries.database[idx].government.societal_values (a flat object of
+-- named axes). A missing row for a given (nation_idx, axis) pair IS
+-- "not applicable" — the raw save's -999 sentinel is dropped at parse
+-- time and never stored (research.md).
+CREATE TABLE IF NOT EXISTS nation_societal_values (
+  nation_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  axis TEXT NOT NULL, -- e.g. 'centralization_vs_decentralization'
+  value DOUBLE NOT NULL -- raw reading, roughly -100..+100
+);
+CREATE INDEX IF NOT EXISTS idx_nation_societal_values_nation_axis
+  ON nation_societal_values (nation_idx, axis);
+
 -- Coarse historical-province groupings. Ownership/development are NOT
 -- authoritative here for aggregate stats — see `locations` below.
 CREATE TABLE IF NOT EXISTS provinces (

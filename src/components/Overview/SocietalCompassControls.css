@@ -1,0 +1,35 @@
+.societal-compass-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+.societal-compass-controls__group {
+  display: flex;
+  gap: var(--space-xs);
+  background: var(--color-surface-container);
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.societal-compass-controls__toggle {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+  background: none;
+  border: none;
+  border-radius: 999px;
+  padding: var(--space-xs) var(--space-sm);
+  cursor: pointer;
+}
+
+.societal-compass-controls__toggle:hover {
+  color: var(--color-on-surface);
+}
+
+.societal-compass-controls__toggle--active {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+}

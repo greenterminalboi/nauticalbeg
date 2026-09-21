@@ -3,13 +3,14 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { EncyclopediaNav } from "../../src/components/Overview/EncyclopediaNav";
 
 describe("EncyclopediaNav", () => {
-  it("lists Countries, Wars, Leaderboard, Characters, and Markets as peer tabs", () => {
+  it("lists Countries, Wars, Leaderboard, Characters, Markets, and Societal Compass as peer tabs", () => {
     render(<EncyclopediaNav activeTab="countries" onSelectTab={vi.fn()} />);
     expect(screen.getByRole("button", { name: /countries/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /wars/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /leaderboard/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /characters/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /markets/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /societal compass/i })).toBeInTheDocument();
   });
 
   it("marks the active tab distinctly (aria-current)", () => {

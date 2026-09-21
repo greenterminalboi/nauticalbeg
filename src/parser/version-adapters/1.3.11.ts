@@ -257,6 +257,14 @@ export async function parseAndStore(
     ["historical_economical_base", "economical_base"],
   ] as const;
   const nationHistoryRows: Array<[number, number, string, number]> = [];
+  // specs/010-societal-values-compass research.md: one row per (nation,
+  // axis) for every axis currently applicable to that country.
+  // government.societal_values is a flat object of named axes; the raw
+  // save marks a not-yet-applicable axis with the exact sentinel -999,
+  // which is dropped here rather than stored (a missing row IS "not
+  // applicable" for every downstream consumer).
+  const SOCIETAL_VALUE_NOT_APPLICABLE = -999;
+  const societalValueRows: Array<[number, string, number]> = [];
   for (const [idxStr, tag] of Object.entries(tags)) {
     const record = asRecord(countryDatabase[idxStr]);
     const currencyData = asRecord(record.currency_data);
@@ -285,6 +293,12 @@ export async function parseAndStore(
         nationHistoryRows.push([idx, HISTORY_START_YEAR + i, metric, value]);
       });
     }
+    const societalValues = asRecord(government.societal_values);
+    for (const [axis, value] of Object.entries(societalValues)) {
+      if (typeof value === "number" && value !== SOCIETAL_VALUE_NOT_APPLICABLE) {
+        societalValueRows.push([idx, axis, value]);
+      }
+    }
   }
   await insertRows(
     db,
@@ -297,6 +311,13 @@ export async function parseAndStore(
     nationHistoryRows,
     (inserted, total) => reportWithinMilestone(inserted / total),
   );
+  if (societalValueRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO nation_societal_values (nation_idx, axis, value) VALUES (?1, ?2, ?3)",
+      societalValueRows,
+    );
+  }
   reportMilestone(); // "nations"
 
   const provinceDatabase = asRecord(asRecord(root.provinces).database);

@@ -7,6 +7,7 @@ const TABS: { id: EncyclopediaTab; label: string }[] = [
   { id: "leaderboard", label: "Leaderboard" },
   { id: "characters", label: "Characters" },
   { id: "markets", label: "Markets" },
+  { id: "societal-compass", label: "Societal Compass" },
 ];
 
 interface EncyclopediaNavProps {

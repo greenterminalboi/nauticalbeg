@@ -516,6 +516,28 @@ export async function listLatestNationMetricArrow(
 }
 
 /**
+ * specs/010-societal-values-compass: one row per (nation_idx, axis,
+ * value) for every currently-applicable Societal Value axis of every
+ * real, currently-existing country. A missing row for a given
+ * (nation_idx, axis) pair means "not applicable" — callers MUST NOT
+ * default a missing axis to 0 (spec FR-005). Same country_type='Real' +
+ * locations-liveness filter as `listLatestNationMetricArrow` above.
+ */
+export async function listSocietalValuesArrow(db: SaveDatabase): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `SELECT
+       nation_societal_values.nation_idx as nation_idx,
+       nation_societal_values.axis as axis,
+       nation_societal_values.value as value
+     FROM nation_societal_values
+     JOIN nations ON nations.idx = nation_societal_values.nation_idx
+     WHERE nations.country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)`,
+  );
+}
+
+/**
  * specs/006-country-leaderboard, post-ship 2026-09-21 (Ruler History
  * stretch goal): one row per ruler term for exactly the requested
  * countries, in reign order — same deliberately-scoped-per-call shape

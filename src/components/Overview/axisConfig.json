@@ -1,0 +1,82 @@
+[
+  {
+    "axis": "aristocracy_vs_plutocracy",
+    "angleDegrees": 135,
+    "positivePoleLabel": "Plutocracy",
+    "negativePoleLabel": "Aristocracy",
+    "band": "SW"
+  },
+  {
+    "axis": "serfdom_vs_free_subjects",
+    "angleDegrees": 45,
+    "positivePoleLabel": "Free Subjects",
+    "negativePoleLabel": "Serfdom",
+    "band": "SE"
+  },
+  {
+    "axis": "mercantilism_vs_free_trade",
+    "angleDegrees": 45,
+    "positivePoleLabel": "Free Trade",
+    "negativePoleLabel": "Mercantilism",
+    "band": "SE"
+  },
+  {
+    "axis": "capital_economy_vs_traditional_economy",
+    "angleDegrees": 0,
+    "positivePoleLabel": "Capital Economy",
+    "negativePoleLabel": "Traditional Economy",
+    "band": "E"
+  },
+  {
+    "axis": "absolutism_vs_liberalism",
+    "angleDegrees": 135,
+    "positivePoleLabel": "Liberalism",
+    "negativePoleLabel": "Absolutism",
+    "band": "SW",
+    "gatingNote": "Age of Absolutism"
+  },
+  {
+    "axis": "centralization_vs_decentralization",
+    "angleDegrees": 90,
+    "positivePoleLabel": "Decentralization",
+    "negativePoleLabel": "Centralization",
+    "band": "S"
+  },
+  {
+    "axis": "traditionalist_vs_innovative",
+    "angleDegrees": 112.5,
+    "positivePoleLabel": "Innovative",
+    "negativePoleLabel": "Traditionalist",
+    "band": "SSW"
+  },
+  {
+    "axis": "spiritualist_vs_humanist",
+    "angleDegrees": 112.5,
+    "positivePoleLabel": "Humanist",
+    "negativePoleLabel": "Spiritualist",
+    "band": "SSW"
+  },
+  {
+    "axis": "individualism_vs_communalism",
+    "angleDegrees": 157.5,
+    "positivePoleLabel": "Communalism",
+    "negativePoleLabel": "Individualism",
+    "band": "WSW"
+  },
+  {
+    "axis": "outward_vs_inward",
+    "angleDegrees": 247.5,
+    "positivePoleLabel": "Inward",
+    "negativePoleLabel": "Outward",
+    "band": "NNW",
+    "provisional": true
+  },
+  {
+    "axis": "belligerent_vs_conciliatory",
+    "angleDegrees": 202.5,
+    "positivePoleLabel": "Conciliatory",
+    "negativePoleLabel": "Belligerent",
+    "band": "WNW",
+    "provisional": true
+  }
+]

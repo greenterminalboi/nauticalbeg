@@ -9,6 +9,11 @@ interface GoodSelectProps {
   goods: readonly string[];
   selectedGood: string;
   onSelectGood: (good: string) => void;
+  /** specs/010-societal-values-compass: this combobox is generic
+   * enough to reuse for any single-select-from-a-searchable-list case
+   * (the compass's "color by axis" picker), not just goods — override
+   * the search box's placeholder to match. */
+  placeholder?: string;
 }
 
 /**
@@ -19,7 +24,12 @@ interface GoodSelectProps {
  * single-select instead of a checkbox multi-select, and closing itself
  * on a pick rather than staying open.
  */
-export function GoodSelect({ goods, selectedGood, onSelectGood }: GoodSelectProps) {
+export function GoodSelect({
+  goods,
+  selectedGood,
+  onSelectGood,
+  placeholder = "Search RGOs by name…",
+}: GoodSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -47,7 +57,7 @@ export function GoodSelect({ goods, selectedGood, onSelectGood }: GoodSelectProp
           <input
             type="text"
             className="good-select__input"
-            placeholder="Search RGOs by name…"
+            placeholder={placeholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoFocus

@@ -36,6 +36,7 @@ import { MarketsTab } from "./MarketsTab";
 import { MarketsSideNav, type MarketsView } from "./MarketsSideNav";
 import { OverviewCard } from "./OverviewCard";
 import { ProvincesTab } from "./ProvincesTab";
+import { SocietalCompassPage } from "./SocietalCompassPage";
 import type { AppSection, EncyclopediaTab, TabId } from "./tabs";
 import { TopBar } from "./TopBar";
 import { WarsTab } from "./WarsTab";
@@ -404,6 +405,11 @@ export function FileLoader() {
   // the extra width renders bigger, more legible charts, not empty
   // padding. LeaderboardTab.css's own `max-width` cap is removed to match.
   const isLeaderboardTab = isFactbook && encyclopediaTab === "leaderboard" && isReady;
+  // specs/010-societal-values-compass: same full-width treatment as
+  // Leaderboard — the compass is a large scatter chart, not bounded
+  // page content.
+  const isSocietalCompassTab =
+    isFactbook && encyclopediaTab === "societal-compass" && isReady;
   // The Map tab (once a save is actually loaded — the pre-load "select a
   // save" message stays in the normal padded/centered layout) wants the
   // full remaining viewport edge-to-edge, not just the full width
@@ -413,7 +419,7 @@ export function FileLoader() {
   const mainClassName = isMapTab ? "shell__main shell__main--flush" : "shell__main";
   const mainInnerClassName = isMapTab
     ? "shell__main-inner shell__main-inner--full-width shell__main-inner--flush"
-    : isTableTab || isEncyclopediaSection || isLeaderboardTab
+    : isTableTab || isEncyclopediaSection || isLeaderboardTab || isSocietalCompassTab
       ? "shell__main-inner shell__main-inner--full-width"
       : "shell__main-inner";
 
@@ -500,6 +506,15 @@ export function FileLoader() {
                 // gate and idle wording as Wars/Leaderboard/Map above.
                 isReady && readDbRef.current ? (
                   <MarketsTab db={readDbRef.current} activeView={marketsView} />
+                ) : (
+                  <p>Select a save file above to get started.</p>
+                )
+              )}
+              {isFactbook && encyclopediaTab === "societal-compass" && (
+                // Save-wide, not nation-scoped, same isReady + readDbRef.current
+                // gate and idle wording as Wars/Leaderboard/Markets above.
+                isReady && readDbRef.current ? (
+                  <SocietalCompassPage db={readDbRef.current} />
                 ) : (
                   <p>Select a save file above to get started.</p>
                 )

@@ -1286,3 +1286,81 @@ neither column for sort order except the primary (average).
   explicit `__value-header`/`__value` classes on both the `<th>` and
   `<td>` for every value column, replacing the positional selector
   entirely.
+
+## Societal Values Compass (010) ships: a 14-axis vector-sum projection, and a user-driven redesign that removed half the original spec (2026-09-21)
+
+A new Encyclopedia tab plotting each selected country's ideological
+position on a 2D scatter chart, computed by projecting its Societal
+Value axes onto fixed angles and summing (mean vector, not raw sum, so
+early-game saves with fewer unlocked axes aren't pulled artificially
+toward the origin).
+
+**Data source, found not assumed, twice.** `government.societal_values`
+turned out to be a flat object of already-signed floats (roughly
+-100..+100), not the separate magnitude+direction fields the source
+spec assumed — and a raw `-999` is the sentinel for "not yet
+applicable," never a missing key or a real zero. Both confirmed against
+`tools/schema-mapping/inventories/Russia (Melted).md` before any
+ingestion code was written. The `-999` sentinel is dropped at parse
+time (`1.3.11.ts`) and never stored — a missing `nation_societal_values`
+row *is* "not applicable" for every downstream consumer, the same
+row-presence convention `nation_history` already used for other
+optional per-nation fields.
+
+**The angle assignment is entirely data, not code.** `axisConfig.json`
+maps each axis to one `angleDegrees` (the positive pole's placement;
+the negative pole is always `+180°`, never a second config entry) plus
+its display labels — `compassPosition.ts` reads this file and has no
+axis names hardcoded anywhere. This mattered in practice: the axis
+layout went through roughly a dozen live revisions after shipping (see
+below), every one of them a JSON edit, zero of them a logic change.
+
+**Shipped, then substantially redesigned live against the user's own
+mental model, not a textbook political compass.** After the initial
+build (great-power color mode, population/development size toggle, 3
+cultural/religious conditional axes, a 4-corner "quadrant name"
+legend), the user reviewed it running and drove it somewhere
+different: the y-axis formula needed an explicit sign flip
+(`y = -value * sin(angle)`, not `+sin`) to make Authoritarian land top
+and Libertarian bottom — a real math correction, not a label swap,
+documented in `compassPosition.ts`. Great-power status, the size
+toggle, and the 3 conditional axes were removed outright ("we don't
+need those whatsoever"). The remaining 11 axes were walked one-by-one
+onto a full 16-point compass rose (every 22.5°) by explicit bearing,
+converted into this codebase's internal angle convention via
+`bearing = angleDegrees + 90` and checked axis-by-axis against the
+user's own table before writing it. The lesson generalizing past this
+one feature: when a visualization encodes a domain-specific mental
+model rather than a standard convention, expect the layout itself —
+not just the chart's mechanics — to be the thing that needs live
+iteration, and keep the mapping in one small data file specifically so
+that iteration stays cheap.
+
+**Compass-rose label placement: snap to the nearest straight edge, not
+a circle, and grow away from center in both dimensions.** A first pass
+placed all 16 labels at a fixed radius around a circle; several sat at
+awkward angles or bled into the tinted quadrant backgrounds. Fixed by
+projecting each label's bearing onto the bounding *square* instead
+(scale by `1/max(|sin|, |cos|)` so whichever axis dominates lands
+exactly on that edge) and, per a second bug report, computing
+horizontal *and* vertical text alignment independently from which half
+of the container the label sits in — not from which edge it nominally
+"belongs to." A `verticalAlign: "middle"` on multi-line text was letting
+half its rendered height creep back past the anchor into the plot,
+worst near a corner where both margins were already thin; anchoring
+every label at its own outer corner (grow left/right AND up/down away
+from center, whichever isn't already centered) fixed it generally
+rather than case-by-case.
+
+**Default view is the player's own country, not every country in the
+save.** Reuses `computeDefaultSelection` and `AddCountryInput` verbatim
+from Leaderboard/World Goods rather than inventing a third selection
+UI — per explicit user request to match the established pattern.
+
+**Known limitation**: live browser verification of the fully-populated
+chart was not completed — `claude-in-chrome`'s `file_upload` silently
+no-op'd on a real save file in this environment (a session-local tool
+limitation, reported upstream), so verification relied on the test
+suite (comprehensive: parser, query, and position-math coverage against
+real fixture data) plus idle-state browser checks, not a rendered
+screenshot with live data.

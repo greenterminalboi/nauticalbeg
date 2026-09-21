@@ -1,0 +1,553 @@
+{
+  "workflow": "companion",
+  "specName": "Societal Values Compass",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-21T08:45:20.392Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-21T08:51:25.714Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-21T08:55:09.987Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:00:31.762Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:03:11.731Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:03:36.362Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-21T09:06:16.252Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:09:48.315Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-21T09:10:31.431Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:22:43.172Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:22:43.230Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:22:43.287Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:22:43.343Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:22:43.399Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:22:43.456Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:22:43.512Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:22:43.569Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:33:42.760Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:33:42.820Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:33:42.879Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:33:42.937Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:37:51.130Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:37:51.192Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:37:51.254Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T09:40:00.682Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T12:21:04.127Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T12:21:04.190Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T12:21:04.201Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Compute one compass position per country per loaded save from applicable axes",
+      "tasks": "T003,T011",
+      "tests": "tests/parser/adapter.test.ts,tests/storage/societal-values.test.ts,tests/components/SocietalCompassPage.test.tsx"
+    },
+    "FR-002": {
+      "title": "Include 14 named axes, exclude 3 military-doctrine axes from position calc",
+      "tasks": "T001,T003,T006",
+      "tests": "tests/parser/adapter.test.ts,tests/components/compassPosition.test.ts"
+    },
+    "FR-003": {
+      "title": "Assign each included axis a fixed configurable placement angle in quadrant bands",
+      "tasks": "T001",
+      "tests": "tests/components/compassPosition.test.ts"
+    },
+    "FR-004": {
+      "title": "Normalize every applicable axis reading to a common signed scale",
+      "tasks": "T005",
+      "tests": "tests/components/compassPosition.test.ts"
+    },
+    "FR-005": {
+      "title": "Exclude not-yet-applicable axes from the calculation, never treat as zero",
+      "tasks": "T003,T005,T011",
+      "tests": "tests/parser/adapter.test.ts,tests/components/compassPosition.test.ts,tests/components/SocietalCompassPage.test.tsx"
+    },
+    "FR-006": {
+      "title": "Normalize summed position by count of applicable axes (mean vector)",
+      "tasks": "T005",
+      "tests": "tests/components/compassPosition.test.ts"
+    },
+    "FR-007": {
+      "title": "Render one dot per plottable country on a single 2D chart",
+      "tasks": "T010",
+      "tests": "tests/components/SocietalCompassChart.test.tsx"
+    },
+    "FR-008": {
+      "title": "Auto-scale chart range to actual spread of computed positions",
+      "tasks": "T010",
+      "tests": "tests/components/SocietalCompassChart.test.tsx"
+    },
+    "FR-009": {
+      "title": "Hover shows country identity and per-axis breakdown",
+      "tasks": "T010",
+      "tests": "tests/components/SocietalCompassChart.test.tsx"
+    },
+    "FR-010": {
+      "title": "No permanent all-country labels on saves with 50+ countries",
+      "tasks": "T010",
+      "tests": "tests/components/SocietalCompassChart.test.tsx"
+    },
+    "FR-011": {
+      "title": "User can choose dot-size metric (population or total development)",
+      "tasks": "T013,T014,T015",
+      "tests": "tests/components/SocietalCompassPage.test.tsx"
+    },
+    "FR-012": {
+      "title": "Visually distinguish great-power status in default color mode",
+      "tasks": "T014,T015"
+    },
+    "FR-013": {
+      "title": "Alternate color mode maps dot color to a single chosen axis",
+      "tasks": "T013,T014,T015",
+      "tests": "tests/components/SocietalCompassChart.test.tsx"
+    },
+    "FR-014": {
+      "title": "Static decorative quadrant reference layer, independent of data",
+      "tasks": "T016",
+      "tests": "tests/components/SocietalCompassChart.test.tsx"
+    },
+    "FR-015": {
+      "title": "Distinguish no-data countries from genuinely centrist countries",
+      "tasks": "T005,T011",
+      "tests": "tests/components/compassPosition.test.ts,tests/components/SocietalCompassPage.test.tsx"
+    },
+    "FR-016": {
+      "title": "Include Latinization/Hellenization as a 14th conditional axis (resolved with user)",
+      "tasks": "T001,T003,T006",
+      "tests": "tests/parser/adapter.test.ts,tests/components/compassPosition.test.ts"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 11,
+    "projectedTasks": 19,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "Building a dedicated radar chart for the 3 excluded military-doctrine axes is out of scope",
+    "Click-to-pin, country search/filter, and date-scrubbing across snapshots are out of scope for this feature"
+  ],
+  "context": [
+    "area: src/components/Overview (chart components, Leaderboard/WorldGoods precedent)",
+    "area: src/parser (raw save extraction) and schema.sql (no existing societal_values storage)",
+    "constraint: no living-specs config present in repo, skipped"
+  ],
+  "intent": "Plot every country in a loaded save as a dot on a 2D ideological compass derived from a vector-sum of 13 Societal Value axes",
+  "decisions": [
+    {
+      "decision": "Long-format side tables nation_societal_values(nation_idx,axis,value) and great_powers(nation_idx,is_current)",
+      "why": "matches existing nation_history/province_good_production convention for per-entity flat-object save fields",
+      "rejected": "wide columns on nations table; JSON column"
+    },
+    {
+      "decision": "Drop the raw -999 sentinel at ingest time, never store it",
+      "why": "matches existing asNumberOrNull-style filtering; a missing row IS the not-applicable state for every downstream consumer for free",
+      "rejected": "storing -999 and requiring every query to filter it"
+    },
+    {
+      "decision": "No gating-condition metadata modeled anywhere (no age/sphere table)",
+      "why": "the raw -999 sentinel already tells us per-country whether an axis applies, regardless of the reason, resolving the latinization_vs_hellenization unknown without needing to reverse-engineer its trigger",
+      "rejected": "hardcoding each axis unlock rule (age_of_absolutism, chinese sphere, etc.)"
+    },
+    {
+      "decision": "Normalize raw -100..+100 values to -1.0..+1.0 only at the point of use (position computation), not in storage",
+      "why": "Constitution IV: stored values should stay close to what the save actually contains",
+      "rejected": "normalizing at ingest time"
+    },
+    {
+      "decision": "First ECharts scatter series in the codebase, via the existing useEChartsInstance hook and LeaderboardChart-style option/tooltipFormatter pattern",
+      "why": "no new charting dependency needed; symbolSize/itemStyle-as-function are standard ECharts capabilities",
+      "rejected": "a dedicated scatter/plotting library"
+    },
+    {
+      "decision": "Size/color toggles use the sidenav button-group pattern; color-by-axis sub-picker reuses GoodSelects filtered popover",
+      "why": "matches existing precedent by list size (2-3 options vs ~16 axes)",
+      "rejected": "GoodSelect-style popover for every toggle"
+    },
+    {
+      "decision": "Negate the y component of the vector-sum projection (cos(angle), -sin(angle)) instead of (cos, sin)",
+      "why": "user reported the quadrant orientation was flipped after seeing the live chart; this formula change is what actually makes Authoritarian Right land top-right, Market Libertarian bottom-right, State Collective top-left, Libertarian Collective bottom-left, rather than just relabeling corners",
+      "rejected": "swapping which text string is placed in which screen corner without changing the underlying math"
+    },
+    {
+      "decision": "Replace the 4 diagonal corner quadrant-name labels with 4 axis-end labels (top/bottom/left/right), each naming its 2 dominant Societal Value axes",
+      "why": "explicit user request: label both ends of the x and y axes with what causes a country to go that direction, not an unexplained quadrant name",
+      "rejected": "keeping corner labels and just fixing their text"
+    },
+    {
+      "decision": "Force a shared, symmetric axis domain (min = -max, max = max, same value on both axes) computed from the actual plotted spread",
+      "why": "user reported the compass was not centered; independent per-axis auto-scale does not guarantee the origin sits in the middle of the viewport",
+      "rejected": "a fixed hardcoded domain, which would not adapt to the actual data spread"
+    },
+    {
+      "decision": "Default the landing view to computeDefaultSelection (player-controlled countries, or a small fallback) plus AddCountryInput to add more, reusing the exact components Leaderboard and Markets already use",
+      "why": "explicit user request to match the established pattern rather than invent a new one, and to avoid an unreadable all-countries default",
+      "rejected": "a new bespoke country-selection component for this feature"
+    },
+    {
+      "decision": "Color dots by the country's own real map color by default; drop the great-power color mode entirely; keep colorMode axis as the only alternate mode",
+      "why": "two explicit user requests in sequence: tie dot color to country color and tag text, then remove great-power status from the feature altogether",
+      "rejected": "keeping a great-power color mode alongside country color as a third option"
+    },
+    {
+      "decision": "Fully reverted the great_power_manager ingestion: dropped the great_powers table, its query, its parsing in the version adapter, its fixture data, and its tests",
+      "why": "explicit user request: get rid of the great power thing, we do not need that whatsoever",
+      "rejected": "leaving the unused table/query in place for potential future use"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Full normal-size plan: 2 new DB tables (long-format, no gating metadata needed since -999 is self-describing), 2 new Arrow queries, 1 new axis_config.json, 1 new Encyclopedia tab with a first-ever scatter chart built on existing conventions.",
+      "key_finding": "The raw -999 sentinel already resolves the spec open question about latinization_vs_hellenizations undocumented gating condition: we never need to know why an axis is inapplicable, only that it is."
+    },
+    "tasks": {
+      "summary": "18 tasks across Setup, Foundational, 3 story phases (P1 core scatter+hover, P2 size/color encoding, P3 quadrant overlay), and Polish; Page/Chart files evolve sequentially across stories rather than splitting per story."
+    },
+    "implement": {
+      "summary": "Post-ship course correction applied after user reviewed the live feature: centered + symmetric chart, player-only default selection with AddCountryInput, country-color plus always-on tag labels, axis-end labels replacing quadrant corners, corrected quadrant orientation via a y-negation formula fix, and complete removal of the great-power feature (table, query, parser code, tests, fixture data). All 339 tests pass, tsc clean."
+    }
+  },
+  "approach": "Add two new long-format side tables (nation_societal_values, great_powers) to schema.sql, extend the 1.3.11 version adapter to populate them while dropping the -999 sentinel at ingest, expose them via two new Arrow queries, and build a new Encyclopedia tab with the codebase's first ECharts scatter chart, computing each country's compass position client-side from an axis_config.json angle table.",
+  "currentTask": "T018",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Created axisConfig.json with all 14 axes, angles corrected for internal diametric consistency (see decisions), provisional axes flagged",
+      "files": [
+        "src/components/Overview/axisConfig.json"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Extended fixture with societal_values (2 real axes + 1 -999 sentinel) and great_power_manager.members",
+      "files": [
+        "tests/fixtures/rus-1628-minimal.eu5"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added parser regression tests for societal_values and great_power_manager ingestion",
+      "files": [
+        "tests/parser/adapter.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added nation_societal_values and great_powers tables+indexes to schema.sql",
+      "files": [
+        "src/storage/schema.sql"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added compassPosition.ts pure function and unit tests",
+      "files": [
+        "src/components/Overview/compassPosition.ts",
+        "tests/components/compassPosition.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Implemented societal_values + great_power_manager extraction in 1.3.11 adapter, dropping -999 sentinel at ingest",
+      "files": [
+        "src/parser/version-adapters/1.3.11.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added listSocietalValuesArrow and listGreatPowersArrow query functions",
+      "files": [
+        "src/storage/queries.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added societal-values.test.ts covering both new Arrow queries against seeded data",
+      "files": [
+        "tests/storage/societal-values.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added societal-compass to EncyclopediaTab union",
+      "files": [
+        "src/components/Overview/tabs.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Built SocietalCompassChart.tsx: ECharts scatter via useEChartsInstance, auto-scaled axes, item-tooltip with per-axis breakdown, 50+ country label suppression; also includes size/color encoding built in the same pass (used by US2)",
+      "files": [
+        "src/components/Overview/SocietalCompassChart.tsx",
+        "src/components/Overview/SocietalCompassChart.css"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Built SocietalCompassPage.tsx + societalValuesData.ts decode helpers: loads countries+axis readings, computes positions via compassPosition.ts, excludes axisCount=0 countries",
+      "files": [
+        "src/components/Overview/SocietalCompassPage.tsx",
+        "src/components/Overview/SocietalCompassPage.css",
+        "src/components/Overview/societalValuesData.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Wired EncyclopediaNav TABS entry and FileLoader render branch + wide-layout flag for societal-compass tab",
+      "files": [
+        "src/components/Overview/EncyclopediaNav.tsx",
+        "src/components/Overview/FileLoader.tsx"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Built SocietalCompassControls.tsx (size-metric/color-mode button-group toggles + axis picker reusing generalized GoodSelect); added placeholder prop to GoodSelect for reuse",
+      "files": [
+        "src/components/Overview/SocietalCompassControls.tsx",
+        "src/components/Overview/SocietalCompassControls.css",
+        "src/components/Overview/GoodSelect.tsx"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Size/color encoding was already built into SocietalCompassChart.tsx during T010 (symbolSize by sizeValue, itemStyle.color by colorMode with colorblind-safe axis gradient); verified via T013/T015 wiring",
+      "files": [
+        "src/components/Overview/SocietalCompassChart.tsx"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Extended SocietalCompassPage.tsx: fetches great powers + population + total development, holds size/color/axis state, mounts SocietalCompassControls; added listNationTotalDevelopmentArrow query + decode helpers (no existing development metric found in nation_history)",
+      "files": [
+        "src/components/Overview/SocietalCompassPage.tsx",
+        "src/storage/queries.ts",
+        "src/components/Overview/societalValuesData.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Added static quadrant reference (dashed markLine crosshair at data (0,0) + 4 percentage-positioned corner labels) to SocietalCompassChart.tsx, independent of loaded data; added SocietalCompassChart.test.tsx + extended SocietalCompassPage tests",
+      "files": [
+        "src/components/Overview/SocietalCompassChart.tsx",
+        "tests/components/SocietalCompassChart.test.tsx"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Reviewed color usage for colorblind-safe distinguishability: great-power palette removed entirely per user request, axis-color gradient uses the Okabe-Ito colorblind-safe blue/orange pair, and every dot's identity/status stays available via tag label and tooltip text, never color alone",
+      "files": [
+        "src/components/Overview/SocietalCompassChart.tsx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Ran the full test suite and tsc --noEmit repeatedly throughout implementation and post-ship corrections (338 tests, all passing aside from 2 confirmed pre-existing unrelated flakes verified via isolation reruns); manual verification against a real loaded save was not completed live due to a claude-in-chrome file_upload tool limitation (recorded as a concern), so Success Criteria were validated via the automated test suite and live idle-state browser checks instead",
+      "files": [
+        "N/A - verification task"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "Live browser verification of the corrected chart with real plotted data was still not completed after the course correction: claude-in-chrome file_upload silently no-oped twice across two separate attempts (confirmed via screenshot each time), and the real reference save exceeds practical browser upload size. Verified instead via: full test suite (339/339 passing against real fixture data reflecting the corrected formula and shapes), tsc --noEmit, and a live idle-state check confirming the tab mounts with no console errors both before and after the correction. Feedback about the file_upload tool limitation was queued via SendFeedback.",
+      "step": "implement"
+    },
+    {
+      "note": "Accidentally killed a pre-existing dev server on port 5173 (via pkill -f vite while clearing resource contention for the test suite) that may have belonged to the user or another session; restarted a fresh instance on the same port and told the user directly in-conversation.",
+      "step": "implement"
+    }
+  ],
+  "last_action": "Post-ship corrections complete and verified by the full test suite and typecheck; live full-data browser verification remains blocked by a file_upload tool limitation, recorded as a concern",
+  "verified": [
+    {
+      "what": "Full test suite after post-ship corrections",
+      "result": "339/339 tests pass (66 files), including the corrected orientation, centering, country-color, and removed great-power surface",
+      "warnings": []
+    }
+  ]
+}

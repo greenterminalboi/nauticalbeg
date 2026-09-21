@@ -611,4 +611,32 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     const total = await queryAll(database, "SELECT COUNT(*) as n FROM ruler_history");
     expect(Number(total[0].n)).toBe(3);
   });
+
+  // specs/010-societal-values-compass
+  it("parses real societal_values axes into nation_societal_values and drops the -999 sentinel entirely", async () => {
+    const database = await freshDb("adapter-societal-values.db");
+    await parseAndStore(
+      database,
+      "save-societal-values",
+      "rus-1628-minimal.eu5",
+      toBytes(fixtureText),
+    );
+    const rows = await queryAll(
+      database,
+      "SELECT nation_idx, axis, value FROM nation_societal_values WHERE nation_idx = 2025 ORDER BY axis",
+    );
+    // The fixture's third axis (absolutism_vs_liberalism=-999) must
+    // produce no row at all — a missing row IS "not applicable"
+    // (research.md), never a stored -999.
+    expect(rows).toEqual([
+      { nation_idx: 2025, axis: "aristocracy_vs_plutocracy", value: 67.5 },
+      { nation_idx: 2025, axis: "centralization_vs_decentralization", value: -41.23 },
+    ]);
+
+    const sentinelRows = await queryAll(
+      database,
+      "SELECT * FROM nation_societal_values WHERE nation_idx = 2025 AND axis = 'absolutism_vs_liberalism'",
+    );
+    expect(sentinelRows).toEqual([]);
+  });
 });

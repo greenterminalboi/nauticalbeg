@@ -27,7 +27,13 @@ export type AppSection = "nauticalbot" | "map" | "factbook" | "encyclopedia" | "
  * item in Countries' own side nav, which is scoped to whichever nation
  * is selected) rather than belonging to one.
  */
-export type EncyclopediaTab = "countries" | "wars" | "leaderboard" | "characters" | "markets";
+export type EncyclopediaTab =
+  | "countries"
+  | "wars"
+  | "leaderboard"
+  | "characters"
+  | "markets"
+  | "societal-compass";
 
 /**
  * Which data category is active *within* Encyclopedia's "Countries"

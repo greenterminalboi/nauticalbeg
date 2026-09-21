@@ -1,0 +1,7 @@
+/* specs/010-societal-values-compass: plain (non-overlay) chart block,
+   same "no grey box, fills the panel" convention as LeaderboardChart.css. */
+.societal-compass-chart__canvas {
+  width: 100%;
+  height: min(70vh, 44rem);
+  min-height: 26rem;
+}

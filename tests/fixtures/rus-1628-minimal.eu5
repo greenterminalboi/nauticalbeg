@@ -138,6 +138,11 @@ countries={
 				ruler=33648607
 				consort=83894681
 				heir=33645428
+				societal_values={
+					centralization_vs_decentralization=-41.23
+					aristocracy_vs_plutocracy=67.5
+					absolutism_vs_liberalism=-999
+				}
 			}
 			historical_population={ 0 0 39.18862 39.55171 40.01348 }
 			historical_tax_base={ 0 0 10.44219 10.61903 10.79581 }
