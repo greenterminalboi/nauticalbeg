@@ -344,6 +344,49 @@ updated for five sections instead of four.
 
 ---
 
+## Post-implementation addendum (2026-09-20): full-width layout + a real treemap bug
+
+**Full-width layout**: `LeaderboardTab`'s hardcoded `max-width: 48rem`
+cap was removed, and `FileLoader.tsx`'s `isLeaderboardTab` condition now
+gives it the same `shell__main-inner--full-width` treatment as the
+Wars/Provinces table tabs (direct request: "do the same thing with the
+leaderboard tab" after the same fix landed for feature 008's Encyclopedia
+section). Its charts are viewBox-scaled SVG (`width: 100%` in
+`LeaderboardChart.css`/`LeaderboardTreemap.css`), so the extra room
+renders bigger, more legible charts, not empty padding.
+
+**A real bug in `treemapLayout.ts`, found from a user screenshot**: the
+user reported the Treemap view looked like "basically a straight
+rectangle across," with every box sharing the same left edge. Root
+cause: `layoutRow`'s orientation check (`rect.width >= rect.height`)
+was backwards — a correct squarified treemap lays each row along the
+*shorter* side of the remaining rectangle, consuming (shrinking) the
+*longer* side, which is what keeps the remaining space trending back
+toward square as more rows are placed. This implementation did the
+opposite: it laid rows along whichever side was already longer,
+consuming the already-shorter side every time. For the real "one
+dominant 'Other' box + several smaller selected countries" data shape
+on a 640×300 canvas, that means after the first row the remaining
+rectangle keeps getting *more* elongated (width stays 640, height keeps
+shrinking: 120 → 60 → 24 → …), so every subsequent country degenerates
+into its own full-width sliver stacked underneath the last — exactly
+what the screenshot showed.
+
+Confirmed via hand-derivation of the `worstRatio` formula (matches the
+textbook Bruls/Huizing/van Wijk definition exactly — the bug is in
+`layoutRow`'s orientation choice, not the scoring math) and empirically
+against two cases: the real skewed "Other"-dominant shape, and the
+classic published squarify example (`[6,6,4,3,2,2,1]` on a 6×4 canvas).
+Both produced the same degenerate stacked-slivers pattern under the old
+orientation and a genuine 2D mosaic under the fix. The existing test
+suite (`tests/components/treemapLayout.test.ts`) never caught this
+because it only asserted total-area conservation and non-overlap, both
+of which the buggy orientation also satisfies — added two regression
+tests asserting boxes vary along both axes, confirmed to fail against
+the old orientation and pass against the fix.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
