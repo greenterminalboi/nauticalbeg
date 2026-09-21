@@ -32,6 +32,7 @@ import { LeaderboardSideNav } from "./LeaderboardSideNav";
 import type { LeaderboardMetric } from "./leaderboardData";
 import { LoadingCircle } from "./LoadingCircle";
 import { MapTab } from "./MapTab";
+import { MarketsTab } from "./MarketsTab";
 import { OverviewCard } from "./OverviewCard";
 import { ProvincesTab } from "./ProvincesTab";
 import type { AppSection, EncyclopediaTab, TabId } from "./tabs";
@@ -378,10 +379,11 @@ export function FileLoader() {
   // Decision 2026-09-19: every Perspective-backed data table (not
   // Overview/placeholders) uses the full main content width — see
   // Shell.css's `--full-width` modifier doc comment. Extend this
-  // condition as more Perspective tabs get built (Characters/Markets
-  // are still ComingSoonPlaceholder for now).
+  // condition as more Perspective tabs get built (Characters is still
+  // ComingSoonPlaceholder for now; Markets (007) joined 2026-09-20).
   const isTableTab =
     (isFactbook && encyclopediaTab === "wars" && isReady) ||
+    (isFactbook && encyclopediaTab === "markets" && isReady) ||
     (showCountriesNav && status.kind === "ready" && status.activeTab === "provinces");
   // The Encyclopedia section (008) wants the full main content width too
   // — same reasoning as the table tabs above (a lot of browsable content,
@@ -483,7 +485,15 @@ export function FileLoader() {
               {isFactbook && encyclopediaTab === "characters" && (
                 <ComingSoonPlaceholder feature="Characters" />
               )}
-              {isFactbook && encyclopediaTab === "markets" && <ComingSoonPlaceholder feature="Markets" />}
+              {isFactbook && encyclopediaTab === "markets" && (
+                // Save-wide, not nation-scoped, same isReady + readDbRef.current
+                // gate and idle wording as Wars/Leaderboard/Map above.
+                isReady && readDbRef.current ? (
+                  <MarketsTab db={readDbRef.current} />
+                ) : (
+                  <p>Select a save file above to get started.</p>
+                )
+              )}
             </>
           )}
         </div>

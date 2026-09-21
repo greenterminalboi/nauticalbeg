@@ -1,0 +1,15 @@
+/* Illuminated Cards & Folios framing, matching MarketList.css/
+ * WorldGoodsOverview.css treatment of a Perspective datagrid's
+ * container. */
+.market-goods-table {
+  border: 3px solid var(--color-on-surface);
+  box-shadow:
+    0 0 0 1px var(--color-tertiary),
+    0 0 0 4px var(--color-vellum),
+    0 0 0 5px var(--color-secondary);
+}
+
+.market-goods-table__viewer {
+  display: block;
+  height: 32rem;
+}

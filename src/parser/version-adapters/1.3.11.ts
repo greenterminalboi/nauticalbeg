@@ -49,6 +49,7 @@ const STRUCTURED_KEYS = new Set([
   "war_manager",
   "played_country",
   "population",
+  "market_manager",
 ]);
 
 /** jomini narrows an unquoted date-like token (e.g. `1628.8.14`) to a
@@ -119,6 +120,19 @@ function asRgbOrNull(value: unknown): [number, number, number] | null {
   return typeof r === "number" && typeof g === "number" && typeof b === "number"
     ? [r, g, b]
     : null;
+}
+
+/** specs/007-production-trade-markets research.md §1/data-model.md: a
+ * price-history point has no embedded date in the save at all — this
+ * computes one, counting back `monthsBack` whole months from the save's
+ * own current date (`metadata.date`), on the researched-but-unconfirmed
+ * assumption that `history` entries are monthly. Returns an ISO
+ * "YYYY-MM" string. */
+function isoYearMonth(gameDate: Date, monthsBack: number): string {
+  const totalMonths = gameDate.getUTCFullYear() * 12 + gameDate.getUTCMonth() - monthsBack;
+  const year = Math.floor(totalMonths / 12);
+  const month = ((totalMonths % 12) + 12) % 12; // 0-11, always positive
+  return `${year}-${String(month + 1).padStart(2, "0")}`;
 }
 
 /** Sums a war's `attacker_losses`/`defender_losses` field (shape:
@@ -448,6 +462,137 @@ export async function parseAndStore(
       db,
       "INSERT INTO population (idx, pop_type, estate, culture, religion, status, size, literacy, satisfaction, owner_idx, missing_goods) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
       populationRows,
+    );
+  }
+
+  // market_manager.database: one row per market (specs/007-production-
+  // trade-markets data-model.md). No name field exists in the save at
+  // all — display name is derived at query time (queries.ts) from
+  // center_location_idx. `member_count` is `members`' list length (the
+  // save also carries a separate `market`/`migration` list per entry;
+  // `members` was chosen as the closest name-match for "locations
+  // belonging to this market" — research.md flags this for
+  // re-verification against a real full save). A market with no `goods`
+  // sub-object at all (2 of 184 in the reference save) contributes zero
+  // market_goods rows, never zero-value ones (FR-006).
+  const marketDatabase = asRecord(asRecord(root.market_manager).database);
+  const gameDate = metadata.date instanceof Date ? metadata.date : null;
+  const marketRows: Array<[number, number | null, number | null, number | null]> = [];
+  const marketGoodRows: Array<
+    [
+      number,
+      string,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+    ]
+  > = [];
+  const marketGoodPriceHistoryRows: Array<[number, string, string, number]> = [];
+
+  for (const [idxStr, value] of Object.entries(marketDatabase)) {
+    const record = asRecord(value);
+    const marketIdx = Number(idxStr);
+    const members = record.members;
+    marketRows.push([
+      marketIdx,
+      asNumberOrNull(record.center),
+      Array.isArray(members) ? members.length : null,
+      asNumberOrNull(record.capacity),
+    ]);
+
+    const goods = asRecord(record.goods);
+    for (const [good, goodValue] of Object.entries(goods)) {
+      const g = asRecord(goodValue);
+      const productionSupplied = asRecord(g.production_supplied);
+      const supplied = asRecord(g.supplied);
+      const demanded = asRecord(g.demanded);
+      // demanded.Trade + demanded.BurgherTrades merged into one "trade"
+      // figure (data-model.md: spec has one trade bucket, the save has
+      // two) — stays null only if BOTH source fields are absent, never
+      // if just one of the two is a confirmed 0.
+      const demandTradeRaw = asNumberOrNull(demanded.Trade);
+      const demandBurgherRaw = asNumberOrNull(demanded.BurgherTrades);
+      const demandTrade =
+        demandTradeRaw === null && demandBurgherRaw === null
+          ? null
+          : (demandTradeRaw ?? 0) + (demandBurgherRaw ?? 0);
+      marketGoodRows.push([
+        marketIdx,
+        good,
+        asNumberOrNull(g.price),
+        asNumberOrNull(g.supply),
+        asNumberOrNull(g.demand),
+        asNumberOrNull(g.stockpile),
+        typeof g.import === "boolean" ? (g.import ? 1 : 0) : null,
+        typeof g.export === "boolean" ? (g.export ? 1 : 0) : null,
+        asNumberOrNull(productionSupplied.RawMaterials),
+        asNumberOrNull(productionSupplied.Buildings),
+        asNumberOrNull(supplied.Trade),
+        asNumberOrNull(demanded.Pops),
+        demandTrade,
+        asNumberOrNull(demanded.Building),
+        asNumberOrNull(demanded.Units),
+        asNumberOrNull(demanded.Construction),
+      ]);
+
+      if (gameDate) {
+        const history = asNumberArray(g.history);
+        history.forEach((price, i) => {
+          const monthsBack = history.length - 1 - i;
+          marketGoodPriceHistoryRows.push([
+            marketIdx,
+            good,
+            isoYearMonth(gameDate, monthsBack),
+            price,
+          ]);
+        });
+      }
+    }
+  }
+  await insertRows(
+    db,
+    "INSERT INTO markets (idx, center_location_idx, member_count, capacity) VALUES (?1, ?2, ?3, ?4)",
+    marketRows,
+  );
+  if (marketGoodRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO market_goods (market_idx, good, price, supply, demand, stockpile, is_importing, is_exporting, supply_raw_materials, supply_buildings, supply_trade, demand_population, demand_trade, demand_building_upkeep, demand_unit_upkeep, demand_construction) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
+      marketGoodRows,
+    );
+  }
+  if (marketGoodPriceHistoryRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO market_good_price_history (market_idx, good, date, price) VALUES (?1, ?2, ?3, ?4)",
+      marketGoodPriceHistoryRows,
+    );
+  }
+
+  // market_manager.produced_goods: the save's own world-total snapshot
+  // per good — read directly, never summed client-side from
+  // market_goods (data-model.md).
+  const producedGoods = asRecord(asRecord(root.market_manager).produced_goods);
+  const worldGoodProductionRows: Array<[string, number]> = [];
+  for (const [good, total] of Object.entries(producedGoods)) {
+    if (typeof total === "number") worldGoodProductionRows.push([good, total]);
+  }
+  if (worldGoodProductionRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO world_good_production (good, total) VALUES (?1, ?2)",
+      worldGoodProductionRows,
     );
   }
 

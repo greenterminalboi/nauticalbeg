@@ -801,10 +801,13 @@ recording since it's this app's standard charting tool everywhere else:
    rendered colors never changed; forcing a repaint via
    `restyleElement()`/`restore()` threw a WASM `"View not found"` error.
 
-Both charts and the treemap are hand-rolled SVG instead (`LeaderboardChart
+Both charts and the treemap were hand-rolled SVG at ship time (`LeaderboardChart
 .tsx`, `LeaderboardTreemap.tsx` + `treemapLayout.ts`'s squarified-treemap
-implementation) — consistent with 005's map choice, now confirmed twice
-over for the same underlying reason.
+implementation) — consistent with 005's map choice, confirmed twice
+over for the same underlying reason. **Superseded by feature 007** (see
+below): both were retrofitted onto Apache ECharts, which turned out to
+support the exact literal-RGB-per-node capability Perspective's plugins
+lacked — `treemapLayout.ts` is deleted.
 
 **A real, user-reported bug in the treemap's "Other" bucket**: `country_type
 = 'Real'` (the existing "is this a real nation, not Pirates/DUMMY"
@@ -895,3 +898,84 @@ to reference something now missing" from "never was a reference").
 24,658 real cross-references were found this way on the first real
 generation run, across 8,935 entries with at least one (every parsed
 `building_types` entry had at least one).
+
+## Production, Trade & Markets (007) ships: a new save section, and a mid-plan pivot to Apache ECharts for all charting (2026-09-20)
+
+`specs/007-production-trade-markets` filled in the reserved-but-placeholder
+Factbook → Markets page: a world goods-production overview, a
+sortable/searchable market list, a per-market per-good breakdown
+(price/supply/demand/stockpile/import-export, with supply and demand
+decomposed into their component sources), and a price-history chart per
+market/good pair. The save's `market_manager` section (the single
+largest section in the save by field-path count, per 004's earlier
+shallow characterization) was previously uningested, caught only by the
+`raw_sections` opaque-JSON fallback; this feature adds it to
+`1.3.11.ts`'s `STRUCTURED_KEYS`, extracting into four new tables
+(`markets`, `market_goods`, `market_good_price_history`,
+`world_good_production`) following the exact `nations`/`nation_history`/
+`population` conventions already established.
+
+**Two real save-format quirks found only by inspecting a full inventory
+scan, not the schema-mapping tool's earlier shallow pass:**
+
+1. A market has no display-name field in the save at all — every
+   observed field is numeric/list/nested. Names are derived at query
+   time via the same `COALESCE(provinces.name, 'Location ' || idx)`
+   fallback chain `listProvincesArrow` already established, with one
+   further `'Market ' || idx` layer for the edge case where a market's
+   own `center` field is absent.
+2. `goods.<good>.history` (the per-good price series) is a bare list of
+   numbers with **no embedded dates** — cadence looks monthly against
+   the save clock but isn't confirmed. Dates are computed once, at
+   parse time, counting back from the save's own current date
+   (`metadata.date`), and stored as an explicit `date` column, rather
+   than leaving every consumer to re-derive the anchor/cadence
+   convention independently. Flagged for re-verification once a second
+   real save is available to confirm the monthly-cadence assumption.
+
+Two of the save's per-market list fields (`members` vs. `market`) look
+equally plausible for "which locations belong to this market" from field
+names alone; `members` was chosen as the closer match, also flagged for
+re-verification against a real save — the schema stores only the
+resulting count, not the list itself, since no requirement reads the
+individual member locations.
+
+**Mid-plan scope addition, decided with the user partway through
+planning: consolidate this app's charting/visualizations on Apache
+ECharts**, using this feature's new price-history chart as the vehicle,
+and retrofitting the two hand-rolled SVG visualizations from 006
+(`LeaderboardChart.tsx`, `LeaderboardTreemap.tsx`) in the same pass —
+`@perspective-dev/*` remains the datagrid/table library, unchanged.
+Notably, **ECharts' treemap series supports an explicit per-node
+`itemStyle.color`**, the exact capability 006's decision log above
+records Perspective's Treemap plugin lacking after two direct
+investigations — confirmed before committing to the retrofit, not
+assumed. All three chart components (the new `MarketGoodPriceChart` plus
+the two retrofits) share one new lifecycle hook,
+`src/components/Overview/charts/useEChartsInstance.ts` (`echarts.init`/
+`setOption`/`ResizeObserver`-driven `.resize()`/`.dispose()`), using
+ECharts' **SVG renderer** rather than its canvas default — deliberately,
+since jsdom (this project's test environment) has no real `<canvas>` 2D
+context, and SVG output stays fully inspectable in tests. One real
+consequence of testing under jsdom worth recording: **ECharts' actual
+layout is meaningless under jsdom's zero-size container** (confirmed —
+a 2-node treemap only ever draws its larger box at a 0×0 container size).
+Every ECharts-based component's tests therefore mock
+`useEChartsInstance` itself and assert on the exact `option` object
+built, rather than on rendered pixel/DOM output — the same pattern
+`LeaderboardTab.test.tsx`'s own two chart-dependent assertions were
+rewritten to use, once real rendering proved unreliable there too.
+`treemapLayout.ts` (006's hand-rolled squarify layout) is deleted as
+dead code once the treemap retrofit landed — nothing else called it.
+
+**Row-selection-to-callback was new plumbing for this codebase's
+`PerspectiveViewer` usage** (006's `WarsTab.tsx` explicitly deferred it).
+Resolved during implementation, source-confirmed rather than guessed:
+`@perspective-dev/react`'s `PerspectiveViewer` has a documented `onClick`
+prop subscribing to the underlying element's own `"perspective-click"`
+event, whose `detail.row` is the clicked row's full `View.to_json()`
+result keyed by whatever the viewer's own `config.columns` lists —
+nothing else. Because the click callback needs a market's numeric `idx`
+(not its display `name`, not guaranteed unique), `idx` is a real,
+visible grid column in `MarketList`, not merely queried-and-hidden —
+Perspective has no such concept.

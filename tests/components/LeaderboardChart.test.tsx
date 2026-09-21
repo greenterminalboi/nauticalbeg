@@ -1,6 +1,27 @@
-import { describe, expect, it } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { render } from "@testing-library/react";
+import type { EChartsOption } from "echarts";
 import { LeaderboardChart, type LeaderboardChartSeries } from "../../src/components/Overview/LeaderboardChart";
+import * as chartHook from "../../src/components/Overview/charts/useEChartsInstance";
+import { NEUTRAL_COLOR } from "../../src/components/Overview/mapLayers";
+
+// specs/007-production-trade-markets: retrofitted onto ECharts via the
+// shared useEChartsInstance hook — same mock-the-hook, assert-the-option
+// approach as MarketGoodPriceChart.test.tsx, since the actual zoom/pan/
+// tooltip/axis rendering is now ECharts' own, not this app's code to
+// test.
+vi.mock("../../src/components/Overview/charts/useEChartsInstance", () => ({
+  useEChartsInstance: vi.fn(),
+}));
+
+beforeEach(() => {
+  vi.mocked(chartHook.useEChartsInstance).mockReset();
+});
+
+function latestOption(): EChartsOption {
+  const calls = vi.mocked(chartHook.useEChartsInstance).mock.calls;
+  return calls[calls.length - 1][1]!;
+}
 
 const series: LeaderboardChartSeries[] = [
   {
@@ -11,130 +32,50 @@ const series: LeaderboardChartSeries[] = [
   },
 ];
 
-function mockSvgSize(svg: SVGSVGElement) {
-  svg.getBoundingClientRect = () =>
-    ({ left: 0, top: 0, width: 640, height: 300, right: 640, bottom: 300 }) as DOMRect;
-}
-
 describe("LeaderboardChart", () => {
-  it("renders more than two tick labels on each axis (expanded axis labels)", () => {
+  it("builds one ECharts line series per input series, with its exact points, in the same order", () => {
     render(<LeaderboardChart title="Population" series={series} />);
-    // 6 x-ticks + 6 y-ticks = 12 axis-label texts, not just a min/max pair.
-    const labels = document.querySelectorAll(".leaderboard-chart__axis-label");
-    expect(labels.length).toBeGreaterThan(4);
+
+    const option = latestOption();
+    const echartsSeries = option.series as Array<{ name?: string; data?: unknown[] }>;
+    expect(echartsSeries).toHaveLength(1);
+    expect(echartsSeries[0].name).toBe("RUS");
+    expect(echartsSeries[0].data).toEqual(series[0].points.map((p) => [p.year, p.value]));
   });
 
-  it("renders no zoom-reset button before any zoom interaction", () => {
+  it("uses the series' literal RGB color, not an auto-assigned palette color (FR-005)", () => {
     render(<LeaderboardChart title="Population" series={series} />);
-    expect(screen.queryByRole("button", { name: "Reset zoom" })).not.toBeInTheDocument();
+
+    const echartsSeries = latestOption().series as Array<{ color?: string }>;
+    expect(echartsSeries[0].color).toBe("rgb(183, 136, 27)");
   });
 
-  it("wheel-zooms in around the cursor, narrowing the visible year range, and Reset zoom restores it", () => {
-    render(<LeaderboardChart title="Population" series={series} />);
-    const svg = document.querySelector(".leaderboard-chart__svg") as SVGSVGElement;
-    mockSvgSize(svg);
-
-    const initialPath = svg.querySelector(".leaderboard-chart__line")!.getAttribute("d");
-
-    fireEvent.wheel(svg, { deltaY: -100, clientX: 320, clientY: 150 });
-
-    const zoomedPath = svg.querySelector(".leaderboard-chart__line")!.getAttribute("d");
-    expect(zoomedPath).not.toBe(initialPath);
-    expect(screen.getByRole("button", { name: "Reset zoom" })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Reset zoom" }));
-    const resetPath = svg.querySelector(".leaderboard-chart__line")!.getAttribute("d");
-    expect(resetPath).toBe(initialPath);
-    expect(screen.queryByRole("button", { name: "Reset zoom" })).not.toBeInTheDocument();
-  });
-
-  it("click-drag pans the view once zoomed in", () => {
-    render(<LeaderboardChart title="Population" series={series} />);
-    const svg = document.querySelector(".leaderboard-chart__svg") as SVGSVGElement;
-    mockSvgSize(svg);
-
-    fireEvent.wheel(svg, { deltaY: -300, clientX: 320, clientY: 150 });
-    const zoomedPath = svg.querySelector(".leaderboard-chart__line")!.getAttribute("d");
-
-    fireEvent.mouseDown(svg, { clientX: 400, clientY: 150, button: 0 });
-    fireEvent.mouseMove(svg, { clientX: 300, clientY: 150 });
-    fireEvent.mouseUp(svg);
-
-    const pannedPath = svg.querySelector(".leaderboard-chart__line")!.getAttribute("d");
-    expect(pannedPath).not.toBe(zoomedPath);
-  });
-
-  it("clips plotted lines/points to the axes' inner rectangle so zoomed-out-of-range data doesn't bleed past the axis box", () => {
-    render(<LeaderboardChart title="Population" series={series} />);
-    const svg = document.querySelector(".leaderboard-chart__svg") as SVGSVGElement;
-
-    const clipPath = svg.querySelector("clipPath");
-    expect(clipPath).toBeTruthy();
-    const clipId = clipPath!.getAttribute("id");
-    expect(clipId).toBeTruthy();
-
-    // A rect matching the axes' inner plotting rectangle backs the clip.
-    const clipRect = clipPath!.querySelector("rect");
-    expect(clipRect).toBeTruthy();
-
-    // The series' line/points render inside a <g> referencing that clip.
-    const line = svg.querySelector(".leaderboard-chart__line")!;
-    const clippedGroup = line.closest(`g[clip-path="url(#${clipId})"]`);
-    expect(clippedGroup).toBeTruthy();
-  });
-
-  it("halves the x-axis tick count for every 100 years of visible range, per direct request", () => {
-    const narrowSeries: LeaderboardChartSeries[] = [
-      { nationIdx: 1, label: "RUS", color: null, points: [{ year: 1400, value: 1 }, { year: 1450, value: 2 }] },
+  it("falls back to the neutral color for a series with no confirmed color, never a fabricated one", () => {
+    const noColorSeries: LeaderboardChartSeries[] = [
+      { nationIdx: 2, label: "Unknown", color: null, points: [{ year: 1400, value: 1 }] },
     ];
-    const wideSeries: LeaderboardChartSeries[] = [
-      { nationIdx: 1, label: "RUS", color: null, points: [{ year: 1337, value: 1 }, { year: 1628, value: 2 }] },
-    ];
+    render(<LeaderboardChart title="Population" series={noColorSeries} />);
 
-    const { container: narrow } = render(<LeaderboardChart title="Population" series={narrowSeries} />);
-    const { container: wide } = render(<LeaderboardChart title="Population" series={wideSeries} />);
-
-    // Only the x-axis labels sit at the bottom (y matches the x-tick
-    // row); count those specifically rather than every axis-label text
-    // (which also includes the fixed-count y-axis labels).
-    const countXTicks = (root: HTMLElement) =>
-      Array.from(root.querySelectorAll(".leaderboard-chart__axis-label")).filter(
-        (el) => el.getAttribute("text-anchor") === "middle",
-      ).length;
-
-    // Narrow range (~50 years, 0 halvings) keeps the full 6 x-ticks;
-    // wide range (~291 years, 2 halvings: 100-199 and 200-299) drops to
-    // max(2, round(6/4)) = 2.
-    expect(countXTicks(narrow)).toBe(6);
-    expect(countXTicks(wide)).toBe(2);
+    const echartsSeries = latestOption().series as Array<{ color?: string }>;
+    expect(echartsSeries[0].color).toBe(`rgb(${NEUTRAL_COLOR.join(", ")})`);
   });
 
-  it("detects hover via one shared mousemove hit-test (not a per-point listener) and clears it on mouseleave", () => {
-    render(<LeaderboardChart title="Population" series={series} />);
-    const svg = document.querySelector(".leaderboard-chart__svg") as SVGSVGElement;
-    mockSvgSize(svg);
+  it("re-derives the option when the series data changes", () => {
+    const { rerender } = render(<LeaderboardChart title="Population" series={series} />);
+    const firstOption = latestOption();
 
-    // No circle carries its own mouse handlers or a <title> anymore —
-    // hover is SVG-wide only.
-    const firstCircle = svg.querySelector(".leaderboard-chart__point")!;
-    expect(firstCircle.querySelector("title")).toBeNull();
+    const changedSeries: LeaderboardChartSeries[] = [
+      { ...series[0], points: [{ year: 1337, value: 999 }] },
+    ];
+    rerender(<LeaderboardChart title="Population" series={changedSeries} />);
+    const secondOption = latestOption();
 
-    // The first point (year 1337, value 0 — the series' minimum) sits
-    // at the plot's bottom-left corner (x=PADDING.left, y=HEIGHT-
-    // PADDING.bottom — SVG y grows downward, so the minimum value is at
-    // the bottom) — move the mouse there and expect the tooltip to appear.
-    fireEvent.mouseMove(svg, { clientX: 72, clientY: 264 });
-    expect(document.querySelector(".leaderboard-chart__tooltip")).toBeTruthy();
-    expect(document.querySelector(".leaderboard-chart__tooltip")!.textContent).toContain("RUS");
+    expect(secondOption).not.toBe(firstOption);
+    expect((secondOption.series as Array<{ data?: unknown[] }>)[0].data).toEqual([[1337, 999]]);
+  });
 
-    // Moving far away from every point clears it.
-    fireEvent.mouseMove(svg, { clientX: 400, clientY: 50 });
-    expect(document.querySelector(".leaderboard-chart__tooltip")).toBeNull();
-
-    // mouseleave also clears any lingering hover state.
-    fireEvent.mouseMove(svg, { clientX: 72, clientY: 264 });
-    expect(document.querySelector(".leaderboard-chart__tooltip")).toBeTruthy();
-    fireEvent.mouseLeave(svg);
-    expect(document.querySelector(".leaderboard-chart__tooltip")).toBeNull();
+  it("renders the chart title as visible text", () => {
+    const { getByText } = render(<LeaderboardChart title="Population" series={series} />);
+    expect(getByText("Population")).toBeInTheDocument();
   });
 });

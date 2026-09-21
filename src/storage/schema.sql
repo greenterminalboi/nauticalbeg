@@ -221,6 +221,84 @@ CREATE TABLE IF NOT EXISTS location_pops (
   pop_idx BIGINT NOT NULL -- logically REFERENCES population(idx); BIGINT for the same reason population.idx is (see that table's comment)
 );
 
+-- specs/007-production-trade-markets: one row per market
+-- (`market_manager.database` entry, 184 in the reference save). No name
+-- field exists in the save at all — display name is derived at query
+-- time from `center_location_idx` (the same location-naming pattern
+-- `provinces`/`locations` already establish), with a further fallback
+-- for the confirmed edge case where a market has no resolvable center.
+-- `idx` is INTEGER, not BIGINT: unlike `population`/`wars`, market ids
+-- are a small (184-entry) index space with no observed large values
+-- (research.md's resolved BIGINT-vs-INTEGER question) — no evidence of
+-- the INT32-overflow pattern that forced those two tables wider.
+-- `member_count` is the save's member-location list length, computed at
+-- extraction; no FR reads the individual member locations, so the list
+-- itself isn't normalized into its own table (research.md's scope
+-- decision).
+CREATE TABLE IF NOT EXISTS markets (
+  idx INTEGER PRIMARY KEY,
+  center_location_idx INTEGER, -- logically REFERENCES locations(idx); NULL when the save has no resolvable center (spec's own edge case)
+  member_count INTEGER,
+  capacity DOUBLE
+);
+
+-- One row per (market, good) pair a market actually trades — a market
+-- with no `goods` sub-object in the save (2 of 184 in the reference
+-- save) contributes zero rows here, never zero-value ones (FR-006).
+-- `supply`/`demand` are the save's own authoritative totals, not derived
+-- by summing the *_raw_materials/*_buildings/etc. components below
+-- (data-model.md). Every numeric/flag column stays NULL, never a
+-- fabricated 0, when the save doesn't populate it for that market/good
+-- (FR-011) — same convention as `wars`/`population` above. `is_importing`/
+-- `is_exporting` are INTEGER 0/1, not a native BOOLEAN column — this
+-- schema has no BOOLEAN column anywhere (`nations.is_player`/
+-- `is_human_played` use the same 0/1 convention), and `insertRows`' bulk
+-- Arrow-insert path only accepts string/number/null per row.
+CREATE TABLE IF NOT EXISTS market_goods (
+  market_idx INTEGER NOT NULL, -- logically REFERENCES markets(idx)
+  good TEXT NOT NULL, -- the save's raw good key (e.g. "iron"), surfaced as-is
+  price DOUBLE,
+  supply DOUBLE,
+  demand DOUBLE,
+  stockpile DOUBLE,
+  is_importing INTEGER, -- 0/1, NULL when the save doesn't confirm either way
+  is_exporting INTEGER,
+  supply_raw_materials DOUBLE, -- goods.<good>.production_supplied.RawMaterials
+  supply_buildings DOUBLE, -- goods.<good>.production_supplied.Buildings
+  supply_trade DOUBLE, -- goods.<good>.supplied.Trade
+  demand_population DOUBLE, -- goods.<good>.demanded.Pops
+  demand_trade DOUBLE, -- goods.<good>.demanded.Trade + demanded.BurgherTrades (merged: spec has one "trade" bucket, save has two)
+  demand_building_upkeep DOUBLE, -- goods.<good>.demanded.Building
+  demand_unit_upkeep DOUBLE, -- goods.<good>.demanded.Units
+  demand_construction DOUBLE -- goods.<good>.demanded.Construction
+);
+CREATE INDEX IF NOT EXISTS idx_market_goods_market ON market_goods (market_idx, good);
+
+-- One row per recorded price point for one (market, good) pair. Source:
+-- `goods.<good>.history`, a bare number list with NO embedded dates in
+-- the save — `date` is computed once at extraction time (research.md's
+-- resolved decision), counting back from the save's current date at a
+-- monthly cadence, so every consumer works with real dates instead of
+-- re-deriving the anchor/cadence convention independently.
+CREATE TABLE IF NOT EXISTS market_good_price_history (
+  market_idx INTEGER NOT NULL, -- logically REFERENCES markets(idx)
+  good TEXT NOT NULL,
+  date TEXT NOT NULL, -- ISO "YYYY-MM"
+  price DOUBLE NOT NULL -- the save always populates every history entry
+);
+CREATE INDEX IF NOT EXISTS idx_market_good_price_history
+  ON market_good_price_history (market_idx, good, date);
+
+-- One row per good: the save's own world-total production snapshot,
+-- from `market_manager.produced_goods.<good>` — read directly, never
+-- summed client-side from `market_goods` (that's a distinct
+-- save-provided figure, not necessarily equal to a naive per-market
+-- sum). Always present per the save.
+CREATE TABLE IF NOT EXISTS world_good_production (
+  good TEXT PRIMARY KEY,
+  total DOUBLE NOT NULL
+);
+
 CREATE SEQUENCE IF NOT EXISTS raw_sections_id_seq;
 CREATE TABLE IF NOT EXISTS raw_sections (
   id INTEGER PRIMARY KEY DEFAULT nextval('raw_sections_id_seq'),

@@ -261,7 +261,7 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     await parseAndStore(database, "save-10", "rus-1628-minimal.eu5", toBytes(fixtureText));
     const rows = await queryAll(
       database,
-      "SELECT key FROM raw_sections WHERE key IN ('metadata', 'countries', 'provinces', 'locations', 'war_manager', 'played_country', 'population')",
+      "SELECT key FROM raw_sections WHERE key IN ('metadata', 'countries', 'provinces', 'locations', 'war_manager', 'played_country', 'population', 'market_manager')",
     );
     expect(rows).toHaveLength(0);
   });
@@ -431,5 +431,112 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
       attacker_casualties: 30474,
       defender_casualties: 53232,
     });
+  });
+
+  it("populates markets from market_manager.database, including the no-center and no-goods edge cases (specs/007-production-trade-markets)", async () => {
+    const database = await freshDb("adapter-markets.db");
+    await parseAndStore(database, "save-13", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(database, "SELECT * FROM markets ORDER BY idx");
+    expect(rows).toHaveLength(3);
+
+    expect(rows.find((r) => r.idx === 1)).toMatchObject({
+      center_location_idx: 1,
+      member_count: 2,
+      capacity: 50,
+    });
+    expect(rows.find((r) => r.idx === 2)).toMatchObject({
+      center_location_idx: 3975,
+      member_count: 1,
+      capacity: 20,
+    });
+    // idx 3: no `center`, no `members`, no `goods` at all in the fixture
+    // — a real, valid market (spec's own edge cases), never a fabricated
+    // center/count rather than NULL.
+    expect(rows.find((r) => r.idx === 3)).toMatchObject({
+      center_location_idx: null,
+      member_count: null,
+      capacity: 5,
+    });
+  });
+
+  it("populates market_goods with supply/demand decomposition, leaving unconfirmed fields NULL (specs/007-production-trade-markets FR-005/FR-006/FR-011)", async () => {
+    const database = await freshDb("adapter-market-goods.db");
+    await parseAndStore(database, "save-14", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(database, "SELECT * FROM market_goods ORDER BY market_idx, good");
+    // market 1: clay + wool; market 2: amber; market 3: none at all.
+    expect(rows).toHaveLength(3);
+    expect(rows.some((r) => r.market_idx === 3)).toBe(false);
+
+    const clay = rows.find((r) => r.market_idx === 1 && r.good === "clay");
+    expect(clay).toMatchObject({
+      price: 1.25,
+      supply: 120.5,
+      demand: 95.3,
+      stockpile: 40.2,
+      is_importing: null, // no `import` field on clay in the fixture
+      is_exporting: 1,
+      supply_raw_materials: 60.1,
+      supply_buildings: 30.2,
+      supply_trade: 15,
+      demand_population: 50,
+      demand_trade: 25, // demanded.Trade (20) + demanded.BurgherTrades (5)
+      demand_building_upkeep: 10,
+      demand_unit_upkeep: 8,
+      demand_construction: 2.3,
+    });
+
+    // wool has no `supplied` block at all in the fixture — supply_trade
+    // stays NULL, never a fabricated 0.
+    const wool = rows.find((r) => r.market_idx === 1 && r.good === "wool");
+    expect(wool).toMatchObject({
+      is_importing: 1,
+      is_exporting: null,
+      supply_trade: null,
+      demand_trade: 12, // 10 + 2
+    });
+
+    // amber has neither `production_supplied.Buildings` nor `supplied`
+    // nor import/export flags — every one of those stays NULL.
+    const amber = rows.find((r) => r.market_idx === 2 && r.good === "amber");
+    expect(amber).toMatchObject({
+      supply_buildings: null,
+      supply_trade: null,
+      is_importing: null,
+      is_exporting: null,
+      demand_trade: 2.5, // 2 + 0.5
+    });
+  });
+
+  it("populates market_good_price_history with computed monthly dates counting back from the save's current date (specs/007-production-trade-markets research.md §1)", async () => {
+    const database = await freshDb("adapter-market-history.db");
+    await parseAndStore(database, "save-15", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    // Fixture's save date is 1628.8.14; clay's 3-point history should
+    // land on the 3 preceding whole months, ending on the save's own
+    // current month, never fabricated/extrapolated points beyond it.
+    const rows = await queryAll(
+      database,
+      "SELECT date, price FROM market_good_price_history WHERE market_idx = 1 AND good = 'clay' ORDER BY date",
+    );
+    expect(rows).toEqual([
+      { date: "1628-06", price: 1.2 },
+      { date: "1628-07", price: 1.22 },
+      { date: "1628-08", price: 1.25 },
+    ]);
+  });
+
+  it("populates world_good_production directly from market_manager.produced_goods, not summed from market_goods (specs/007-production-trade-markets)", async () => {
+    const database = await freshDb("adapter-world-goods.db");
+    await parseAndStore(database, "save-16", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(database, "SELECT * FROM world_good_production ORDER BY good");
+    expect(rows).toEqual([
+      { good: "amber", total: 10.89009 },
+      { good: "clay", total: 13.19736 },
+      { good: "lumber", total: 38.39616 }, // present in produced_goods even though no market trades it
+      { good: "wool", total: 8.47007 },
+    ]);
   });
 });

@@ -32,6 +32,7 @@ describe("buildSaveInventory against the committed fixture", () => {
         "cheats",
         "countries",
         "locations",
+        "market_manager",
         "metadata",
         "played_country",
         "population",

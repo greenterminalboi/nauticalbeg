@@ -1,0 +1,15 @@
+/* Illuminated Cards & Folios framing, matching WarsTab.css/
+ * WorldGoodsOverview.css treatment of a Perspective datagrid's
+ * container. */
+.market-list {
+  border: 3px solid var(--color-on-surface);
+  box-shadow:
+    0 0 0 1px var(--color-tertiary),
+    0 0 0 4px var(--color-vellum),
+    0 0 0 5px var(--color-secondary);
+}
+
+.market-list__viewer {
+  display: block;
+  height: 32rem;
+}

@@ -25,6 +25,7 @@
     "@perspective-dev/viewer-charts": "^5.5.1",
     "@perspective-dev/viewer-datagrid": "^5.5.1",
     "apache-arrow": "^17.0.0",
+    "echarts": "^6.1.0",
     "jomini": "^0.10.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

@@ -1,0 +1,22 @@
+.markets-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.markets-tab__heading {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.markets-tab__overview,
+.markets-tab__markets {
+  display: flex;
+  flex-direction: column;
+}
+
+.markets-tab__detail {
+  /* Empty in Phase 3 — Phase 4/5 fill this in (see MarketsTab.tsx's
+   * doc comment on the hook point above). */
+}

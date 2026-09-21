@@ -244,6 +244,93 @@ locations={
 		}
 	}
 }
+market_manager={
+	database={
+		1={
+			center=1
+			capacity=50
+			members={ 1 3975 }
+			goods={
+				clay={
+					price=1.25
+					supply=120.5
+					demand=95.3
+					stockpile=40.2
+					export=yes
+					production_supplied={
+						RawMaterials=60.1
+						Buildings=30.2
+					}
+					supplied={
+						Trade=15
+					}
+					demanded={
+						Pops=50
+						Trade=20
+						BurgherTrades=5
+						Building=10
+						Units=8
+						Construction=2.3
+					}
+					history={ 1.2 1.22 1.25 }
+				}
+				wool={
+					price=2.1
+					supply=40
+					demand=42
+					stockpile=5
+					import=yes
+					production_supplied={
+						RawMaterials=35
+					}
+					demanded={
+						Pops=30
+						Trade=10
+						BurgherTrades=2
+						Building=0
+						Units=0
+						Construction=0
+					}
+					history={ 2.05 2.08 2.1 }
+				}
+			}
+		}
+		2={
+			center=3975
+			capacity=20
+			members={ 3975 }
+			goods={
+				amber={
+					price=5.5
+					supply=10
+					demand=8
+					stockpile=2
+					production_supplied={
+						RawMaterials=10
+					}
+					demanded={
+						Pops=5
+						Trade=2
+						BurgherTrades=0.5
+						Building=0.3
+						Units=0
+						Construction=0.2
+					}
+					history={ 5.4 5.45 5.5 }
+				}
+			}
+		}
+		3={
+			capacity=5
+		}
+	}
+	produced_goods={
+		clay=13.19736
+		wool=8.47007
+		amber=10.89009
+		lumber=38.39616
+	}
+}
 war_manager={
 	database={
 		2030043139={

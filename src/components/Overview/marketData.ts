@@ -1,0 +1,117 @@
+// specs/007-production-trade-markets data-model.md/contracts/query-
+// functions.md: decoded, in-memory forms of the four new list*Arrow
+// query functions' Arrow IPC results — mirrors leaderboardData.ts's
+// direct-decode-via-apache-arrow pattern.
+import { tableFromIPC } from "apache-arrow";
+import {
+  listMarketGoodPriceHistoryArrow,
+  listMarketGoodsArrow,
+  listMarketsArrow,
+  listWorldGoodsArrow,
+} from "../../storage/queries";
+import type { SaveDatabase } from "../../storage/db";
+
+export interface WorldGood {
+  good: string;
+  total: number;
+}
+
+export interface Market {
+  idx: number;
+  name: string;
+  memberCount: number | null;
+  capacity: number | null;
+}
+
+export interface MarketGood {
+  good: string;
+  price: number | null;
+  supply: number | null;
+  demand: number | null;
+  stockpile: number | null;
+  isImporting: boolean | null;
+  isExporting: boolean | null;
+  supplyRawMaterials: number | null;
+  supplyBuildings: number | null;
+  supplyTrade: number | null;
+  demandPopulation: number | null;
+  demandTrade: number | null;
+  demandBuildingUpkeep: number | null;
+  demandUnitUpkeep: number | null;
+  demandConstruction: number | null;
+}
+
+export interface MarketGoodPricePoint {
+  date: string;
+  price: number;
+}
+
+function decodeRows(buffer: ArrayBuffer): Record<string, unknown>[] {
+  return tableFromIPC(new Uint8Array(buffer))
+    .toArray()
+    .map((row) => row.toJSON());
+}
+
+function numberOrNull(value: unknown): number | null {
+  return typeof value === "number" ? value : null;
+}
+
+/** 0/1 (or DuckDB's native boolean, for a hand-built test row) -> a real
+ * tri-state boolean; NULL stays NULL — never coerced to `false`
+ * (FR-011). */
+function flagOrNull(value: unknown): boolean | null {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number" || typeof value === "bigint") return Number(value) === 1;
+  return null;
+}
+
+export async function decodeWorldGoods(db: SaveDatabase): Promise<WorldGood[]> {
+  const rows = decodeRows(await listWorldGoodsArrow(db));
+  return rows.map((r) => ({
+    good: String(r.good),
+    total: numberOrNull(r.total) ?? 0,
+  }));
+}
+
+export async function decodeMarkets(db: SaveDatabase): Promise<Market[]> {
+  const rows = decodeRows(await listMarketsArrow(db));
+  return rows.map((r) => ({
+    idx: typeof r.idx === "number" ? r.idx : -1,
+    name: String(r.name),
+    memberCount: numberOrNull(r.member_count),
+    capacity: numberOrNull(r.capacity),
+  }));
+}
+
+export async function decodeMarketGoods(db: SaveDatabase, marketIdx: number): Promise<MarketGood[]> {
+  const rows = decodeRows(await listMarketGoodsArrow(db, marketIdx));
+  return rows.map((r) => ({
+    good: String(r.good),
+    price: numberOrNull(r.price),
+    supply: numberOrNull(r.supply),
+    demand: numberOrNull(r.demand),
+    stockpile: numberOrNull(r.stockpile),
+    isImporting: flagOrNull(r.is_importing),
+    isExporting: flagOrNull(r.is_exporting),
+    supplyRawMaterials: numberOrNull(r.supply_raw_materials),
+    supplyBuildings: numberOrNull(r.supply_buildings),
+    supplyTrade: numberOrNull(r.supply_trade),
+    demandPopulation: numberOrNull(r.demand_population),
+    demandTrade: numberOrNull(r.demand_trade),
+    demandBuildingUpkeep: numberOrNull(r.demand_building_upkeep),
+    demandUnitUpkeep: numberOrNull(r.demand_unit_upkeep),
+    demandConstruction: numberOrNull(r.demand_construction),
+  }));
+}
+
+export async function decodeMarketGoodPriceHistory(
+  db: SaveDatabase,
+  marketIdx: number,
+  good: string,
+): Promise<MarketGoodPricePoint[]> {
+  const rows = decodeRows(await listMarketGoodPriceHistoryArrow(db, marketIdx, good));
+  return rows.map((r) => ({
+    date: String(r.date),
+    price: numberOrNull(r.price) ?? 0,
+  }));
+}

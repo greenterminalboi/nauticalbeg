@@ -492,6 +492,87 @@ export async function listLatestNationMetricArrow(
   );
 }
 
+/**
+ * specs/007-production-trade-markets contracts/query-functions.md:
+ * every tradeable good's save-wide total production, straight from the
+ * save's own snapshot (`world_good_production`) — never summed
+ * client-side from `market_goods`. Feeds `WorldGoodsOverview` (User
+ * Story 1); no params, save-wide and unfiltered.
+ */
+export async function listWorldGoodsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
+  return queryArrowIPC(db, "SELECT good, total FROM world_good_production ORDER BY good");
+}
+
+/**
+ * specs/007-production-trade-markets contracts/query-functions.md: one
+ * row per market. `name` mirrors `listProvincesArrow`'s existing
+ * location-naming pattern (province's raw `province_definition` key,
+ * falling back to `'Location ' || idx`), with one further fallback layer
+ * for the spec's own edge case — a market with no resolvable `center` at
+ * all gets `'Market ' || idx`, never a fabricated location name. Feeds
+ * `MarketList` (User Story 1).
+ */
+export async function listMarketsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `SELECT
+       markets.idx as idx,
+       COALESCE(provinces.name, 'Location ' || locations.idx, 'Market ' || markets.idx) as name,
+       markets.member_count as member_count,
+       markets.capacity as capacity
+     FROM markets
+     LEFT JOIN locations ON locations.idx = markets.center_location_idx
+     LEFT JOIN provinces ON provinces.idx = locations.province_idx
+     ORDER BY markets.idx`,
+  );
+}
+
+/**
+ * specs/007-production-trade-markets contracts/query-functions.md: the
+ * full per-good breakdown for one market — only goods that market
+ * actually trades (a market with no `market_goods` rows at all returns
+ * an empty result, not a zero-filled one, per FR-006). Feeds
+ * `MarketGoodsTable` (User Story 2).
+ */
+export async function listMarketGoodsArrow(
+  db: SaveDatabase,
+  marketIdx: number,
+): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `SELECT
+       good, price, supply, demand, stockpile, is_importing, is_exporting,
+       supply_raw_materials, supply_buildings, supply_trade,
+       demand_population, demand_trade, demand_building_upkeep,
+       demand_unit_upkeep, demand_construction
+     FROM market_goods
+     WHERE market_idx = ?1
+     ORDER BY good`,
+    [marketIdx],
+  );
+}
+
+/**
+ * specs/007-production-trade-markets contracts/query-functions.md: the
+ * recorded price history for one (market, good) pair — only the real
+ * points the save actually recorded (FR-007/SC-003), never interpolated
+ * or extrapolated ones. Feeds `MarketGoodPriceChart` (User Story 3).
+ */
+export async function listMarketGoodPriceHistoryArrow(
+  db: SaveDatabase,
+  marketIdx: number,
+  good: string,
+): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `SELECT date, price
+     FROM market_good_price_history
+     WHERE market_idx = ?1 AND good = ?2
+     ORDER BY date`,
+    [marketIdx, good],
+  );
+}
+
 /** Used on app start to offer resuming a kept save (Acceptance Scenario 2). */
 export async function listKeptSave(): Promise<KeptSaveSummary | null> {
   return readKeptSavePointer();
