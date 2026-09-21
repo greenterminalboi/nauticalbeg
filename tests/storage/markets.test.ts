@@ -10,7 +10,6 @@ import {
 } from "../../src/storage/db";
 import { parseAndStore } from "../../src/parser/version-adapters/1.3.11";
 import {
-  listMarketGoodPriceHistoryArrow,
   listMarketGoodsArrow,
   listMarketsArrow,
   listWorldGoodsArrow,
@@ -25,7 +24,7 @@ function decodeRows(buffer: ArrayBuffer): Record<string, unknown>[] {
   return tableFromIPC(new Uint8Array(buffer)).toArray().map((row) => row.toJSON());
 }
 
-describe("storage/queries listWorldGoodsArrow + listMarketsArrow + listMarketGoodsArrow + listMarketGoodPriceHistoryArrow (Markets page)", () => {
+describe("storage/queries listWorldGoodsArrow + listMarketsArrow + listMarketGoodsArrow (Markets page)", () => {
   let db: SaveDatabase;
 
   beforeAll(() => {
@@ -56,35 +55,43 @@ describe("storage/queries listWorldGoodsArrow + listMarketsArrow + listMarketGoo
     ]);
   });
 
-  it("listMarketsArrow derives a display name via the province-name fallback chain, including the no-resolvable-center edge case", async () => {
+  it("listMarketsArrow derives a display name from the center location (not its province), plus the current owner of that location", async () => {
     await freshParsedDb("markets-list.db", "save-2");
     const rows = decodeRows(await listMarketsArrow(db));
 
     expect(rows).toHaveLength(3);
 
-    // idx 1: center=1 -> location 1 -> province 0 -> provinces.name =
-    // "uppland_province" (province_definition, surfaced as-is).
+    // idx 1: center=1 -> location 1 -> metadata.compatibility.locations[0]
+    // = "stockholm". Location 1's owner is nation 3 (SCA).
     expect(rows.find((r) => r.idx === 1)).toMatchObject({
-      name: "uppland_province",
+      name: "stockholm",
       member_count: 2,
       capacity: 50,
+      owner_idx: 3,
+      owner_name: "SCA",
     });
 
-    // idx 2: center=3975 -> location 3975 -> province 16777289 ->
-    // provinces.name = "mazyr_province". A market with exactly one
-    // member location is a valid market, not an error state.
+    // idx 2: center=3975 -> location 3975 ->
+    // metadata.compatibility.locations[3974] = "mazyr". A market with
+    // exactly one member location is a valid market, not an error state.
+    // Location 3975's owner is nation 2025 (RUS).
     expect(rows.find((r) => r.idx === 2)).toMatchObject({
-      name: "mazyr_province",
+      name: "mazyr",
       member_count: 1,
       capacity: 20,
+      owner_idx: 2025,
+      owner_name: "RUS",
     });
 
     // idx 3: no `center` at all in the fixture -> the neutral
-    // 'Market 3' fallback, never a fabricated location name.
+    // 'Market 3' fallback, never a fabricated location name, and no
+    // owner to resolve.
     expect(rows.find((r) => r.idx === 3)).toMatchObject({
       name: "Market 3",
       member_count: null,
       capacity: 5,
+      owner_idx: null,
+      owner_name: "Unknown",
     });
   });
 
@@ -109,21 +116,5 @@ describe("storage/queries listWorldGoodsArrow + listMarketsArrow + listMarketGoo
     // (FR-006).
     const market3Goods = decodeRows(await listMarketGoodsArrow(db, 3));
     expect(market3Goods).toEqual([]);
-  });
-
-  it("listMarketGoodPriceHistoryArrow scopes strictly to the requested (market, good) pair, in date order", async () => {
-    await freshParsedDb("markets-history.db", "save-4");
-
-    const rows = decodeRows(await listMarketGoodPriceHistoryArrow(db, 1, "clay"));
-    expect(rows).toEqual([
-      { date: "1628-06", price: 1.2 },
-      { date: "1628-07", price: 1.22 },
-      { date: "1628-08", price: 1.25 },
-    ]);
-
-    // A good with no recorded history at all for this market/good pair
-    // (wrong market) returns empty, not a fabricated flat series.
-    const wrongMarket = decodeRows(await listMarketGoodPriceHistoryArrow(db, 2, "clay"));
-    expect(wrongMarket).toEqual([]);
   });
 });

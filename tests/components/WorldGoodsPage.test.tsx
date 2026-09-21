@@ -1,16 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { WorldGoodsPage } from "../../src/components/Overview/WorldGoodsPage";
-import { WorldGoodsOverview } from "../../src/components/Overview/WorldGoodsOverview";
 import { ShareTreemap, type ShareTreemapEntry } from "../../src/components/Overview/ShareTreemap";
 import * as marketData from "../../src/components/Overview/marketData";
 import * as leaderboardData from "../../src/components/Overview/leaderboardData";
 import type { SaveDatabase } from "../../src/storage/db";
 import type { LeaderboardCountry } from "../../src/components/Overview/leaderboardData";
+import type { WorldGood } from "../../src/components/Overview/marketData";
 
-vi.mock("../../src/components/Overview/WorldGoodsOverview", () => ({
-  WorldGoodsOverview: vi.fn(() => <div data-testid="world-goods-overview" />),
-}));
 vi.mock("../../src/components/Overview/ShareTreemap", () => ({
   ShareTreemap: vi.fn(() => <div data-testid="share-treemap" />),
 }));
@@ -21,28 +18,46 @@ function country(idx: number, tag: string, color: [number, number, number] | nul
   return { idx, tag, name: null, color, isHumanPlayed: false };
 }
 
-beforeEach(() => {
-  vi.mocked(WorldGoodsOverview).mockClear();
-  vi.mocked(ShareTreemap).mockClear();
-});
-
-// Mirrors WorldGoodsOverview's real click-payload shape:
-// onSelectGood(good, hasProductionCoverage) arrives synchronously with
-// the selection -- no separate list-loading race to synchronize with.
-function selectGood(good: string, hasProductionCoverage: boolean) {
-  const props = vi.mocked(WorldGoodsOverview).mock.calls.at(-1)![0];
-  act(() => {
-    props.onSelectGood(good, hasProductionCoverage);
-  });
+function good(name: string, total: number, hasProductionCoverage: boolean): WorldGood {
+  return { good: name, total, hasProductionCoverage };
 }
 
+beforeEach(() => {
+  vi.mocked(ShareTreemap).mockClear();
+  vi.spyOn(marketData, "decodeGoodProductionByOwner").mockResolvedValue([]);
+  vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue([]);
+});
+
 describe("WorldGoodsPage", () => {
-  it("always renders WorldGoodsOverview", () => {
+  it("defaults to wheat, scoping GoodSelect to only goods with a production-share breakdown (RGOs)", async () => {
+    vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([
+      good("wheat", 100, true),
+      good("clay", 13.2, true),
+      good("tools", 4.5, false), // no coverage -- must not be offered
+    ]);
+
     render(<WorldGoodsPage db={fakeDb} />);
-    expect(screen.getByTestId("world-goods-overview")).toBeInTheDocument();
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "wheat" })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "wheat" }));
+    const list = within(screen.getByRole("list"));
+    expect(list.getByRole("button", { name: "clay" })).toBeInTheDocument();
+    expect(list.queryByRole("button", { name: "tools" })).not.toBeInTheDocument();
+  });
+
+  it("shows the selected good's world total next to the picker", async () => {
+    vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([good("wheat", 123.456, true)]);
+
+    render(<WorldGoodsPage db={fakeDb} />);
+
+    await waitFor(() => expect(screen.getByText("123.5")).toBeInTheDocument());
   });
 
   it("selecting a covered good renders ShareTreemap with one entry per producing country plus an unattributed bucket", async () => {
+    vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([
+      good("wheat", 100, true),
+      good("clay", 100, true),
+    ]);
     vi.spyOn(marketData, "decodeGoodProductionByOwner").mockResolvedValue([
       { ownerIdx: 1, amount: 60 },
       { ownerIdx: 2, amount: 30 },
@@ -54,7 +69,9 @@ describe("WorldGoodsPage", () => {
     ]);
 
     render(<WorldGoodsPage db={fakeDb} />);
-    selectGood("clay", true);
+    await waitFor(() => expect(screen.getByRole("button", { name: "wheat" })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "wheat" }));
+    fireEvent.click(within(screen.getByRole("list")).getByRole("button", { name: "clay" }));
 
     await waitFor(() => expect(screen.getByTestId("share-treemap")).toBeInTheDocument());
     const props = vi.mocked(ShareTreemap).mock.calls.at(-1)![0];
@@ -69,6 +86,7 @@ describe("WorldGoodsPage", () => {
   });
 
   it("an owner_idx not present in the Real-countries list also buckets into unattributed (non-Real owner)", async () => {
+    vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([good("wheat", 65, true)]);
     vi.spyOn(marketData, "decodeGoodProductionByOwner").mockResolvedValue([
       { ownerIdx: 1, amount: 60 },
       { ownerIdx: 99, amount: 5 }, // e.g. Pirates -- not in loadLeaderboardCountries' Real-only list
@@ -78,7 +96,6 @@ describe("WorldGoodsPage", () => {
     ]);
 
     render(<WorldGoodsPage db={fakeDb} />);
-    selectGood("clay", true);
 
     await waitFor(() => expect(screen.getByTestId("share-treemap")).toBeInTheDocument());
     const entries = vi.mocked(ShareTreemap).mock.calls.at(-1)![0].entries as ShareTreemapEntry[];
@@ -87,6 +104,7 @@ describe("WorldGoodsPage", () => {
   });
 
   it("a country with zero production of the good never appears (it's simply absent from the query result)", async () => {
+    vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([good("wheat", 60, true)]);
     vi.spyOn(marketData, "decodeGoodProductionByOwner").mockResolvedValue([
       { ownerIdx: 1, amount: 60 },
     ]);
@@ -96,7 +114,6 @@ describe("WorldGoodsPage", () => {
     ]);
 
     render(<WorldGoodsPage db={fakeDb} />);
-    selectGood("clay", true);
 
     await waitFor(() => expect(screen.getByTestId("share-treemap")).toBeInTheDocument());
     const entries = vi.mocked(ShareTreemap).mock.calls.at(-1)![0].entries as ShareTreemapEntry[];
@@ -105,6 +122,7 @@ describe("WorldGoodsPage", () => {
   });
 
   it("folds real producers beyond the top 15 into one distinct 'other producers' bucket (FR-009)", async () => {
+    vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([good("iron", 210, true)]);
     const byOwner = Array.from({ length: 20 }, (_, i) => ({ ownerIdx: i + 1, amount: 20 - i }));
     vi.spyOn(marketData, "decodeGoodProductionByOwner").mockResolvedValue(byOwner);
     vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue(
@@ -112,7 +130,6 @@ describe("WorldGoodsPage", () => {
     );
 
     render(<WorldGoodsPage db={fakeDb} />);
-    selectGood("iron", true);
 
     await waitFor(() => expect(screen.getByTestId("share-treemap")).toBeInTheDocument());
     const entries = vi.mocked(ShareTreemap).mock.calls.at(-1)![0].entries as ShareTreemapEntry[];
@@ -128,18 +145,17 @@ describe("WorldGoodsPage", () => {
     expect(entries.some((e) => e.id === "unattributed")).toBe(false);
   });
 
-  it("selecting an uncovered good shows a not-available message, never a treemap (FR-004)", async () => {
-    const decodeGoodProductionByOwner = vi.spyOn(marketData, "decodeGoodProductionByOwner");
+  it("shows a not-available message, never a picker or a treemap, when no good in the save has coverage", async () => {
+    vi.spyOn(marketData, "decodeWorldGoods").mockResolvedValue([good("tools", 4.5, false)]);
 
     const { container } = render(<WorldGoodsPage db={fakeDb} />);
-    selectGood("tools", false);
 
     await waitFor(() =>
       expect(container.querySelector(".world-goods-page__not-available")?.textContent).toMatch(
-        /isn't available/i,
+        /no.*breakdown available/i,
       ),
     );
     expect(screen.queryByTestId("share-treemap")).not.toBeInTheDocument();
-    expect(decodeGoodProductionByOwner).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "tools" })).not.toBeInTheDocument();
   });
 });

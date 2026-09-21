@@ -103,7 +103,10 @@ export function MarketList({ db, selectedMarketId, onSelectMarket }: MarketListP
           client={table}
           config={{
             sort: [["name", "asc"]],
-            columns: ["idx", "name", "member_count", "capacity"],
+            // owner_name added post-ship, 2026-09-21 (specs/007's
+            // market-owner request) -- the current owner of the
+            // market's center location.
+            columns: ["idx", "name", "member_count", "capacity", "owner_name"],
           }}
           onClick={handleClick}
         />

@@ -50,7 +50,7 @@ describe("MarketList", () => {
     expect(props.client).toBe(table);
     expect(props.config).toMatchObject({
       sort: [["name", "asc"]],
-      columns: ["idx", "name", "member_count", "capacity"],
+      columns: ["idx", "name", "member_count", "capacity", "owner_name"],
     });
   });
 

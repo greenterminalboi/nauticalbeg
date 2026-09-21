@@ -17,7 +17,13 @@
   margin: 0 0 var(--space-sm);
 }
 
+/* Post-ship, 2026-09-21: fill most of the viewport's remaining height
+   rather than a small fixed box — the shell doesn't constrain this tab's
+   content to viewport height (unlike Map's flush layout), so a
+   viewport-relative height is how this canvas actually "takes up the
+   panel" instead of floating in leftover page space. */
 .leaderboard-chart__canvas {
   width: 100%;
-  height: 20rem;
+  height: min(70vh, 44rem);
+  min-height: 26rem;
 }

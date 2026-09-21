@@ -122,19 +122,6 @@ function asRgbOrNull(value: unknown): [number, number, number] | null {
     : null;
 }
 
-/** specs/007-production-trade-markets research.md §1/data-model.md: a
- * price-history point has no embedded date in the save at all — this
- * computes one, counting back `monthsBack` whole months from the save's
- * own current date (`metadata.date`), on the researched-but-unconfirmed
- * assumption that `history` entries are monthly. Returns an ISO
- * "YYYY-MM" string. */
-function isoYearMonth(gameDate: Date, monthsBack: number): string {
-  const totalMonths = gameDate.getUTCFullYear() * 12 + gameDate.getUTCMonth() - monthsBack;
-  const year = Math.floor(totalMonths / 12);
-  const month = ((totalMonths % 12) + 12) % 12; // 0-11, always positive
-  return `${year}-${String(month + 1).padStart(2, "0")}`;
-}
-
 /** Sums a war's `attacker_losses`/`defender_losses` field (shape:
  * `{ losses: { <unit_type>: { Battle?, Attrition?, Capture? } } }`) into
  * one total. Returns `null` — not `0` — when the field never appeared
@@ -171,7 +158,6 @@ const PARSE_MILESTONES = [
   "wars",
   "population",
   "markets",
-  "market-price-history", // split from "markets" -- typically this feature's single largest table
   "world-goods",
   "raw-sections",
   "done",
@@ -544,7 +530,6 @@ export async function parseAndStore(
   // sub-object at all (2 of 184 in the reference save) contributes zero
   // market_goods rows, never zero-value ones (FR-006).
   const marketDatabase = asRecord(asRecord(root.market_manager).database);
-  const gameDate = metadata.date instanceof Date ? metadata.date : null;
   const marketRows: Array<[number, number | null, number | null, number | null]> = [];
   const marketGoodRows: Array<
     [
@@ -566,7 +551,6 @@ export async function parseAndStore(
       number | null,
     ]
   > = [];
-  const marketGoodPriceHistoryRows: Array<[number, string, string, number]> = [];
 
   for (const [idxStr, value] of Object.entries(marketDatabase)) {
     const record = asRecord(value);
@@ -613,19 +597,12 @@ export async function parseAndStore(
         asNumberOrNull(demanded.Units),
         asNumberOrNull(demanded.Construction),
       ]);
-
-      if (gameDate) {
-        const history = asNumberArray(g.history);
-        history.forEach((price, i) => {
-          const monthsBack = history.length - 1 - i;
-          marketGoodPriceHistoryRows.push([
-            marketIdx,
-            good,
-            isoYearMonth(gameDate, monthsBack),
-            price,
-          ]);
-        });
-      }
+      // Per-good `history` (price time series) is deliberately NOT
+      // extracted — removed after a real user report: pulling it for
+      // every good in every market was the single largest cost in
+      // parsing a real save, for a feature (a per-market/good price
+      // chart) that wasn't worth that cost. See ARCHITECTURE.md's
+      // decision log.
     }
   }
   await insertRows(
@@ -642,15 +619,6 @@ export async function parseAndStore(
     );
   }
   reportMilestone(); // "markets"
-  if (marketGoodPriceHistoryRows.length > 0) {
-    await insertRows(
-      db,
-      "INSERT INTO market_good_price_history (market_idx, good, date, price) VALUES (?1, ?2, ?3, ?4)",
-      marketGoodPriceHistoryRows,
-      (inserted, total) => reportWithinMilestone(inserted / total),
-    );
-  }
-  reportMilestone(); // "market-price-history"
 
   // market_manager.produced_goods: the save's own world-total snapshot
   // per good — read directly, never summed client-side from

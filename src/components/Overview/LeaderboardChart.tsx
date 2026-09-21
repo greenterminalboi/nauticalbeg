@@ -39,7 +39,11 @@ export function LeaderboardChart({ title, series }: LeaderboardChartProps) {
     () => ({
       tooltip: { trigger: "axis" },
       dataZoom: [{ type: "inside" }, { type: "slider" }],
-      xAxis: { type: "value", name: "Year" },
+      // scale: true (post-ship, 2026-09-21) -- an EU5 save's earliest
+      // year is 1337, not 0; without it ECharts' "value" axis defaults
+      // its min to 0, wasting most of the plot on thirteen unplotted
+      // centuries. Mirrors yAxis's existing scale: true below.
+      xAxis: { type: "value", name: "Year", scale: true },
       yAxis: { type: "value", scale: true },
       series: series.map((s) => ({
         type: "line",

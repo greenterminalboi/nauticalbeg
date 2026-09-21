@@ -40,7 +40,7 @@ describe("MarketGoodsTable", () => {
     vi.spyOn(queries, "listMarketGoodsArrow").mockResolvedValue(fakeArrowBuffer());
 
     const { PerspectiveViewer } = await import("@perspective-dev/react");
-    render(<MarketGoodsTable db={fakeDb} marketId={1} selectedGoodId={null} onSelectGood={vi.fn()} />);
+    render(<MarketGoodsTable db={fakeDb} marketId={1} />);
 
     await waitFor(() => expect(screen.getByTestId("perspective-viewer")).toBeInTheDocument());
     expect(queries.listMarketGoodsArrow).toHaveBeenCalledWith(fakeDb, 1);
@@ -69,6 +69,10 @@ describe("MarketGoodsTable", () => {
         "demand_construction",
       ]),
     );
+    // Post-ship, 2026-09-21: read-only, no row selection -- the thing
+    // selecting a good used to reveal (a per-good price chart) was
+    // removed entirely.
+    expect(props.onClick).toBeUndefined();
   });
 
   it("re-queries when the selected market changes", async () => {
@@ -78,35 +82,11 @@ describe("MarketGoodsTable", () => {
     } as never);
     vi.spyOn(queries, "listMarketGoodsArrow").mockResolvedValue(fakeArrowBuffer());
 
-    const { rerender } = render(
-      <MarketGoodsTable db={fakeDb} marketId={1} selectedGoodId={null} onSelectGood={vi.fn()} />,
-    );
+    const { rerender } = render(<MarketGoodsTable db={fakeDb} marketId={1} />);
     await waitFor(() => expect(queries.listMarketGoodsArrow).toHaveBeenCalledWith(fakeDb, 1));
 
-    rerender(<MarketGoodsTable db={fakeDb} marketId={2} selectedGoodId={null} onSelectGood={vi.fn()} />);
+    rerender(<MarketGoodsTable db={fakeDb} marketId={2} />);
     await waitFor(() => expect(queries.listMarketGoodsArrow).toHaveBeenCalledWith(fakeDb, 2));
-  });
-
-  it("calls onSelectGood with the clicked row's good", async () => {
-    const table = fakeTable(1);
-    vi.mocked(perspectiveSetup.getPerspectiveWorker).mockResolvedValue({
-      table: vi.fn().mockResolvedValue(table),
-    } as never);
-    vi.spyOn(queries, "listMarketGoodsArrow").mockResolvedValue(fakeArrowBuffer());
-
-    const { PerspectiveViewer } = await import("@perspective-dev/react");
-    const onSelectGood = vi.fn();
-    render(<MarketGoodsTable db={fakeDb} marketId={1} selectedGoodId={null} onSelectGood={onSelectGood} />);
-
-    await waitFor(() => expect(screen.getByTestId("perspective-viewer")).toBeInTheDocument());
-    const props = vi.mocked(PerspectiveViewer).mock.calls[0][0];
-    props.onClick!({
-      row: { good: "clay", price: 1.25 },
-      column_names: [],
-      config: { filter: [] },
-    });
-
-    expect(onSelectGood).toHaveBeenCalledWith("clay");
   });
 
   it("shows EmptyState (not a zero-value grid) when the market trades no goods at all (FR-006)", async () => {
@@ -116,7 +96,7 @@ describe("MarketGoodsTable", () => {
     } as never);
     vi.spyOn(queries, "listMarketGoodsArrow").mockResolvedValue(fakeArrowBuffer());
 
-    render(<MarketGoodsTable db={fakeDb} marketId={3} selectedGoodId={null} onSelectGood={vi.fn()} />);
+    render(<MarketGoodsTable db={fakeDb} marketId={3} />);
 
     await waitFor(() => expect(screen.getByText("Nothing to show")).toBeInTheDocument());
     expect(table.delete).toHaveBeenCalledWith({ lazy: true });
@@ -128,7 +108,7 @@ describe("MarketGoodsTable", () => {
     } as never);
     vi.spyOn(queries, "listMarketGoodsArrow").mockRejectedValue(new Error("boom"));
 
-    render(<MarketGoodsTable db={fakeDb} marketId={1} selectedGoodId={null} onSelectGood={vi.fn()} />);
+    render(<MarketGoodsTable db={fakeDb} marketId={1} />);
 
     await waitFor(() => expect(screen.getByText("boom")).toBeInTheDocument());
     expect(screen.getByText("Not available for this save")).toBeInTheDocument();

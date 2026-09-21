@@ -42,32 +42,34 @@ rendered by `FileLoader.tsx` (`showMarketsNav`, same `isFactbook &&
 encyclopediaTab === "markets" && isReady && !!readDbRef.current` gate
 as `showLeaderboardNav`), mutually exclusive with the other side navs.
 
-## `WorldGoodsOverview` (extended)
+## `WorldGoodsOverview` — removed (post-ship, 2026-09-21)
+
+The always-visible `listWorldGoodsArrow` data grid, and its
+row-selection-to-callback wiring, are gone — replaced by `GoodSelect`
+below, on explicit user request ("get rid of the datatable"). The file,
+its CSS, and its test are deleted.
+
+## `GoodSelect` (new, post-ship follow-up)
 
 ```ts
-interface WorldGoodsOverviewProps {
-  db: SaveDatabase;
-  selectedGood: string | null;
-  onSelectGood: (good: string, hasProductionCoverage: boolean) => void;
+interface GoodSelectProps {
+  goods: readonly string[];
+  selectedGood: string;
+  onSelectGood: (good: string) => void;
 }
 ```
 
-**Implementation-time refinement**: `onSelectGood` carries the clicked
-row's `has_production_coverage` alongside `good`, since it's already a
-column in the click payload — `WorldGoodsPage` then needs no separate
-`decodeWorldGoods` fetch/lookup just to answer "is this good covered,"
-which also removes a real async race (selecting a good before that
-separate list finishes loading). `has_production_coverage` remains a
-real grid column for FR-005's visible marker regardless.
+A single-select searchable combobox — same search-a-filtered-list
+interaction `CountrySearchOverlay` established for Leaderboard, but
+single-select and self-closing on a pick rather than staying open. Pure
+presentation: `WorldGoodsPage` is the one that scopes `goods` to only
+the RGOs (goods with `hasProductionCoverage`), so a good without a
+production-share breakdown is never offered in the first place — this
+is now how the coverage boundary is made visible (FR-005/FR-004),
+superseding the old grid's `has_production_coverage` column and the old
+per-selection "not available" message.
 
-`PerspectiveViewer` over `listWorldGoodsArrow`, columns `["good",
-"total", "has_production_coverage"]` (the third column is the visible
-coverage marker — FR-005). Row-selection-to-callback via the same
-`onClick`/`"perspective-click"` pattern `MarketList`/`MarketGoodsTable`
-already established (007's resolved risk) — the click payload needs
-`good` in `config.columns`, which it already is.
-
-## `WorldGoodsPage` (new, state owner)
+## `WorldGoodsPage` (state owner, revised)
 
 ```ts
 interface WorldGoodsPageProps {
@@ -75,30 +77,22 @@ interface WorldGoodsPageProps {
 }
 ```
 
-Owns `selectedGood: string | null` and `selectedGoodCoverage: boolean`,
-both set together from `onSelectGood`'s two arguments — no separate
-`decodeWorldGoods` fetch needed (see the refinement note above). Always
-renders `WorldGoodsOverview`. When `selectedGood` is set:
-- `selectedGoodCoverage === true`: fetches
-  `listGoodProductionByOwnerArrow(db, selectedGood)` (via a new
-  `decodeGoodProductionByOwner` helper in `marketData.ts`), builds
-  `ShareTreemapEntry[]` by joining against `loadLeaderboardCountries`'s
-  result (research.md), and renders `<ShareTreemap title={selectedGood}
-  entries={entries} />`.
-  **Legibility at scale (FR-009)**: after the real-country/Unattributed
-  split above, sort real countries descending by amount; the top
-  `MAX_INDIVIDUAL_PRODUCERS` (a constant, 15 — enough to show every
-  major producer of a typical good without degenerating into dozens of
-  sliver boxes) get their own entry, and every real country beyond that
-  cutoff folds into one further `"Other producers"` entry (`id:
-  "other-producers"`), summed — a second, distinct bucket from
-  `"unattributed"`, so a viewer can tell "many small real countries"
-  apart from "no real owner" at a glance. Below the cutoff (typically
-  the case), no such bucket appears at all — never an empty
-  "Other producers" box.
-- Otherwise: renders a plain message — "Production-share data isn't
-  available for `<good>` yet" — never a blank or fabricated treemap
-  (FR-004).
+Loads `decodeWorldGoods(db)` once on mount (`goods: WorldGood[]`).
+`selectedGood` defaults to `"wheat"` if it has coverage, else the first
+covered good — set once `goods` loads, from `goods.filter(g =>
+g.hasProductionCoverage)`. Renders `GoodSelect` scoped to that same
+covered list, the selected good's world total (from the already-loaded
+`goods`, no extra fetch) next to it, and — on selecting a good — fetches
+`listGoodProductionByOwnerArrow(db, selectedGood)` (via
+`decodeGoodProductionByOwner`) and joins against
+`loadLeaderboardCountries`'s result (research.md) to build
+`ShareTreemapEntry[]`, rendering `<ShareTreemap title={selectedGood}
+entries={entries} />`. `buildEntries`'s legibility-at-scale logic
+(FR-009: top 15 individual producers + a distinct "Other producers"
+bucket beyond that, separate from "Unattributed") is unchanged. If no
+good in the save has coverage at all, renders a plain message instead
+of `GoodSelect`/`ShareTreemap` — the only remaining "not available"
+case, now a save-wide edge case rather than a per-selection one.
 
 ## `ShareTreemap` (renamed from `LeaderboardTreemap`)
 
@@ -108,3 +102,10 @@ No prop or behavior change — same `title: string` /
 signature the component already had. `LeaderboardTab.tsx` updates its
 import path only; its own entries-building logic (the wealth-share
 "Other" bucket) is untouched.
+
+**Post-ship follow-up (2026-09-21)**: `squareRatio: 1` (a boxier
+layout) and a per-box drop shadow/border via ECharts' `itemStyle`, plus
+its canvas sizing to `min(70vh, 44rem)` instead of a fixed `20rem` —
+applied here in the shared component, so Leaderboard's own treemap use
+gets the same visual treatment as World Goods', not a per-caller
+option.

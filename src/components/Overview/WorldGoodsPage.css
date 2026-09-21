@@ -1,7 +1,27 @@
 .world-goods-page {
   display: flex;
   flex-direction: column;
+  gap: var(--space-md);
+}
+
+.world-goods-page__caption {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+}
+
+.world-goods-page__controls {
+  display: flex;
+  align-items: center;
   gap: var(--space-lg);
+}
+
+.world-goods-page__total {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-on-surface);
 }
 
 .world-goods-page__not-available {

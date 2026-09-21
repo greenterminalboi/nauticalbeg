@@ -4,7 +4,6 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MarketsTab } from "../../src/components/Overview/MarketsTab";
 import { MarketsSideNav, type MarketsView } from "../../src/components/Overview/MarketsSideNav";
 import * as queries from "../../src/storage/queries";
-import * as marketData from "../../src/components/Overview/marketData";
 import * as perspectiveSetup from "../../src/perspective/setup";
 import type { SaveDatabase } from "../../src/storage/db";
 
@@ -114,7 +113,7 @@ describe("MarketsTab", () => {
     expect(screen.queryByTestId("markets-tab-detail")).not.toBeInTheDocument();
   });
 
-  it("selecting a market renders MarketGoodsTable (User Story 2), without yet revealing the chart hook point (Phase 5, not built)", async () => {
+  it("selecting a market renders MarketGoodsTable (User Story 2)", async () => {
     vi.spyOn(queries, "listMarketGoodsArrow").mockResolvedValue(fakeArrowBuffer());
 
     const { PerspectiveViewer } = await import("@perspective-dev/react");
@@ -133,45 +132,8 @@ describe("MarketsTab", () => {
 
     await screen.findByTestId("markets-tab-detail");
     expect(queries.listMarketGoodsArrow).toHaveBeenCalledWith(fakeDb, 7);
+    // Post-ship, 2026-09-21: MarketGoodsTable is now read-only (no
+    // per-good price chart to select into) -- just the second viewer.
     await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(2));
-    expect(screen.queryByTestId("markets-tab-chart-placeholder")).not.toBeInTheDocument();
-  });
-
-  it("selecting a good within the selected market renders MarketGoodPriceChart (User Story 3)", async () => {
-    vi.spyOn(queries, "listMarketGoodsArrow").mockResolvedValue(fakeArrowBuffer());
-    vi.spyOn(marketData, "decodeMarketGoodPriceHistory").mockResolvedValue([
-      { date: "1628-08", price: 1.25 },
-    ]);
-
-    const { PerspectiveViewer } = await import("@perspective-dev/react");
-    render(<MarketsTab db={fakeDb} activeView="markets" />);
-
-    await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(1));
-    // Identify MarketList's viewer by its columns, since re-renders mean
-    // mock.calls' index doesn't reliably map to "the Nth mounted viewer".
-    function latestCallWithColumn(column: string) {
-      const calls = vi.mocked(PerspectiveViewer).mock.calls;
-      for (let i = calls.length - 1; i >= 0; i--) {
-        const columns = (calls[i][0].config as { columns?: string[] } | undefined)?.columns;
-        if (columns?.includes(column)) return calls[i][0];
-      }
-      throw new Error(`no PerspectiveViewer call found with column "${column}"`);
-    }
-
-    latestCallWithColumn("member_count").onClick!({
-      row: { idx: 7, name: "Location 7", member_count: 1, capacity: 50 },
-      column_names: [],
-      config: { filter: [] },
-    });
-
-    await waitFor(() => expect(screen.getAllByTestId("perspective-viewer")).toHaveLength(2));
-    latestCallWithColumn("good").onClick!({
-      row: { good: "clay", price: 1.25 },
-      column_names: [],
-      config: { filter: [] },
-    });
-
-    await screen.findByText("clay price history");
-    expect(marketData.decodeMarketGoodPriceHistory).toHaveBeenCalledWith(fakeDb, 7, "clay");
   });
 });

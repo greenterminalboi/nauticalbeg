@@ -71,9 +71,24 @@ export function ShareTreemap({ title, entries }: ShareTreemapProps) {
           type: "treemap",
           roam: false,
           nodeClick: false,
+          // Post-ship, 2026-09-21: a "boxier" layout (closer to square
+          // boxes rather than thin slivers) plus a subtle drop shadow
+          // per box, on the user's explicit request to make this look
+          // better -- squareRatio: 1 is ECharts' own literal "aim for
+          // square" setting for its squarified layout algorithm.
+          squareRatio: 1,
           breadcrumb: { show: false },
           upperLabel: { show: false },
           label: { show: true, color: "#fff" },
+          itemStyle: {
+            borderRadius: 4,
+            borderWidth: 2,
+            borderColor: "rgba(0, 0, 0, 0.25)",
+            shadowBlur: 8,
+            shadowColor: "rgba(0, 0, 0, 0.35)",
+            shadowOffsetX: 2,
+            shadowOffsetY: 2,
+          },
           data: entries.map((e) => ({
             name: e.label,
             value: e.value,

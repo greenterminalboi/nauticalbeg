@@ -15,9 +15,9 @@ const PRODUCTION_CHUNK_SIZE = 50_000;
 /**
  * Regression coverage for `insertRows`' chunking (added alongside a real
  * user report: the loading screen sat motionless for a long stretch on
- * a real save with a very large `market_good_price_history` table, with
- * no way to tell from outside whether one giant `insertArrowTable` call
- * was still working or stuck). Confirms chunking a row set larger than
+ * a real save with a very large table, with no way to tell from outside
+ * whether one giant `insertArrowTable` call was still working or stuck).
+ * Confirms chunking a row set larger than
  * one chunk both lands every row correctly and reports real,
  * monotonically increasing "inserted so far" progress — not just that
  * the feature doesn't crash.
@@ -51,25 +51,24 @@ describe("db.ts insertRows chunking", () => {
     await applySchema(db);
 
     // 10 rows at chunk size 3 -> chunks of [3, 3, 3, 1], against
-    // market_good_price_history (no PK/uniqueness constraint to fight,
-    // and already the table this was found on).
+    // nation_history (no PK/uniqueness constraint to fight).
     const totalRows = 10;
-    const rows: Array<[number, string, string, number]> = Array.from({ length: totalRows }, (_, i) => [
-      1,
-      "clay",
-      "1628-01",
+    const rows: Array<[number, number, string, number]> = Array.from({ length: totalRows }, (_, i) => [
+      2025,
+      1628 + i,
+      "population",
       i,
     ]);
 
     const chunkCalls: Array<[number, number]> = [];
     await insertRows(
       db,
-      "INSERT INTO market_good_price_history (market_idx, good, date, price) VALUES (?1, ?2, ?3, ?4)",
+      "INSERT INTO nation_history (nation_idx, year, metric, value) VALUES (?1, ?2, ?3, ?4)",
       rows,
       (inserted, total) => chunkCalls.push([inserted, total]),
     );
 
-    const countRows = await queryRows(db, "SELECT COUNT(*) as n FROM market_good_price_history");
+    const countRows = await queryRows(db, "SELECT COUNT(*) as n FROM nation_history");
     expect(Number(countRows[0].n)).toBe(totalRows);
 
     // Real, monotonically increasing progress -- 4 chunks (3, 3, 3, 1),
@@ -87,14 +86,14 @@ describe("db.ts insertRows chunking", () => {
     db = await openSaveDatabase("insert-rows-chunking-small.db");
     await applySchema(db);
 
-    const rows: Array<[number, string, string, number]> = [
-      [1, "clay", "1628-01", 1.1],
-      [1, "clay", "1628-02", 1.2],
+    const rows: Array<[number, number, string, number]> = [
+      [2025, 1628, "population", 1.1],
+      [2025, 1629, "population", 1.2],
     ];
     const chunkCalls: Array<[number, number]> = [];
     await insertRows(
       db,
-      "INSERT INTO market_good_price_history (market_idx, good, date, price) VALUES (?1, ?2, ?3, ?4)",
+      "INSERT INTO nation_history (nation_idx, year, metric, value) VALUES (?1, ?2, ?3, ?4)",
       rows,
       (inserted, total) => chunkCalls.push([inserted, total]),
     );

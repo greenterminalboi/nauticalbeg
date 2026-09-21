@@ -331,6 +331,41 @@
       "decision": "Post-ship follow-up: moved the World Goods/Markets view switch from a MarketsTab-local top-of-content button group into the shell side nav (MarketsSideNav.tsx), mirroring LeaderboardSideNav exactly",
       "why": "user feedback after ship: this project reserves the side nav for primary page switches (as Leaderboard/Countries already do), keeping MarketsTab-local toggles for a secondary axis only",
       "rejected": "leaving the switch as a top-of-content button group, consistent with the initial ship but inconsistent with the rest of the app"
+    },
+    {
+      "decision": "Removed market_good_price_history entirely (table + extraction + chart)",
+      "why": "real user report: pulling per-good price history for every market was the single largest cost in parsing a real save, for a feature not worth that cost",
+      "rejected": "keep the chart, load its data on demand"
+    },
+    {
+      "decision": "Extended Real+owns-territory existence filtering to listNations and listLeaderboardCountriesArrow app-wide",
+      "why": "a Real-typed tag with no owned territory is a defunct historical tag, same precedent as the Leaderboard treemap Other bucket fix",
+      "rejected": "leave listNations/listLeaderboardCountriesArrow filtering only by country_type"
+    },
+    {
+      "decision": "Market display name switched from provinces.name to locations.name via center_location_idx; added market owner (owner_idx/owner_name/owner_color)",
+      "why": "user request: markets should be tied to a location list/name, not a province, plus surface who owns the location a market sits on",
+      "rejected": "keep province-based naming"
+    },
+    {
+      "decision": "Leaderboard chart xAxis gained scale: true",
+      "why": "EU5s earliest year is 1337, not 0; ECharts value axis defaults min to 0 without it",
+      "rejected": "hardcode xAxis min to 1337"
+    },
+    {
+      "decision": "LeaderboardChart/ShareTreemap canvases resized to min(70vh, 44rem)",
+      "why": "user request: charts should take up the panel; shell does not constrain these tabs content to viewport height",
+      "rejected": "restructure Shell.css to give these tabs a flush/fixed-height layout like Map"
+    },
+    {
+      "decision": "Replaced WorldGoodsOverview data grid with GoodSelect, a searchable single-select combobox scoped to covered goods (RGOs), default wheat",
+      "why": "user request: get rid of the datatable, use a selection with search, default wheat",
+      "rejected": "keep the grid and add a separate picker alongside it"
+    },
+    {
+      "decision": "ShareTreemap gained squareRatio: 1 and a per-box shadow/border via itemStyle",
+      "why": "user request: more boxy, add a 3D shadow effect to look better",
+      "rejected": "a World-Goods-only styled variant instead of changing the shared component"
     }
   ],
   "step_summaries": {
@@ -342,7 +377,7 @@
       "summary": "18 tasks across 4 phases (Foundational data layer + ShareTreemap rename, US1 World-Goods-as-own-page, US2 production-share treemap, Polish)."
     },
     "implement": {
-      "summary": "World Goods promoted to its own switchable page under Markets; selecting a covered good (52 of 71) shows a real per-country production-share treemap via a new province_good_production table + derived coverage flag, with Unattributed and Other-producers buckets for honesty at scale. LeaderboardTreemap renamed to ShareTreemap, now shared by both features."
+      "summary": "Post-ship wrap-up (2026-09-21): removed price history, app-wide country-existence filtering, location-based market naming + owner, Leaderboard x-axis fix, app-wide chart enlargement, World Goods page redesigned around GoodSelect, ShareTreemap boxier+shadowed."
     }
   },
   "approach": "Extend the provinces parser extraction with last_month_produced into a new province_good_production table, add a derived coverage column to listWorldGoodsArrow plus a new per-owner production query, and promote World Goods to its own switchable MarketsTab page reusing the renamed ShareTreemap component and LeaderboardTab's exact Other-bucket pattern.",

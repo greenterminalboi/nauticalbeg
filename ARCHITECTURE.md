@@ -1067,3 +1067,65 @@ never a fabricated time estimate per constitution Principle IV) up
 through `load-save.ts` to the existing `onProgress("parsing", percent)`
 channel `FileLoader.tsx` already consumed for "validating"'s byte-read
 progress — the same mechanism, just previously unused for "parsing."
+
+**Post-ship wrap-up, 2026-09-21: 007/009's remaining rough edges,
+resolved as one batch.**
+
+- **`market_good_price_history` removed entirely** (table, extraction,
+  the per-market/good price chart it fed). A real user report — pulling
+  a monthly price time series for every good in every market was the
+  single largest cost in parsing a real save, for a feature that wasn't
+  worth that cost. `MarketGoodsTable` is now a plain read-only grid (no
+  row-selection-to-chart wiring); the schema keeps only a comment where
+  the table was, since additive-only schema means an old kept-save may
+  still have inert leftover rows nothing reads or writes anymore.
+- **"Country exists" filtering extended app-wide.** `listNations` and
+  `listLeaderboardCountriesArrow` already excluded non-`Real`
+  `country_type`s; both now also require
+  `EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)`
+  — a `Real`-typed tag that currently owns no territory (a defunct
+  historical tag left in the save) is excluded the same way Leaderboard's
+  treemap "Other" bucket already excluded it. `listWarsArrow` is a
+  deliberate exception (historical war participants by design); a
+  market's own owner join (`listMarketsArrow`) is deliberately NOT
+  filtered this way either — "who currently owns this market's center
+  location" should show the real answer even if that owner is otherwise
+  filtered from leaderboards.
+- **Market naming switched from province to location.** `listMarketsArrow`
+  no longer joins `provinces` at all; a market's display name now comes
+  from `locations.name` (populated from
+  `metadata.compatibility.locations`, a single always-present ~28,573-
+  entry array with real names) via its `center_location_idx`, falling
+  back to `'Location ' || idx`, then `'Market ' || idx` if the center
+  itself can't be resolved — never a fabricated name.
+- **Market owner added.** `listMarketsArrow` now also joins the center
+  location's current owner nation, surfacing `owner_idx`/`owner_name`/
+  `owner_color_*` (unfiltered by the existence check above, on purpose)
+  through `decodeMarkets` and into `MarketList`'s grid.
+- **Leaderboard's line chart x-axis now uses `scale: true`** (mirroring
+  the y-axis, which already had it) — EU5's earliest year is 1337, not
+  0, and ECharts' "value" axis defaults its min to 0 without this,
+  wasting most of the plot on thirteen unplotted centuries.
+- **Every chart canvas enlarged app-wide**: `LeaderboardChart` and the
+  shared `ShareTreemap` (used by both Leaderboard's treemap and World
+  Goods) now size to `min(70vh, 44rem)` instead of a fixed `20rem` —
+  the shell doesn't constrain these tabs' content to viewport height the
+  way Map's flush layout does, so a viewport-relative height is how a
+  canvas actually fills its panel instead of floating in leftover page
+  space.
+- **World Goods page redesigned.** `WorldGoodsOverview` (the always-
+  visible data grid) is gone; picking a good is now `GoodSelect`, a
+  single-select searchable combobox scoped to only the goods with a
+  production-share breakdown (RGOs) and defaulting to wheat. Since a
+  good without coverage is no longer offered at all, the old "not
+  available" per-selection message and the extra
+  `hasProductionCoverage`-through-the-click-payload plumbing are gone
+  too — the boundary between covered and uncovered goods is now made
+  by what's in the list, not by rejecting a selection after the fact.
+  The selected good's world total (already loaded alongside the
+  covered/uncovered list) renders next to the picker. `ShareTreemap`
+  itself gained `squareRatio: 1` (a boxier layout, closer to square
+  boxes than thin slivers) and a per-box drop shadow/border via
+  `itemStyle`, on explicit request to make it look better — applied to
+  the shared component, so Leaderboard's treemap gets the same
+  treatment.

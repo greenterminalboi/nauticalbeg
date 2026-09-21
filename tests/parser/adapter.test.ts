@@ -537,24 +537,6 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     });
   });
 
-  it("populates market_good_price_history with computed monthly dates counting back from the save's current date (specs/007-production-trade-markets research.md §1)", async () => {
-    const database = await freshDb("adapter-market-history.db");
-    await parseAndStore(database, "save-15", "rus-1628-minimal.eu5", toBytes(fixtureText));
-
-    // Fixture's save date is 1628.8.14; clay's 3-point history should
-    // land on the 3 preceding whole months, ending on the save's own
-    // current month, never fabricated/extrapolated points beyond it.
-    const rows = await queryAll(
-      database,
-      "SELECT date, price FROM market_good_price_history WHERE market_idx = 1 AND good = 'clay' ORDER BY date",
-    );
-    expect(rows).toEqual([
-      { date: "1628-06", price: 1.2 },
-      { date: "1628-07", price: 1.22 },
-      { date: "1628-08", price: 1.25 },
-    ]);
-  });
-
   it("populates world_good_production directly from market_manager.produced_goods, not summed from market_goods (specs/007-production-trade-markets)", async () => {
     const database = await freshDb("adapter-world-goods.db");
     await parseAndStore(database, "save-16", "rus-1628-minimal.eu5", toBytes(fixtureText));

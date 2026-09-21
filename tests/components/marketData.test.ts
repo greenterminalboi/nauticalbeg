@@ -10,7 +10,6 @@ import {
 import { parseAndStore } from "../../src/parser/version-adapters/1.3.11";
 import {
   decodeGoodProductionByOwner,
-  decodeMarketGoodPriceHistory,
   decodeMarketGoods,
   decodeMarkets,
   decodeWorldGoods,
@@ -53,17 +52,22 @@ describe("marketData decode helpers", () => {
     expect(clayByOwner).toEqual([{ ownerIdx: 3, amount: 13.19736 }]);
   });
 
-  it("decodeMarkets returns camelCase fields, including the no-resolvable-center fallback name", async () => {
+  it("decodeMarkets returns camelCase fields, named from the center location (not its province), including owner and the no-resolvable-center fallback name", async () => {
     await freshParsedDb("market-data-markets.db", "save-2");
     const markets = await decodeMarkets(db);
+    // Market 1's center (location 1) -> metadata.compatibility.locations[0] = "stockholm".
     expect(markets.find((m) => m.idx === 1)).toMatchObject({
-      name: "uppland_province",
+      name: "stockholm",
       memberCount: 2,
       capacity: 50,
+      ownerIdx: 3,
+      ownerName: "SCA",
     });
     expect(markets.find((m) => m.idx === 3)).toMatchObject({
       name: "Market 3",
       memberCount: null,
+      ownerIdx: null,
+      ownerName: "Unknown",
     });
   });
 
@@ -78,15 +82,5 @@ describe("marketData decode helpers", () => {
     const wool = goods.find((g) => g.good === "wool");
     expect(wool?.isImporting).toBe(true);
     expect(wool?.isExporting).toBeNull();
-  });
-
-  it("decodeMarketGoodPriceHistory returns points in date order with no fabricated points", async () => {
-    await freshParsedDb("market-data-history.db", "save-4");
-    const points = await decodeMarketGoodPriceHistory(db, 1, "clay");
-    expect(points).toEqual([
-      { date: "1628-06", price: 1.2 },
-      { date: "1628-07", price: 1.22 },
-      { date: "1628-08", price: 1.25 },
-    ]);
   });
 });

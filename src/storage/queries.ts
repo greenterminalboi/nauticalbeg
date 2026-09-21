@@ -148,11 +148,23 @@ export async function getPlayerNationOverview(db: SaveDatabase): Promise<NationO
  * never a display `name` — the save only records a human-readable name
  * for the player's own nation (see version-adapters/1.3.11.ts) — so this
  * falls back to the tag the same way `getNationOverview` does.
+ *
+ * `country_type = 'Real'` alone is NOT "currently exists" — confirmed
+ * against a real save that it covers ~2,470 country slots, the
+ * overwhelming majority long-defunct historical tags formed and
+ * annexed centuries ago (the same finding `listLatestNationMetricArrow`
+ * below was built around). "Exists" app-wide means also currently
+ * owning territory (post-ship correction, 2026-09-21) — a real,
+ * cheap-to-check fact (`EXISTS` against `locations.owner_idx`), not a
+ * fabricated one.
  */
 export async function listNations(db: SaveDatabase): Promise<NationSummary[]> {
   const rows = await queryRows(
     db,
-    "SELECT idx, tag, name FROM nations WHERE country_type = 'Real' ORDER BY COALESCE(name, tag)",
+    `SELECT idx, tag, name FROM nations
+     WHERE country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)
+     ORDER BY COALESCE(name, tag)`,
   );
   return rows.map((row) => ({
     idx: Number(row.idx),
@@ -310,6 +322,13 @@ export async function listProvincesArrow(db: SaveDatabase, nationIdx: number): P
  * most non-player nations have no `name` set). `is_ongoing` is computed
  * here rather than stored (`schema.sql`'s `wars.end_date IS NULL`
  * already says the same thing unambiguously).
+ *
+ * Deliberately NOT filtered by "currently exists" (unlike `listNations`/
+ * `listLeaderboardCountriesArrow`, post-ship, 2026-09-21): a war is a
+ * historical event, and its attacker/defender were real participants at
+ * the time regardless of whether that tag has since been annexed —
+ * hiding a since-defunct participant behind "Unknown" would make
+ * genuine history less accurate, not more.
  */
 export async function listWarsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
   return queryArrowIPC(
@@ -396,9 +415,12 @@ export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuff
 /**
  * specs/006-country-leaderboard: every selectable country for the
  * Leaderboard's search overlay and default-selection computation. Same
- * `country_type = 'Real'` filter as `listNations` (below) — reused, not
- * reinvented, per research.md §4 — extended with the three color
- * columns (already on `nations` since feature 005) and the new
+ * "currently exists" filter as `listNations` (above) — `country_type =
+ * 'Real'` AND currently owns territory (post-ship correction,
+ * 2026-09-21: the search overlay previously let a user search/select
+ * from ~2,470 mostly-defunct historical tags, only 265 of which
+ * actually exist right now) — extended with the three color columns
+ * (already on `nations` since feature 005) and the new
  * `is_human_played` flag (research.md §5/§6). Save-wide, like
  * `listWarsArrow`/`listMapLocationsArrow` — not scoped to a selected
  * nation.
@@ -416,6 +438,7 @@ export async function listLeaderboardCountriesArrow(db: SaveDatabase): Promise<A
        is_human_played
      FROM nations
      WHERE country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)
      ORDER BY COALESCE(name, tag)`,
   );
 }
@@ -547,25 +570,40 @@ export async function listGoodProductionByOwnerArrow(
 }
 
 /**
- * specs/007-production-trade-markets contracts/query-functions.md: one
- * row per market. `name` mirrors `listProvincesArrow`'s existing
- * location-naming pattern (province's raw `province_definition` key,
- * falling back to `'Location ' || idx`), with one further fallback layer
- * for the spec's own edge case — a market with no resolvable `center` at
- * all gets `'Market ' || idx`, never a fabricated location name. Feeds
- * `MarketList` (User Story 1).
+ * specs/007-production-trade-markets contracts/query-functions.md
+ * (renamed/re-owned post-ship, 2026-09-21): one row per market, named
+ * from its center **location**, not its province — `locations.name`
+ * (the save's own `metadata.compatibility.locations` array, broadly
+ * populated, e.g. "stockholm") rather than the province's raw
+ * `province_definition` key, per direct request that a market's
+ * identity not be tied to a province at all. Falls back to `'Location '
+ * || idx` for a location with no confirmed name, and `'Market ' || idx`
+ * for the edge case where a market has no resolvable `center` at all —
+ * never a fabricated name. Also surfaces the current owner of that
+ * center location (the market's own "owner"), the same
+ * `COALESCE(name, tag, 'Unknown')` display-name fallback
+ * `listWarsArrow`/`listMapLocationsArrow` already use — shown as
+ * whoever currently holds the location, not filtered to
+ * `country_type = 'Real'`, since a Pirate- or rebel-held market center
+ * is still a real, confirmed fact worth showing, not something to hide.
+ * Feeds `MarketList` (User Story 1).
  */
 export async function listMarketsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
   return queryArrowIPC(
     db,
     `SELECT
        markets.idx as idx,
-       COALESCE(provinces.name, 'Location ' || locations.idx, 'Market ' || markets.idx) as name,
+       COALESCE(locations.name, 'Location ' || locations.idx, 'Market ' || markets.idx) as name,
        markets.member_count as member_count,
-       markets.capacity as capacity
+       markets.capacity as capacity,
+       locations.owner_idx as owner_idx,
+       COALESCE(owner.name, owner.tag, 'Unknown') as owner_name,
+       owner.color_r as owner_color_r,
+       owner.color_g as owner_color_g,
+       owner.color_b as owner_color_b
      FROM markets
      LEFT JOIN locations ON locations.idx = markets.center_location_idx
-     LEFT JOIN provinces ON provinces.idx = locations.province_idx
+     LEFT JOIN nations owner ON owner.idx = locations.owner_idx
      ORDER BY markets.idx`,
   );
 }
@@ -592,27 +630,6 @@ export async function listMarketGoodsArrow(
      WHERE market_idx = ?1
      ORDER BY good`,
     [marketIdx],
-  );
-}
-
-/**
- * specs/007-production-trade-markets contracts/query-functions.md: the
- * recorded price history for one (market, good) pair — only the real
- * points the save actually recorded (FR-007/SC-003), never interpolated
- * or extrapolated ones. Feeds `MarketGoodPriceChart` (User Story 3).
- */
-export async function listMarketGoodPriceHistoryArrow(
-  db: SaveDatabase,
-  marketIdx: number,
-  good: string,
-): Promise<ArrayBuffer> {
-  return queryArrowIPC(
-    db,
-    `SELECT date, price
-     FROM market_good_price_history
-     WHERE market_idx = ?1 AND good = ?2
-     ORDER BY date`,
-    [marketIdx, good],
   );
 }
 

@@ -274,20 +274,15 @@ CREATE TABLE IF NOT EXISTS market_goods (
 );
 CREATE INDEX IF NOT EXISTS idx_market_goods_market ON market_goods (market_idx, good);
 
--- One row per recorded price point for one (market, good) pair. Source:
--- `goods.<good>.history`, a bare number list with NO embedded dates in
--- the save — `date` is computed once at extraction time (research.md's
--- resolved decision), counting back from the save's current date at a
--- monthly cadence, so every consumer works with real dates instead of
--- re-deriving the anchor/cadence convention independently.
-CREATE TABLE IF NOT EXISTS market_good_price_history (
-  market_idx INTEGER NOT NULL, -- logically REFERENCES markets(idx)
-  good TEXT NOT NULL,
-  date TEXT NOT NULL, -- ISO "YYYY-MM"
-  price DOUBLE NOT NULL -- the save always populates every history entry
-);
-CREATE INDEX IF NOT EXISTS idx_market_good_price_history
-  ON market_good_price_history (market_idx, good, date);
+-- market_good_price_history (one row per recorded price point per
+-- market/good) was removed: pulling `goods.<good>.history` for every
+-- good in every market was the single largest cost in parsing a real
+-- save, for a price-history chart that wasn't worth that cost (real
+-- user report; see ARCHITECTURE.md's decision log). A save kept before
+-- this change may still have the old table sitting in its OPFS
+-- database — harmless, inert leftover data; nothing here creates or
+-- reads it anymore, matching this schema's existing additive-only
+-- convention (no table is ever actively dropped on resume).
 
 -- One row per good: the save's own world-total production snapshot,
 -- from `market_manager.produced_goods.<good>` — read directly, never

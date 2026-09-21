@@ -14,7 +14,12 @@
   margin: 0 0 var(--space-sm);
 }
 
+/* Post-ship, 2026-09-21: fill most of the viewport's remaining height
+   rather than a small fixed box — same reasoning as
+   LeaderboardChart.css's __canvas. Shared by both Leaderboard's treemap
+   view and the World Goods production-share treemap. */
 .share-treemap__canvas {
   width: 100%;
-  height: 20rem;
+  height: min(70vh, 44rem);
+  min-height: 26rem;
 }
