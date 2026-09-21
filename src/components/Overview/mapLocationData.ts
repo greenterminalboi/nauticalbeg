@@ -22,6 +22,15 @@ export interface MapLocationRow {
   control: number | null;
   rawMaterial: string | null;
   totalPopulation: number;
+  development: number | null;
+  rank: string | null;
+  marketIdx: number | null;
+  possibleTax: number | null;
+  soldiers: number | null;
+  cultureName: string | null;
+  cultureColor: [number, number, number] | null;
+  religionName: string | null;
+  religionColor: [number, number, number] | null;
 }
 
 export type MapLocationDataset = Map<string, MapLocationRow>;
@@ -65,6 +74,15 @@ export async function loadMapLocationDataset(db: SaveDatabase): Promise<MapLocat
       control: typeof r.control === "number" ? r.control : null,
       rawMaterial: typeof r.raw_material === "string" ? r.raw_material : null,
       totalPopulation: typeof r.total_population === "number" ? r.total_population : 0,
+      development: typeof r.development === "number" ? r.development : null,
+      rank: typeof r.rank === "string" ? r.rank : null,
+      marketIdx: typeof r.market_idx === "number" ? r.market_idx : null,
+      possibleTax: typeof r.possible_tax === "number" ? r.possible_tax : null,
+      soldiers: typeof r.soldiers === "number" ? r.soldiers : null,
+      cultureName: typeof r.culture_name === "string" ? r.culture_name : null,
+      cultureColor: rgbOrNull(r.culture_color_r, r.culture_color_g, r.culture_color_b),
+      religionName: typeof r.religion_name === "string" ? r.religion_name : null,
+      religionColor: rgbOrNull(r.religion_color_r, r.religion_color_g, r.religion_color_b),
     });
   }
   return dataset;

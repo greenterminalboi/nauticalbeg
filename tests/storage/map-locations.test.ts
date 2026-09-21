@@ -73,6 +73,40 @@ describe("storage/queries listMapLocationsArrow (Map tab)", () => {
     expect(Number(loc1!.total_population)).toBe(0);
   });
 
+  it("returns rank/market_idx/possible_tax/soldiers and culture/religion name+color, joined by id (specs/011-atlas-map-modes)", async () => {
+    db = await openSaveDatabase("map-locations-atlas-map-modes.db");
+    await applySchema(db);
+    await parseAndStore(db, "save-3", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = decodeRows(await listMapLocationsArrow(db));
+
+    const loc3975 = rows.find((r) => r.name === "mazyr");
+    expect(loc3975).toMatchObject({
+      rank: "town",
+      market_idx: 1,
+      culture_name: "polesian_culture",
+      culture_color_r: 166,
+      culture_color_g: 133,
+      culture_color_b: 133,
+      religion_name: "orthodox",
+      religion_color_r: 121,
+      religion_color_g: 53,
+      religion_color_b: 140,
+    });
+    expect(Number(loc3975!.possible_tax)).toBeCloseTo(31.69176, 5);
+    expect(Number(loc3975!.soldiers)).toBeCloseTo(9.5, 5);
+
+    // Location 1 has no population.pop_stats.soldiers entry in the
+    // fixture — must come back NULL, never a fabricated 0.
+    const loc1 = rows.find((r) => r.name === "stockholm");
+    expect(loc1?.soldiers).toBeNull();
+    expect(loc1).toMatchObject({
+      rank: "city",
+      culture_name: "swedish",
+      religion_name: "lutheran",
+    });
+  });
+
   it("keeps a location's row even when it has no matching nation (Unknown fallback, matching listWarsArrow's convention)", async () => {
     db = await openSaveDatabase("map-locations-unknown-nation.db");
     await applySchema(db);
@@ -126,14 +160,28 @@ describe("storage/queries listMapLocationsArrow (Map tab)", () => {
     await applySchema(db);
 
     const locCols = await db.conn.query(
-      "SELECT name, raw_material, controller_idx, control FROM locations WHERE idx = 1",
+      "SELECT name, raw_material, controller_idx, control, rank, culture_idx, religion_idx, market_idx, possible_tax, soldiers FROM locations WHERE idx = 1",
     );
     expect(locCols.toArray()[0].toJSON()).toMatchObject({
       name: null,
       raw_material: null,
       controller_idx: null,
       control: null,
+      rank: null,
+      culture_idx: null,
+      religion_idx: null,
+      market_idx: null,
+      possible_tax: null,
+      soldiers: null,
     });
+
+    // cultures/religions didn't exist at all before this feature — must
+    // now exist and be queryable (empty, since this "kept" save was
+    // never re-parsed).
+    const cultureCount = await db.conn.query("SELECT COUNT(*) as n FROM cultures");
+    expect(cultureCount.toArray()[0].toJSON().n).toBe(0n);
+    const religionCount = await db.conn.query("SELECT COUNT(*) as n FROM religions");
+    expect(religionCount.toArray()[0].toJSON().n).toBe(0n);
 
     const nationCols = await db.conn.query(
       "SELECT color_r, color_g, color_b FROM nations WHERE idx = 3",

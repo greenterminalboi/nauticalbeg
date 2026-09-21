@@ -1,5 +1,5 @@
 # Spec-Driven Development Status
-<!-- spec-status: project=nauticalbeg commit=5863ba8c0512ce5ddf2bdfeb79cbe6e748d09e9a updated=2026-09-21T05:00:37Z -->
+<!-- spec-status: project=nauticalbeg commit=ffe8e05a10abf1ea4337bc12b179a3543763d9e2 updated=2026-09-21T13:29:21Z -->
 
 | Feature                      | Specify | Plan | Tasks | Implement |
 |------------------------------|---------|------|-------|-----------|
@@ -12,7 +12,8 @@
 | 007-production-trade-markets | ✓       | ✓    | ✓     | ✓ Complete |
 | 008-game-encyclopedia        | ✓       | ✓    | ✓     | ✓ Complete |
 | 009-world-goods-production   | ✓       | ✓    | ✓     | ✓ Complete |
-| 010-societal-values-compass  | ✓       | ✓    | ✓     | ✓ Complete |
+| 010-societal-values-compass  | -       | ✓    | ✓     | ✓ Complete |
+| 011-atlas-map-modes          | -       | ✓    | ✓     | ✓ Complete |
 
 <!-- feature: 001-save-import-overview has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=46 tasks_completed=46 checklist_files=requirements.md -->
 <!-- feature: 002-db-technology-migration has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=86 tasks_completed=19 checklist_files=requirements.md -->
@@ -23,4 +24,5 @@
 <!-- feature: 007-production-trade-markets has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=false has_contracts=true has_checklists=true tasks_total=28 tasks_completed=28 checklist_files=requirements.md -->
 <!-- feature: 008-game-encyclopedia has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=30 tasks_completed=30 checklist_files=requirements.md -->
 <!-- feature: 009-world-goods-production has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=false has_contracts=true has_checklists=true tasks_total=18 tasks_completed=18 checklist_files=requirements.md -->
-<!-- feature: 010-societal-values-compass has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=false has_contracts=true has_checklists=true tasks_total=18 tasks_completed=18 checklist_files=requirements.md -->
+<!-- feature: 010-societal-values-compass has_spec=false has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=false has_contracts=true has_checklists=true tasks_total=18 tasks_completed=18 checklist_files=requirements.md -->
+<!-- feature: 011-atlas-map-modes has_spec=false has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=false has_contracts=false has_checklists=true tasks_total=29 tasks_completed=29 checklist_files=requirements.md -->

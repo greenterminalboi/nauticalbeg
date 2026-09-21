@@ -190,6 +190,45 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     expect(sca[0]).toMatchObject({ color_r: null, color_g: null, color_b: null });
   });
 
+  it("populates locations.rank/market_idx/possible_tax/soldiers and cultures/religions with the save's own names and colors (specs/011-atlas-map-modes)", async () => {
+    const database = await freshDb("adapter-atlas-map-modes.db");
+    await parseAndStore(database, "save-18", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const loc1 = await queryAll(database, "SELECT * FROM locations WHERE idx = 1");
+    expect(loc1[0]).toMatchObject({
+      rank: "city",
+      market_idx: 1,
+      possible_tax: 48.04188,
+      culture_idx: 1851,
+      religion_idx: 15,
+    });
+    // Location 1 has no population.pop_stats block in the fixture at
+    // all — soldiers must stay NULL, never a fabricated 0.
+    expect(loc1[0].soldiers).toBeNull();
+
+    const loc3975 = await queryAll(database, "SELECT * FROM locations WHERE idx = 3975");
+    expect(loc3975[0]).toMatchObject({
+      rank: "town",
+      market_idx: 1,
+      culture_idx: 884,
+      religion_idx: 18,
+    });
+    expect(loc3975[0].possible_tax).toBeCloseTo(31.69176, 5);
+    expect(loc3975[0].soldiers).toBeCloseTo(9.5, 5);
+
+    const cultures = await queryAll(database, "SELECT * FROM cultures ORDER BY idx");
+    expect(cultures).toEqual([
+      { idx: 884, name: "polesian_culture", color_r: 166, color_g: 133, color_b: 133 },
+      { idx: 1851, name: "swedish", color_r: 0, color_g: 104, color_b: 165 },
+    ]);
+
+    const religions = await queryAll(database, "SELECT * FROM religions ORDER BY idx");
+    expect(religions).toEqual([
+      { idx: 15, name: "lutheran", color_r: 0, color_g: 0, color_b: 178 },
+      { idx: 18, name: "orthodox", color_r: 121, color_g: 53, color_b: 140 },
+    ]);
+  });
+
   it("leaves locations.name NULL, without throwing, when metadata.compatibility is absent (specs/005-map-visualization research.md §1)", async () => {
     // Some saves (e.g. never-multiplayer-flagged ones — unconfirmed
     // either way against a real singleplayer save) may not carry this
@@ -289,7 +328,7 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     await parseAndStore(database, "save-10", "rus-1628-minimal.eu5", toBytes(fixtureText));
     const rows = await queryAll(
       database,
-      "SELECT key FROM raw_sections WHERE key IN ('metadata', 'countries', 'provinces', 'locations', 'war_manager', 'played_country', 'population', 'market_manager')",
+      "SELECT key FROM raw_sections WHERE key IN ('metadata', 'countries', 'provinces', 'locations', 'war_manager', 'played_country', 'population', 'market_manager', 'culture_manager', 'religion_manager')",
     );
     expect(rows).toHaveLength(0);
   });

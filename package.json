@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "generate:map": "tsx tools/map-generation/generate.ts",
+    "generate:terrain": "tsx tools/map-generation/generate-terrain-lookup.ts",
     "schema-map": "tsx tools/schema-mapping/generate.ts",
     "generate:encyclopedia": "tsx tools/encyclopedia-scraping/generate.ts",
     "generate:ruler-names": "tsx tools/ruler-names-scraping/generate.ts",

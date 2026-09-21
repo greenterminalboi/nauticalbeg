@@ -52,6 +52,8 @@ const STRUCTURED_KEYS = new Set([
   "market_manager",
   "rulerterm_manager",
   "character_db",
+  "culture_manager",
+  "religion_manager",
 ]);
 
 /** jomini narrows an unquoted date-like token (e.g. `1628.8.14`) to a
@@ -373,6 +375,12 @@ export async function parseAndStore(
       string | null,
       number | null,
       number | null,
+      string | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
     ]
   > = [];
   // specs/005-map-visualization research.md §2: each location's
@@ -384,6 +392,12 @@ export async function parseAndStore(
   for (const [idxStr, value] of Object.entries(locationDatabase)) {
     const record = asRecord(value);
     const locationIdx = Number(idxStr);
+    const population = asRecord(record.population);
+    // specs/011-atlas-map-modes research.md §3: a location's population
+    // breakdown by profession (nobles/clergy/burghers/laborers/soldiers/
+    // peasants) — `produced` is this feature's Soldiers layer value,
+    // absent (not zero) on a location with no soldiers pop-stats entry.
+    const soldiersStats = asRecord(asRecord(population.pop_stats).soldiers);
     locationRows.push([
       locationIdx,
       asNumberOrNull(record.owner),
@@ -393,9 +407,15 @@ export async function parseAndStore(
       asStringOrNull(record.raw_material),
       asNumberOrNull(record.controller),
       asNumberOrNull(record.control),
+      asStringOrNull(record.rank),
+      asNumberOrNull(record.culture),
+      asNumberOrNull(record.religion),
+      asNumberOrNull(record.market),
+      asNumberOrNull(record.possible_tax),
+      asNumberOrNull(soldiersStats.produced),
     ]);
 
-    const pops = asRecord(record.population).pops;
+    const pops = population.pops;
     if (Array.isArray(pops)) {
       for (const popIdx of pops) {
         if (typeof popIdx === "number") locationPopRows.push([locationIdx, popIdx]);
@@ -404,7 +424,7 @@ export async function parseAndStore(
   }
   await insertRows(
     db,
-    "INSERT INTO locations (idx, owner_idx, province_idx, development, name, raw_material, controller_idx, control) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+    "INSERT INTO locations (idx, owner_idx, province_idx, development, name, raw_material, controller_idx, control, rank, culture_idx, religion_idx, market_idx, possible_tax, soldiers) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
     locationRows,
   );
   if (locationPopRows.length > 0) {
@@ -412,6 +432,52 @@ export async function parseAndStore(
       db,
       "INSERT INTO location_pops (location_idx, pop_idx) VALUES (?1, ?2)",
       locationPopRows,
+    );
+  }
+
+  // specs/011-atlas-map-modes research.md §4: culture_manager/
+  // religion_manager give each id locations/population already carry
+  // (opaque, unresolved) a real name and the save's own in-game color —
+  // never parsed before this feature needed them.
+  const cultureDatabase = asRecord(asRecord(root.culture_manager).database);
+  const cultureRows: Array<[number, string | null, number | null, number | null, number | null]> = [];
+  for (const [idxStr, value] of Object.entries(cultureDatabase)) {
+    const record = asRecord(value);
+    const rgb = asRgbOrNull(record.color);
+    cultureRows.push([
+      Number(idxStr),
+      asStringOrNull(record.name),
+      rgb ? rgb[0] : null,
+      rgb ? rgb[1] : null,
+      rgb ? rgb[2] : null,
+    ]);
+  }
+  if (cultureRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO cultures (idx, name, color_r, color_g, color_b) VALUES (?1, ?2, ?3, ?4, ?5)",
+      cultureRows,
+    );
+  }
+
+  const religionDatabase = asRecord(asRecord(root.religion_manager).database);
+  const religionRows: Array<[number, string | null, number | null, number | null, number | null]> = [];
+  for (const [idxStr, value] of Object.entries(religionDatabase)) {
+    const record = asRecord(value);
+    const rgb = asRgbOrNull(record.color);
+    religionRows.push([
+      Number(idxStr),
+      asStringOrNull(record.name),
+      rgb ? rgb[0] : null,
+      rgb ? rgb[1] : null,
+      rgb ? rgb[2] : null,
+    ]);
+  }
+  if (religionRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO religions (idx, name, color_r, color_g, color_b) VALUES (?1, ?2, ?3, ?4, ?5)",
+      religionRows,
     );
   }
   reportMilestone(); // "locations"

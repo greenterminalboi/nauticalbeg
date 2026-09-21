@@ -5,6 +5,7 @@
 // (spec FR-009).
 import type { MapLocationDataset, MapLocationRow } from "./mapLocationData";
 import { RGO_GAME_COLORS } from "./rgoGameColors";
+import { LOCATION_TERRAIN } from "./locationTerrain";
 
 /** Shared "unowned / no confirmed data" fill (spec Edge Cases,
  * FR-009) — a light, desaturated gray, distinguishable from any
@@ -239,3 +240,279 @@ const controlLayer: MapLayer = {
   },
 };
 MAP_LAYERS.push(controlLayer);
+
+// --- specs/011-atlas-map-modes: shared numeric-layer helper -------------
+
+/** Log-normalized, per-dataset-`WeakMap`-memoized gradient shading — the
+ * same approach `populationLayer` above already uses (research.md §4 of
+ * that feature: a perceptual, not raw-linear, scale so one outlier
+ * location doesn't wash out the rest). Factored out here for reuse by
+ * Development/Tax Base/Soldiers below rather than duplicated three times;
+ * `populationLayer`'s own implementation is left untouched. Each caller
+ * supplies its own `lowColor`/`highColor` so the layers stay visually
+ * distinguishable from each other and from Population when switched
+ * between (constitution Principle VI / spec SC-004). */
+function numericLayer(
+  id: string,
+  label: string,
+  tooltipLabel: string,
+  getValue: (row: MapLocationRow) => number | null,
+  lowColor: [number, number, number],
+  highColor: [number, number, number],
+): MapLayer {
+  const maxCache = new WeakMap<MapLocationDataset, number>();
+  function getMax(dataset: MapLocationDataset): number {
+    const cached = maxCache.get(dataset);
+    if (cached !== undefined) return cached;
+    let max = 0;
+    for (const row of dataset.values()) {
+      const value = getValue(row);
+      if (value !== null && value > max) max = value;
+    }
+    maxCache.set(dataset, max);
+    return max;
+  }
+
+  return {
+    id,
+    label,
+    getFill(row, dataset) {
+      const value = getValue(row);
+      if (value === null || value <= 0) return NEUTRAL_COLOR;
+      const max = getMax(dataset);
+      if (max <= 0) return NEUTRAL_COLOR;
+      const t = Math.log1p(value) / Math.log1p(max);
+      return [
+        lerp(lowColor[0], highColor[0], t),
+        lerp(lowColor[1], highColor[1], t),
+        lerp(lowColor[2], highColor[2], t),
+      ];
+    },
+    getTooltipFields(row) {
+      const value = getValue(row);
+      return [
+        { label: "Location", value: row.name },
+        {
+          label: tooltipLabel,
+          value: value === null ? "No data" : value.toLocaleString(undefined, { maximumFractionDigits: 1 }),
+        },
+      ];
+    },
+    getLegend() {
+      return [
+        { color: NEUTRAL_COLOR, label: "No data" },
+        { color: lowColor, label: "Low" },
+        { color: highColor, label: "High" },
+      ];
+    },
+  };
+}
+
+// --- User Story 1 (specs/011-atlas-map-modes): Development ---------------
+
+const developmentLayer = numericLayer(
+  "development",
+  "Development",
+  "Development",
+  (row) => row.development,
+  [255, 245, 204],
+  [166, 86, 0],
+);
+MAP_LAYERS.push(developmentLayer);
+
+// --- User Story 2 (specs/011-atlas-map-modes): Location Terrain ----------
+
+/** Every distinct topography category, assigned a stable golden-angle-hue
+ * color once per module load — terrain never varies by save (it's static
+ * game-definition data, `locationTerrain.ts`'s own doc comment), so this
+ * is computed once, not memoized per dataset like the numeric layers or
+ * RGO's per-save assignment. Sorted first for a deterministic assignment
+ * order independent of the generated table's own key order. */
+const TERRAIN_COLORS: Map<string, [number, number, number]> = (() => {
+  const categories = Array.from(new Set(Object.values(LOCATION_TERRAIN))).sort();
+  const colors = new Map<string, [number, number, number]>();
+  categories.forEach((category, i) => {
+    colors.set(category, hslToRgb(i * GOLDEN_ANGLE_DEG, RGO_SATURATION, RGO_LIGHTNESS));
+  });
+  return colors;
+})();
+
+const terrainLayer: MapLayer = {
+  id: "terrain",
+  label: "Location Terrain",
+  getFill(row) {
+    const topography = LOCATION_TERRAIN[row.name];
+    if (topography === undefined) return NEUTRAL_COLOR;
+    return TERRAIN_COLORS.get(topography) ?? NEUTRAL_COLOR;
+  },
+  getTooltipFields(row) {
+    const topography = LOCATION_TERRAIN[row.name];
+    return [
+      { label: "Location", value: row.name },
+      { label: "Terrain", value: topography ?? "No data" },
+    ];
+  },
+  getLegend() {
+    const entries = Array.from(TERRAIN_COLORS, ([label, color]) => ({ color, label }));
+    entries.sort((a, b) => a.label.localeCompare(b.label));
+    return entries;
+  },
+};
+MAP_LAYERS.push(terrainLayer);
+
+// --- User Story 3 (specs/011-atlas-map-modes): Location Rank -------------
+
+// Confirmed against a real save (research.md §7): exactly these 4
+// settlement tiers exist, a small closed set — no dynamic/fallback color
+// assignment needed, unlike Terrain/Culture/Religion/Market's open sets.
+const RANK_COLORS: Record<string, [number, number, number]> = {
+  rural_settlement: [255, 247, 188],
+  town: [254, 196, 79],
+  city: [217, 95, 14],
+  megalopolis: [127, 39, 4],
+};
+
+const rankLayer: MapLayer = {
+  id: "rank",
+  label: "Location Rank",
+  getFill(row) {
+    if (row.rank === null) return NEUTRAL_COLOR;
+    return RANK_COLORS[row.rank] ?? NEUTRAL_COLOR;
+  },
+  getTooltipFields(row) {
+    return [
+      { label: "Location", value: row.name },
+      { label: "Rank", value: row.rank ?? "No data" },
+    ];
+  },
+  getLegend() {
+    return Object.entries(RANK_COLORS).map(([label, color]) => ({ color, label }));
+  },
+};
+MAP_LAYERS.push(rankLayer);
+
+// --- User Story 4 (specs/011-atlas-map-modes): Primary Culture -----------
+
+const primaryCultureLayer: MapLayer = {
+  id: "primaryCulture",
+  label: "Primary Culture",
+  getFill(row) {
+    return row.cultureColor ?? NEUTRAL_COLOR;
+  },
+  getTooltipFields(row) {
+    return [
+      { label: "Location", value: row.name },
+      { label: "Culture", value: row.cultureName ?? "No data" },
+    ];
+  },
+  getLegend(dataset) {
+    const entries = new Map<string, [number, number, number]>();
+    for (const row of dataset.values()) {
+      if (row.cultureName !== null && row.cultureColor !== null) {
+        entries.set(row.cultureName, row.cultureColor);
+      }
+    }
+    return Array.from(entries, ([label, color]) => ({ color, label })).sort((a, b) =>
+      a.label.localeCompare(b.label),
+    );
+  },
+};
+MAP_LAYERS.push(primaryCultureLayer);
+
+// --- User Story 5 (specs/011-atlas-map-modes): Primary Religion ----------
+
+const primaryReligionLayer: MapLayer = {
+  id: "primaryReligion",
+  label: "Primary Religion",
+  getFill(row) {
+    return row.religionColor ?? NEUTRAL_COLOR;
+  },
+  getTooltipFields(row) {
+    return [
+      { label: "Location", value: row.name },
+      { label: "Religion", value: row.religionName ?? "No data" },
+    ];
+  },
+  getLegend(dataset) {
+    const entries = new Map<string, [number, number, number]>();
+    for (const row of dataset.values()) {
+      if (row.religionName !== null && row.religionColor !== null) {
+        entries.set(row.religionName, row.religionColor);
+      }
+    }
+    return Array.from(entries, ([label, color]) => ({ color, label })).sort((a, b) =>
+      a.label.localeCompare(b.label),
+    );
+  },
+};
+MAP_LAYERS.push(primaryReligionLayer);
+
+// --- User Story 6 (specs/011-atlas-map-modes): Location Market -----------
+
+/** Memoized per dataset reference (see the MapLayer interface's doc
+ * comment) — markets have no in-game color of their own (unlike
+ * culture/religion, research.md §6), so this mirrors RGO's own
+ * getRgoColorMap: a stable golden-angle hue assigned in first-encountered
+ * order while scanning the dataset. */
+const marketColorCache = new WeakMap<MapLocationDataset, Map<number, [number, number, number]>>();
+function getMarketColorMap(dataset: MapLocationDataset): Map<number, [number, number, number]> {
+  const cached = marketColorCache.get(dataset);
+  if (cached) return cached;
+  const colors = new Map<number, [number, number, number]>();
+  let index = 0;
+  for (const row of dataset.values()) {
+    if (row.marketIdx === null || colors.has(row.marketIdx)) continue;
+    colors.set(row.marketIdx, hslToRgb(index * GOLDEN_ANGLE_DEG, RGO_SATURATION, RGO_LIGHTNESS));
+    index += 1;
+  }
+  marketColorCache.set(dataset, colors);
+  return colors;
+}
+
+const marketLayer: MapLayer = {
+  id: "market",
+  label: "Location Market",
+  getFill(row, dataset) {
+    if (row.marketIdx === null) return NEUTRAL_COLOR;
+    return getMarketColorMap(dataset).get(row.marketIdx) ?? NEUTRAL_COLOR;
+  },
+  getTooltipFields(row) {
+    return [
+      { label: "Location", value: row.name },
+      { label: "Market", value: row.marketIdx === null ? "No data" : `Market ${row.marketIdx}` },
+    ];
+  },
+  getLegend(dataset) {
+    const entries = Array.from(getMarketColorMap(dataset), ([marketIdx, color]) => ({
+      color,
+      label: `Market ${marketIdx}`,
+    }));
+    entries.sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
+    return entries;
+  },
+};
+MAP_LAYERS.push(marketLayer);
+
+// --- User Story 7 (specs/011-atlas-map-modes): Tax Base -------------------
+
+const taxBaseLayer = numericLayer(
+  "taxBase",
+  "Tax Base",
+  "Tax Base",
+  (row) => row.possibleTax,
+  [229, 245, 224],
+  [0, 109, 44],
+);
+MAP_LAYERS.push(taxBaseLayer);
+
+// --- User Story 8 (specs/011-atlas-map-modes): Soldiers -------------------
+
+const soldiersLayer = numericLayer(
+  "soldiers",
+  "Soldiers",
+  "Soldiers",
+  (row) => row.soldiers,
+  [254, 229, 217],
+  [165, 15, 21],
+);
+MAP_LAYERS.push(soldiersLayer);

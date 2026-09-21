@@ -18,6 +18,15 @@ function makeRow(overrides: Partial<MapLocationRow> = {}): MapLocationRow {
     control: 1,
     rawMaterial: "clay",
     totalPopulation: 5,
+    development: 20,
+    rank: "city",
+    marketIdx: 1,
+    possibleTax: 10,
+    soldiers: 5,
+    cultureName: "swedish",
+    cultureColor: [0, 104, 165],
+    religionName: "lutheran",
+    religionColor: [0, 0, 178],
     ...overrides,
   };
 }
@@ -191,6 +200,215 @@ describe("mapLayers control layer (specs/005-map-visualization US5)", () => {
       { label: "Location", value: "Test Location" },
       { label: "Controller", value: "RUS" },
       { label: "Control", value: expect.stringContaining("75") },
+    ]);
+  });
+});
+
+describe("mapLayers terrain layer (specs/011-atlas-map-modes US2)", () => {
+  it("colors a location by its real terrain category, sourced from the generated location_templates.txt lookup", () => {
+    const layer = requireLayer("terrain");
+    // stockholm's real topography is "flatland" (locationTerrain.ts,
+    // generated from the real local install — research.md §5).
+    const row = makeRow({ name: "stockholm" });
+    expect(layer.getFill(row, new Map())).not.toEqual(NEUTRAL_COLOR);
+    // Same category always resolves to the same color.
+    expect(layer.getFill(row, new Map())).toEqual(layer.getFill(makeRow({ name: "stockholm" }), new Map()));
+  });
+
+  it("falls back to the neutral color for a location name absent from the terrain lookup", () => {
+    const layer = requireLayer("terrain");
+    const row = makeRow({ name: "definitely-not-a-real-location-xyz" });
+    expect(layer.getFill(row, new Map())).toEqual(NEUTRAL_COLOR);
+  });
+
+  it("tooltip surfaces the location's name and terrain category", () => {
+    const layer = requireLayer("terrain");
+    const row = makeRow({ name: "stockholm" });
+    expect(layer.getTooltipFields(row)).toEqual([
+      { label: "Location", value: "stockholm" },
+      { label: "Terrain", value: "flatland" },
+    ]);
+  });
+});
+
+describe("mapLayers rank layer (specs/011-atlas-map-modes US3)", () => {
+  it("assigns each of the 4 confirmed rank values a distinct color", () => {
+    const layer = requireLayer("rank");
+    const rural = layer.getFill(makeRow({ rank: "rural_settlement" }), new Map());
+    const town = layer.getFill(makeRow({ rank: "town" }), new Map());
+    const city = layer.getFill(makeRow({ rank: "city" }), new Map());
+    const mega = layer.getFill(makeRow({ rank: "megalopolis" }), new Map());
+    const colors = [rural, town, city, mega];
+    for (let i = 0; i < colors.length; i++) {
+      for (let j = i + 1; j < colors.length; j++) {
+        expect(colors[i]).not.toEqual(colors[j]);
+      }
+    }
+  });
+
+  it("falls back to the neutral color for a location with no rank", () => {
+    const layer = requireLayer("rank");
+    expect(layer.getFill(makeRow({ rank: null }), new Map())).toEqual(NEUTRAL_COLOR);
+  });
+
+  it("tooltip surfaces the location's name and rank", () => {
+    const layer = requireLayer("rank");
+    const row = makeRow({ name: "Test Location", rank: "city" });
+    expect(layer.getTooltipFields(row)).toEqual([
+      { label: "Location", value: "Test Location" },
+      { label: "Rank", value: "city" },
+    ]);
+  });
+});
+
+describe("mapLayers primary culture layer (specs/011-atlas-map-modes US4)", () => {
+  it("fills a location with its culture's real in-game color, sourced from the save", () => {
+    const layer = requireLayer("primaryCulture");
+    const row = makeRow({ cultureColor: [0, 104, 165] });
+    expect(layer.getFill(row, new Map())).toEqual([0, 104, 165]);
+  });
+
+  it("falls back to the neutral color for a location with no culture, or whose culture id doesn't resolve", () => {
+    const layer = requireLayer("primaryCulture");
+    expect(layer.getFill(makeRow({ cultureColor: null }), new Map())).toEqual(NEUTRAL_COLOR);
+  });
+
+  it("tooltip surfaces the location's name and culture name", () => {
+    const layer = requireLayer("primaryCulture");
+    const row = makeRow({ name: "Test Location", cultureName: "swedish" });
+    expect(layer.getTooltipFields(row)).toEqual([
+      { label: "Location", value: "Test Location" },
+      { label: "Culture", value: "swedish" },
+    ]);
+  });
+
+  it("legend lists every distinct culture present in the dataset, sorted", () => {
+    const layer = requireLayer("primaryCulture");
+    const swedish = makeRow({ cultureName: "swedish", cultureColor: [0, 104, 165] });
+    const polesian = makeRow({ cultureName: "polesian_culture", cultureColor: [166, 133, 133] });
+    const dataset = datasetOf([swedish, polesian]);
+    expect(layer.getLegend(dataset)).toEqual([
+      { color: [166, 133, 133], label: "polesian_culture" },
+      { color: [0, 104, 165], label: "swedish" },
+    ]);
+  });
+});
+
+describe("mapLayers primary religion layer (specs/011-atlas-map-modes US5)", () => {
+  it("fills a location with its religion's real in-game color, sourced from the save", () => {
+    const layer = requireLayer("primaryReligion");
+    const row = makeRow({ religionColor: [0, 0, 178] });
+    expect(layer.getFill(row, new Map())).toEqual([0, 0, 178]);
+  });
+
+  it("falls back to the neutral color for a location with no religion, or whose religion id doesn't resolve", () => {
+    const layer = requireLayer("primaryReligion");
+    expect(layer.getFill(makeRow({ religionColor: null }), new Map())).toEqual(NEUTRAL_COLOR);
+  });
+
+  it("tooltip surfaces the location's name and religion name", () => {
+    const layer = requireLayer("primaryReligion");
+    const row = makeRow({ name: "Test Location", religionName: "lutheran" });
+    expect(layer.getTooltipFields(row)).toEqual([
+      { label: "Location", value: "Test Location" },
+      { label: "Religion", value: "lutheran" },
+    ]);
+  });
+});
+
+describe("mapLayers market layer (specs/011-atlas-map-modes US6)", () => {
+  it("assigns two different markets visibly distinct colors, deterministically for the same dataset", () => {
+    const layer = requireLayer("market");
+    const market1 = makeRow({ marketIdx: 1 });
+    const market2 = makeRow({ marketIdx: 2 });
+    const dataset = datasetOf([market1, market2]);
+    const fill1 = layer.getFill(market1, dataset);
+    const fill2 = layer.getFill(market2, dataset);
+    expect(fill1).not.toEqual(fill2);
+    expect(layer.getFill(market1, dataset)).toEqual(fill1);
+  });
+
+  it("falls back to the neutral color for a location with no market", () => {
+    const layer = requireLayer("market");
+    const row = makeRow({ marketIdx: null });
+    expect(layer.getFill(row, datasetOf([row]))).toEqual(NEUTRAL_COLOR);
+  });
+
+  it("tooltip surfaces the location's name and market", () => {
+    const layer = requireLayer("market");
+    const row = makeRow({ name: "Test Location", marketIdx: 7 });
+    expect(layer.getTooltipFields(row)).toEqual([
+      { label: "Location", value: "Test Location" },
+      { label: "Market", value: "Market 7" },
+    ]);
+  });
+});
+
+describe("mapLayers tax base layer (specs/011-atlas-map-modes US7)", () => {
+  it("shades a location with no tax base value distinctly from a taxed one", () => {
+    const layer = requireLayer("taxBase");
+    const empty = makeRow({ possibleTax: 0 });
+    const taxed = makeRow({ possibleTax: 40 });
+    const dataset = datasetOf([empty, taxed]);
+    expect(layer.getFill(empty, dataset)).toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(taxed, dataset)).not.toEqual(NEUTRAL_COLOR);
+  });
+
+  it("tooltip surfaces the location's name and tax base value", () => {
+    const layer = requireLayer("taxBase");
+    const row = makeRow({ name: "Test Location", possibleTax: 31.69176 });
+    expect(layer.getTooltipFields(row)).toEqual([
+      { label: "Location", value: "Test Location" },
+      { label: "Tax Base", value: expect.stringContaining("31.7") },
+    ]);
+  });
+});
+
+describe("mapLayers soldiers layer (specs/011-atlas-map-modes US8)", () => {
+  it("shades a location with no soldiers value distinctly from one with soldiers", () => {
+    const layer = requireLayer("soldiers");
+    const empty = makeRow({ soldiers: 0 });
+    const garrisoned = makeRow({ soldiers: 9.5 });
+    const dataset = datasetOf([empty, garrisoned]);
+    expect(layer.getFill(empty, dataset)).toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(garrisoned, dataset)).not.toEqual(NEUTRAL_COLOR);
+  });
+
+  it("tooltip surfaces the location's name and soldier population", () => {
+    const layer = requireLayer("soldiers");
+    const row = makeRow({ name: "Test Location", soldiers: 9.5 });
+    expect(layer.getTooltipFields(row)).toEqual([
+      { label: "Location", value: "Test Location" },
+      { label: "Soldiers", value: expect.stringContaining("9.5") },
+    ]);
+  });
+});
+
+describe("mapLayers development layer (specs/011-atlas-map-modes US1)", () => {
+  it("shades a location with no development value distinctly from a developed one", () => {
+    const layer = requireLayer("development");
+    const empty = makeRow({ development: 0 });
+    const developed = makeRow({ development: 40 });
+    const dataset = datasetOf([empty, developed]);
+    expect(layer.getFill(empty, dataset)).toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(developed, dataset)).not.toEqual(NEUTRAL_COLOR);
+  });
+
+  it("stays outlier-resistant, matching the population layer's approach", () => {
+    const layer = requireLayer("development");
+    const small1 = makeRow({ development: 1 });
+    const small2 = makeRow({ development: 2 });
+    const outlier = makeRow({ development: 5000 });
+    const dataset = datasetOf([small1, small2, outlier]);
+    expect(layer.getFill(small1, dataset)).not.toEqual(layer.getFill(small2, dataset));
+  });
+
+  it("tooltip surfaces the location's name and development value", () => {
+    const layer = requireLayer("development");
+    const row = makeRow({ name: "Test Location", development: 42 });
+    expect(layer.getTooltipFields(row)).toEqual([
+      { label: "Location", value: "Test Location" },
+      { label: "Development", value: expect.stringContaining("42") },
     ]);
   });
 });

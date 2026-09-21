@@ -208,6 +208,7 @@ locations={
 			owner=3
 			controller=3
 			previous_owner=3
+			market=1
 			religion=15
 			culture=1851
 			rank=city
@@ -226,6 +227,7 @@ locations={
 			controller=2025
 			previous_controller=83888522
 			previous_owner=83888522
+			market=1
 			religion=18
 			culture=884
 			rank=town
@@ -244,8 +246,58 @@ locations={
 			tax=13.82359
 			possible_tax=31.69176
 			population={
+				pop_stats={
+					soldiers={
+						population_ratio=9.75
+						produced=9.5
+						last=-0.00001
+						unemployed=0.25724
+						changes={
+							Reproduction=0.00724
+							DemotionOut=-0.00725
+						}
+					}
+				}
 				pops={ 943 14016 }
 			}
+		}
+	}
+}
+culture_manager={
+	database={
+		1851={
+			name="swedish"
+			culture_definition=swedish
+			color=rgb {0 104 165 }
+			language=swedish_dialect
+		}
+		884={
+			name="polesian_culture"
+			culture_definition=polesian_culture
+			color=rgb {166 133 133 }
+			language=belarusian_dialect
+		}
+	}
+}
+religion_manager={
+	database={
+		15={
+			name="lutheran"
+			key="lutheran"
+			icon="lutheran"
+			index=15
+			definition=lutheran
+			color=rgb {0 0 178 }
+			group=christian
+		}
+		18={
+			name="orthodox"
+			key="orthodox"
+			icon="orthodox"
+			index=18
+			definition=orthodox
+			color=rgb {121 53 140 }
+			group=christian
 		}
 	}
 }

@@ -1364,3 +1364,78 @@ limitation, reported upstream), so verification relied on the test
 suite (comprehensive: parser, query, and position-math coverage against
 real fixture data) plus idle-state browser checks, not a rendered
 screenshot with live data.
+
+## Expanded Atlas Map Modes (011) ships: 8 new layers, and a hard rule against trusting the trimmed fixture for field existence (2026-09-21)
+
+Eight new `mapLayers.ts` entries (Development, Location Terrain, Location
+Rank, Primary Culture, Primary Religion, Location Market, Tax Base,
+Soldiers) on top of feature 005's four. Three originally-requested modes
+(Location Wealth, Food Productivity, Sailors) were dropped entirely —
+no genuine per-location field backs any of them in the real save,
+confirmed by direct inspection, not by absence in the trimmed fixture.
+
+**The trimmed fixture is not a source of truth for "does this field
+exist."** `tests/fixtures/rus-1628-minimal.eu5` was hand-minimized for
+earlier features and silently omits anything they never read. Early in
+this feature, grepping it for `wealth`/`soldiers`/`food` came up empty
+and was reported as "not in the save" — wrong on two of three: `soldiers`
+turned out real (nested under `population.pop_stats.soldiers`, a
+sub-object the fixture's sample locations don't carry), caught only
+because the user, looking at the live game, pushed back immediately.
+Every field this feature ships was re-confirmed against the real, full
+save (`/Users/halda/Downloads/Russia (Melted).eu5`) before being wired
+up; the fixture was only extended afterward, once each field's real name
+and shape were known.
+
+**Two of three "obviously present" attributes turned out not to exist
+as location-level save data at all.** `wealth` never appears anywhere in
+the save under any name — the one plausible-sounding candidate
+(`value_flow`) was rejected after checking its actual distribution
+(median 1.78, max ~2 trillion — not a currency figure). `food` doesn't
+exist per-location either, confirmed by grepping the entire ~5.67M-line
+`locations.locations` block for zero matches; it only exists one level
+up, on `provinces`. Per constitution Principle IV, neither was
+approximated from a coarser-grained figure — both were dropped from
+scope rather than shipped as a misleadingly location-grained reading of
+province/country data.
+
+**`culture`/`religion` resolve to real names and real in-game colors,
+not a generated fallback palette.** `locations.culture`/`.religion` are
+bare numeric ids — same opaque-id shape `population.culture`/`.religion`
+already had since feature 002/004, never resolved anywhere in the app.
+The save's own `culture_manager`/`religion_manager` sections (not
+previously in `1.3.11.ts`'s `STRUCTURED_KEYS`) turned out to carry both
+a real `name` and the game's own `color` per id — so two new small
+reference tables (`cultures`, `religions`) plus a join replaced what was
+originally planned as another RGO-style generated-fallback-color layer.
+
+**Location Terrain is generated-and-committed reference data, not a
+save field or a topojson-embedded property.** Terrain never appears in
+a save at all — it's static per-location-name data in the game's own
+`location_templates.txt` install file. Rather than bake it into
+`public/map/locations.topojson` (feature 003's asset, whose location
+features today carry only `name`), a new one-off script,
+`tools/map-generation/generate-terrain-lookup.ts`
+(`npm run generate:terrain -- --install <path>`), writes a committed
+`locationTerrain.ts` lookup — the same generation-then-commit shape
+`rgoGameColors.ts` already established, joined by the same location
+`name` key the map already uses at runtime (confirmed directly in
+`MapCanvas.tsx`'s `dataset.get(polygon.name)` — a `queries.ts` doc
+comment elsewhere claims `idx` became the join key in a later revision;
+that never actually shipped, the runtime code still keys by `name`).
+
+**One quiet gap closed in passing**: `locations.development` was in the
+schema and parser since feature 001/005, but `listMapLocationsArrow`
+never actually selected it and `MapLocationRow` never carried it — the
+existing four layers just never needed it. Adding the Development layer
+here required adding the column to the query and row type first, the
+same shared-infrastructure change every other new field in this feature
+needed.
+
+**Every numeric layer got its own gradient, not a copy of Population's
+blue.** A shared `numericLayer(...)` factory in `mapLayers.ts` reuses
+Population's log-normalized, per-dataset-memoized shading (never
+touching Population's own code), but Development/Tax Base/Soldiers each
+supply distinct low/high colors (amber, green, red) so a user can tell
+which of the resulting 12 layers is active without reading the sidebar
+label.

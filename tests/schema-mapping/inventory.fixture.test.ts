@@ -35,6 +35,11 @@ describe("buildSaveInventory against the committed fixture", () => {
         // the fixture for that feature's own extraction tests.
         "character_db",
         "countries",
+        // specs/011-atlas-map-modes: culture_manager/religion_manager
+        // added to the fixture for the Primary Culture/Religion map
+        // layers' own extraction tests.
+        "culture_manager",
+        "religion_manager",
         "locations",
         "market_manager",
         "metadata",

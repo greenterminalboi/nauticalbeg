@@ -1,0 +1,711 @@
+{
+  "workflow": "companion",
+  "specName": "Expanded Atlas Map Modes",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-21T12:28:31.153Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-21T12:31:50.106Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-21T12:32:01.236Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:08:24.372Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:08:24.430Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:08:31.810Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-21T13:10:01.123Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:11:17.139Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-21T13:11:41.235Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:12:30.182Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:13:30.015Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:14:01.345Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:14:01.406Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:14:34.888Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:15:19.250Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:15:19.311Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:16:15.914Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:16:15.976Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:17:20.202Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:17:20.263Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:18:10.727Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:18:23.141Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:18:56.331Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:18:56.391Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:16.971Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.034Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.095Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.158Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.223Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.290Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.357Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.427Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.495Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.568Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.666Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:20:17.746Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:28:28.452Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:28:28.512Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-21T13:28:28.524Z"
+    }
+  ],
+  "last_action": "All 29 tasks closed, full suite green (66 files/363 tests, --no-file-parallelism), tsc --noEmit clean",
+  "coverage": {
+    "FR-001": {
+      "title": "Development map layer",
+      "tasks": "T010,T011",
+      "tests": "tests/components/mapLayers.test.ts::mapLayers development layer"
+    },
+    "FR-002": {
+      "title": "Location Terrain map layer",
+      "tasks": "T012,T013,T014,T015",
+      "tests": "tests/components/mapLayers.test.ts::mapLayers terrain layer"
+    },
+    "FR-003": {
+      "title": "Location Rank map layer",
+      "tasks": "T016,T017",
+      "tests": "tests/components/mapLayers.test.ts::mapLayers rank layer"
+    },
+    "FR-004": {
+      "title": "Primary Culture map layer",
+      "tasks": "T018,T019",
+      "tests": "tests/components/mapLayers.test.ts::mapLayers primary culture layer"
+    },
+    "FR-005": {
+      "title": "Primary Religion map layer",
+      "tasks": "T020,T021",
+      "tests": "tests/components/mapLayers.test.ts::mapLayers primary religion layer"
+    },
+    "FR-006": {
+      "title": "Location Market map layer",
+      "tasks": "T022,T023",
+      "tests": "tests/components/mapLayers.test.ts::mapLayers market layer"
+    },
+    "FR-007": {
+      "title": "Tax Base map layer",
+      "tasks": "T024,T025",
+      "tests": "tests/components/mapLayers.test.ts::mapLayers tax base layer"
+    },
+    "FR-008": {
+      "title": "Soldiers map layer",
+      "tasks": "T026,T027",
+      "tests": "tests/components/mapLayers.test.ts::mapLayers soldiers layer"
+    },
+    "FR-009": {
+      "title": "Neutral no-data fill per new layer",
+      "tasks": "T010,T014,T016,T018,T020,T022,T024,T026",
+      "tests": "tests/components/mapLayers.test.ts (neutral-color assertions across all 8 new layer describe blocks)"
+    },
+    "FR-010": {
+      "title": "Tooltip attribute value per new layer",
+      "tasks": "T011,T015,T017,T019,T021,T023,T025,T027",
+      "tests": "tests/components/mapLayers.test.ts (tooltip assertions across all 8 new layer describe blocks)"
+    },
+    "FR-011": {
+      "title": "Sidebar entry per new layer",
+      "tasks": "T011,T015,T017,T019,T021,T023,T025,T027",
+      "tests": "inherited from feature 005s MapSidebar, which renders every MAP_LAYERS entry generically"
+    },
+    "FR-012": {
+      "title": "Outlier-resistant numeric shading scale",
+      "tasks": "T009",
+      "tests": "tests/components/mapLayers.test.ts::numericLayer outlier-resistance tests (development/taxBase/soldiers)"
+    },
+    "FR-013": {
+      "title": "Usable legend for large categorical sets",
+      "tasks": "T015,T019,T021,T023",
+      "tests": "tests/components/mapLayers.test.ts::terrain/primaryCulture/market legend tests"
+    },
+    "FR-014": {
+      "title": "No reload/query on layer switch, pan/zoom preserved",
+      "tasks": "T029",
+      "tests": "inherited from feature 005s existing MapTab/layer-switch mechanism, unmodified by this feature"
+    },
+    "FR-015": {
+      "title": "Usable legend for large categorical sets"
+    },
+    "FR-016": {
+      "title": "No reload/query on layer switch, pan/zoom preserved"
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 22,
+    "scopeSignal": "none",
+    "verdict": "oversized",
+    "note": "revised after dropping Wealth/Food/Sailors and adding Location Rank"
+  },
+  "expectations": [
+    "No changes to the four existing layers (Political, Location Population, RGO, Control)",
+    "No simultaneous/stacked layers (still exactly one active layer at a time, per spec 005)",
+    "Exact save field names/paths for the new attributes are confirmed during plan/research, not pinned in this spec"
+  ],
+  "context": [
+    "area: src/components/Overview/mapLayers.ts (existing MapLayer registry — Political/Population/RGO/Control from spec 005)",
+    "area: src/components/Overview/mapLocationData.ts (per-location dataset loaded once per save)",
+    "area: src/storage/queries.ts listMapLocationsArrow (per-location SQL feeding the map)",
+    "area: src/storage/schema.sql locations table (development already stored; terrain/wealth/tax_base/culture/religion/food/sailors/soldiers/market not yet stored)",
+    "area: src/parser/version-adapters/1.3.11.ts (save-field extraction into locations table)",
+    "area: src/storage/schema.sql markets table (spec 007 — no per-location market membership stored yet)",
+    "constraint: reuse spec 005s existing map-layer infrastructure (sidebar, tooltip, legend, pan/zoom preservation) rather than building new UI mechanics",
+    "field: locations.development (Development)",
+    "field: game install location_templates.txt topography (Location Terrain)",
+    "field: locations.rank (Location Rank — 4 values: rural_settlement/town/city/megalopolis, confirmed against real save)",
+    "field: locations.culture numeric id (Primary Culture)",
+    "field: locations.religion numeric id (Primary Religion)",
+    "field: locations.market (Location Market — direct field, no join through markets.center_location_idx needed)",
+    "field: locations.tax / locations.possible_tax (Tax Base)",
+    "field: locations.population.pop_stats.soldiers (Soldiers — confirmed via real save, not the trimmed fixture)",
+    "dropped: Location Wealth, Food Productivity, Sailors — no genuine per-location save field after real-save investigation (see memory: never_guess_map_mode_fields_from_fixture, eu5_save_format_gotchas)"
+  ],
+  "intent": "Add ten new per-location map modes (Development, Terrain, Primary Culture, Primary Religion, Location Market, Wealth, Tax Base, Food Productivity, Sailors, Soldiers) to the existing Map tab, following spec 005s layer pattern.",
+  "decisions": [
+    {
+      "decision": "Drop Location Wealth, Food Productivity, Sailors",
+      "why": "No genuine per-location save field exists for any of the three, confirmed by exhaustive real-save inspection; value_flow (wealth candidate) rejected on distribution grounds (median 1.78, max ~2 trillion)",
+      "rejected": "Approximating from prosperity/possible_tax, or spreading province/country-level figures across member locations"
+    },
+    {
+      "decision": "Tax Base uses possible_tax, not tax",
+      "why": "possible_tax is the fiscal-base concept (potential before reductions); tax is current collected revenue",
+      "rejected": "tax (current collected)"
+    },
+    {
+      "decision": "Soldiers uses population.pop_stats.soldiers.produced",
+      "why": "Matches how Location Population already shades by a raw headcount, not a ratio; population_ratio was the other candidate",
+      "rejected": "population.pop_stats.soldiers.population_ratio"
+    },
+    {
+      "decision": "Primary Culture/Religion resolve via two new tables (cultures, religions) sourced from culture_manager/religion_manager, using the saves own colors",
+      "why": "locations.culture/religion are bare numeric ids with no existing name lookup anywhere in the schema; the saves own manager sections carry both name and color per id",
+      "rejected": "Reading culture/religion from static location_templates.txt (that is default/historical, not current save state)"
+    },
+    {
+      "decision": "Location Terrain is generated static reference data (tools/map-generation/generate-terrain-lookup.ts writing src/components/Overview/locationTerrain.ts), not save-parsed or baked into the topojson asset",
+      "why": "Terrain never appears in the save; it only exists in the games location_templates.txt install file, same kind of data rgoGameColors.ts already covers under the constitutions Encyclopedia-data exception",
+      "rejected": "Baking topography into public/map/locations.topojson (feature 003 asset); reading location_templates.txt at runtime (no local filesystem access in a browser app)"
+    },
+    {
+      "decision": "Location Market reads locations.market directly, no membership-list join",
+      "why": "The location record already carries market=<idx> directly, confirmed in the real save",
+      "rejected": "Normalizing markets member-location list into a join table (the original, more complex plan)"
+    },
+    {
+      "decision": "Location Rank reads locations.rank, not original_rank",
+      "why": "rank is the locations current settlement tier; original_rank is a historical snapshot",
+      "rejected": "original_rank"
+    },
+    {
+      "decision": "Gave each numeric layer its own low/high gradient color pair (amber for Development, green for Tax Base, red for Soldiers) instead of reusing Populations blue",
+      "why": "Only one layer is active at a time, but distinct gradients help a user recognize which of 12 layers is active at a glance (spec SC-004)",
+      "rejected": "Reusing Populations exact blue gradient for every numeric layer"
+    },
+    {
+      "decision": "Location Market tooltip/legend shows \"Market <idx>\" rather than a resolved display name",
+      "why": "MapLocationRow only carries marketIdx, not a joined display name; matches the markets querys own COALESCE(...,  Market  || idx) fallback convention elsewhere in this codebase",
+      "rejected": "Joining to a resolved market display name in listMapLocationsArrow, which would have added another join for a label already available in queries.ts elsewhere"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Planned 8 confirmed map layers (Development, Terrain, Rank, Primary Culture, Primary Religion, Location Market, Tax Base, Soldiers) after dropping 3 unconfirmable ones; added 6 locations columns + 2 new reference tables (cultures, religions) + 1 generated terrain lookup",
+      "key_finding": "Every field must be confirmed against the real save (not the trimmed fixture) before being wired up — two of the original nine modes had no real field, and value_flow (a plausible-sounding wealth candidate) failed a distribution sanity check"
+    },
+    "tasks": {
+      "summary": "29 tasks across Setup, Foundational, 8 per-story phases, and Polish; US2 (Terrain) is fully independent of Foundational and every other story"
+    },
+    "implement": {
+      "summary": "8 new map layers shipped (Development, Location Terrain, Location Rank, Primary Culture, Primary Religion, Location Market, Tax Base, Soldiers); 29/29 tasks done, 363/363 tests pass, tsc clean"
+    }
+  },
+  "approach": "Extend feature 005's MapLayer registry with 8 new layers reading from locations table additions (rank/market_idx/possible_tax/soldiers/culture_idx/religion_idx) plus two new per-save reference tables (cultures, religions) and one generated static terrain lookup, all loaded through the existing single per-save listMapLocationsArrow query with no new query path.",
+  "currentTask": "T029",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Extended rus-1628-minimal.eu5 with market, population.pop_stats.soldiers, and culture_manager/religion_manager sections, all values sourced from the real save (culture 1851=swedish, 884=polesian_culture; religion 15=lutheran, 18=orthodox)",
+      "files": [
+        "tests/fixtures/rus-1628-minimal.eu5"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added 6 additive ALTER TABLE columns to locations (rank/culture_idx/religion_idx/market_idx/possible_tax/soldiers) plus new cultures/religions reference tables",
+      "files": [
+        "src/storage/schema.sql"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added culture_manager/religion_manager extraction into new cultures/religions tables",
+      "files": [
+        "src/parser/version-adapters/1.3.11.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Extracted rank/market/possible_tax/soldiers (via population.pop_stats.soldiers.produced) into the locations insert",
+      "files": [
+        "src/parser/version-adapters/1.3.11.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Extended listMapLocationsArrow with rank/market_idx/possible_tax/soldiers columns and cultures/religions LEFT JOINs",
+      "files": [
+        "src/storage/queries.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Extended MapLocationRow + loadMapLocationDataset with rank/marketIdx/possibleTax/soldiers/cultureName/cultureColor/religionName/religionColor",
+      "files": [
+        "src/components/Overview/mapLocationData.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added shared numericLayer log-normalized gradient factory to mapLayers.ts for reuse by Development/Tax Base/Soldiers",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added parser regression tests for rank/market_idx/possible_tax/soldiers/cultures/religions; extended raw_sections exclusion list",
+      "files": [
+        "tests/parser/adapter.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added listMapLocationsArrow tests for the 6 new columns + culture/religion join, and extended kept-save-compatibility test for the new columns/tables",
+      "files": [
+        "tests/storage/map-locations.test.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Added development layer pure-function tests; also fixed a gap: development was never actually exposed through listMapLocationsArrow/MapLocationRow despite being in the DB, now fixed in queries.ts/mapLocationData.ts",
+      "files": [
+        "tests/components/mapLayers.test.ts",
+        "src/storage/queries.ts",
+        "src/components/Overview/mapLocationData.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added development entry to MAP_LAYERS using the numericLayer helper",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Wrote generate-terrain-lookup.ts CLI script + npm generate:terrain script",
+      "files": [
+        "tools/map-generation/generate-terrain-lookup.ts",
+        "package.json"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Ran the script against the real local install, committed all 28573 locations to locationTerrain.ts",
+      "files": [
+        "src/components/Overview/locationTerrain.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Added terrain layer pure-function tests against the real generated lookup",
+      "files": [
+        "tests/components/mapLayers.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Added terrain entry to MAP_LAYERS with golden-angle-hue colors per topography category, memoized once per module load",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Added rank layer pure-function tests",
+      "files": [
+        "tests/components/mapLayers.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Added rank entry to MAP_LAYERS with a fixed 4-value color map",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Added primary culture layer pure-function tests",
+      "files": [
+        "tests/components/mapLayers.test.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Added primaryCulture entry to MAP_LAYERS using the save's own culture colors",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Added primary religion layer pure-function tests",
+      "files": [
+        "tests/components/mapLayers.test.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Added primaryReligion entry to MAP_LAYERS mirroring the culture layer's shape",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Added market layer pure-function tests",
+      "files": [
+        "tests/components/mapLayers.test.ts"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Added getMarketColorMap helper (RGO-style golden-angle assignment) + market entry to MAP_LAYERS",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Added tax base layer pure-function tests",
+      "files": [
+        "tests/components/mapLayers.test.ts"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Added taxBase entry to MAP_LAYERS using the numericLayer helper",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Added soldiers layer pure-function tests",
+      "files": [
+        "tests/components/mapLayers.test.ts"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Added soldiers entry to MAP_LAYERS using the numericLayer helper. Open item: produced vs population_ratio spot-check against the live in-game location panel not performed this session (no interactive game session available) -- recorded as a concern",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Manual review: all 8 new layers use lightness+hue gradients (not hue-only), remain distinguishable under color-vision deficiency via lightness alone, and every layer carries a text tooltip as the non-color identification path (Principle VI); SC-004 satisfied by each layer's distinct sidebar label",
+      "files": [
+        "src/components/Overview/mapLayers.ts"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Full suite green: 66 files / 363 tests pass (--no-file-parallelism; default parallel run has pre-existing unrelated flakiness in keep-save.test.ts/queries.test.ts/RulerHistoryChart.test.tsx from OPFS/duckdb-wasm resource contention, confirmed unrelated to this feature by isolated runs). tsc --noEmit clean. No lint script configured in this project.",
+      "files": [
+        "tests/parser/adapter.test.ts",
+        "tests/storage/map-locations.test.ts",
+        "tests/components/mapLayers.test.ts",
+        "tests/schema-mapping/inventory.fixture.test.ts"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "TypeScript compiles clean",
+      "command": "npx tsc --noEmit",
+      "result": "0 errors"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "research.md open verification item (Soldiers: population.pop_stats.soldiers.produced vs population_ratio) was not spot-checked against the live in-game location panel this session -- no interactive game session available. produced was chosen because it matches Locations Population layers own use of a raw headcount, not a ratio.",
+      "step": "implement"
+    },
+    {
+      "note": "Full parallel vitest run (npm run test) has pre-existing flakiness unrelated to this feature: keep-save.test.ts, storage/queries.test.ts, and RulerHistoryChart.test.tsx intermittently time out or fail on unrelated assertions under full-suite parallel load (OPFS/duckdb-wasm resource contention), confirmed by isolated runs all passing cleanly. --no-file-parallelism gives a fully clean 66/66 file, 363/363 test run.",
+      "step": "implement"
+    }
+  ]
+}

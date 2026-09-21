@@ -133,6 +133,40 @@ ALTER TABLE locations ADD COLUMN IF NOT EXISTS raw_material TEXT; -- from locati
 ALTER TABLE locations ADD COLUMN IF NOT EXISTS controller_idx INTEGER; -- from locations.locations[idx].controller; logically REFERENCES nations(idx) — may differ from owner_idx during occupation
 ALTER TABLE locations ADD COLUMN IF NOT EXISTS control DOUBLE; -- from locations.locations[idx].control — drives the Control map layer's shading strength
 
+-- specs/011-atlas-map-modes: six more fields already sitting on the raw
+-- location record, confirmed against a real save (research.md), never
+-- the trimmed test fixture (see the feature's own recorded lesson on
+-- why). `culture_idx`/`religion_idx` are bare ids — resolved to a name
+-- and the save's own in-game color via the `cultures`/`religions`
+-- tables below, not stored as text here.
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS rank TEXT; -- from locations.locations[idx].rank — current settlement tier, drives the Location Rank map layer
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS culture_idx INTEGER; -- from locations.locations[idx].culture; logically REFERENCES cultures(idx) — drives the Primary Culture map layer
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS religion_idx INTEGER; -- from locations.locations[idx].religion; logically REFERENCES religions(idx) — drives the Primary Religion map layer
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS market_idx INTEGER; -- from locations.locations[idx].market; logically REFERENCES markets(idx) — drives the Location Market map layer
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS possible_tax DOUBLE; -- from locations.locations[idx].possible_tax — the fiscal-base value (not `tax`, the current collected revenue), drives the Tax Base map layer
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS soldiers DOUBLE; -- from locations.locations[idx].population.pop_stats.soldiers.produced — drives the Soldiers map layer
+
+-- specs/011-atlas-map-modes: per-save reference tables resolving the
+-- bare `culture`/`religion` ids on `locations` (and `population`, which
+-- has carried the same opaque ids unresolved since feature 002/004) to
+-- a real name and the save's own in-game color. Sourced from the save's
+-- own `culture_manager.database`/`religion_manager.database` sections
+-- (research.md §4) — not previously parsed at all before this feature.
+CREATE TABLE IF NOT EXISTS cultures (
+  idx INTEGER PRIMARY KEY,
+  name TEXT,
+  color_r INTEGER,
+  color_g INTEGER,
+  color_b INTEGER
+);
+CREATE TABLE IF NOT EXISTS religions (
+  idx INTEGER PRIMARY KEY,
+  name TEXT,
+  color_r INTEGER,
+  color_g INTEGER,
+  color_b INTEGER
+);
+
 -- Minimal war participation data: only enough to answer "is this nation
 -- currently at war" (FR-006's war-status stat). One row per country per
 -- war they participate in; full war history/detail is out of scope for

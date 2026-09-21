@@ -397,10 +397,25 @@ export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuff
        COALESCE(controller.name, controller.tag, 'Unknown') as controller_name,
        locations.control as control,
        locations.raw_material as raw_material,
-       COALESCE(pop_totals.total_population, 0) as total_population
+       COALESCE(pop_totals.total_population, 0) as total_population,
+       locations.development as development,
+       locations.rank as rank,
+       locations.market_idx as market_idx,
+       locations.possible_tax as possible_tax,
+       locations.soldiers as soldiers,
+       culture.name as culture_name,
+       culture.color_r as culture_color_r,
+       culture.color_g as culture_color_g,
+       culture.color_b as culture_color_b,
+       religion.name as religion_name,
+       religion.color_r as religion_color_r,
+       religion.color_g as religion_color_g,
+       religion.color_b as religion_color_b
      FROM locations
      LEFT JOIN nations owner ON owner.idx = locations.owner_idx
      LEFT JOIN nations controller ON controller.idx = locations.controller_idx
+     LEFT JOIN cultures culture ON culture.idx = locations.culture_idx
+     LEFT JOIN religions religion ON religion.idx = locations.religion_idx
      LEFT JOIN (
        SELECT location_pops.location_idx as location_idx,
               SUM(population.size) as total_population
