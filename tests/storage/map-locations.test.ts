@@ -84,6 +84,11 @@ describe("storage/queries listMapLocationsArrow (Map tab)", () => {
     expect(loc3975).toMatchObject({
       rank: "town",
       market_idx: 1,
+      // market 1's center is location 1 ("stockholm") — both locations
+      // 1 and 3975 belong to market 1 in the fixture, so both must show
+      // the same real center-location name, not a bare "Market 1"
+      // (post-ship correction, 2026-09-21).
+      market_name: "stockholm",
       culture_name: "polesian_culture",
       culture_color_r: 166,
       culture_color_g: 133,
@@ -102,6 +107,8 @@ describe("storage/queries listMapLocationsArrow (Map tab)", () => {
     expect(loc1?.soldiers).toBeNull();
     expect(loc1).toMatchObject({
       rank: "city",
+      market_idx: 1,
+      market_name: "stockholm",
       culture_name: "swedish",
       religion_name: "lutheran",
     });

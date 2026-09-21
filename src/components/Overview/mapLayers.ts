@@ -449,43 +449,76 @@ MAP_LAYERS.push(primaryReligionLayer);
 
 // --- User Story 6 (specs/011-atlas-map-modes): Location Market -----------
 
+// Sea/lake terrain categories (research.md §5's 21 confirmed topography
+// values) — post-ship correction, 2026-09-21 (user report): a market's
+// raw membership can include coastal/open-water locations for naval
+// trade-route purposes, but coloring water the same as the market's land
+// territory misrepresents what this layer shows, so water locations are
+// excluded from both the fill and the market-name/color assignment below.
+// `salt_pans`/`atoll` are land features, deliberately not included here.
+const WATER_TERRAIN = new Set([
+  "ocean",
+  "deep_ocean",
+  "coastal_ocean",
+  "ocean_wasteland",
+  "inland_sea",
+  "narrows",
+  "lakes",
+  "high_lakes",
+]);
+
+function isWaterLocation(row: MapLocationRow): boolean {
+  const topography = LOCATION_TERRAIN[row.name];
+  return topography !== undefined && WATER_TERRAIN.has(topography);
+}
+
 /** Memoized per dataset reference (see the MapLayer interface's doc
  * comment) — markets have no in-game color of their own (unlike
- * culture/religion, research.md §6), so this mirrors RGO's own
+ * culture/religion, research.md §6), so colors mirror RGO's own
  * getRgoColorMap: a stable golden-angle hue assigned in first-encountered
- * order while scanning the dataset. */
-const marketColorCache = new WeakMap<MapLocationDataset, Map<number, [number, number, number]>>();
-function getMarketColorMap(dataset: MapLocationDataset): Map<number, [number, number, number]> {
-  const cached = marketColorCache.get(dataset);
+ * order while scanning the dataset. Names come from `row.marketName`
+ * (queries.ts's `market_name`, the market's real center-location name —
+ * post-ship correction, 2026-09-21: previously a bare "Market <idx>"). */
+interface MarketInfo {
+  color: [number, number, number];
+  name: string;
+}
+const marketInfoCache = new WeakMap<MapLocationDataset, Map<number, MarketInfo>>();
+function getMarketInfo(dataset: MapLocationDataset): Map<number, MarketInfo> {
+  const cached = marketInfoCache.get(dataset);
   if (cached) return cached;
-  const colors = new Map<number, [number, number, number]>();
+  const info = new Map<number, MarketInfo>();
   let index = 0;
   for (const row of dataset.values()) {
-    if (row.marketIdx === null || colors.has(row.marketIdx)) continue;
-    colors.set(row.marketIdx, hslToRgb(index * GOLDEN_ANGLE_DEG, RGO_SATURATION, RGO_LIGHTNESS));
+    if (row.marketIdx === null || isWaterLocation(row) || info.has(row.marketIdx)) continue;
+    info.set(row.marketIdx, {
+      color: hslToRgb(index * GOLDEN_ANGLE_DEG, RGO_SATURATION, RGO_LIGHTNESS),
+      name: row.marketName ?? `Market ${row.marketIdx}`,
+    });
     index += 1;
   }
-  marketColorCache.set(dataset, colors);
-  return colors;
+  marketInfoCache.set(dataset, info);
+  return info;
 }
 
 const marketLayer: MapLayer = {
   id: "market",
   label: "Location Market",
   getFill(row, dataset) {
-    if (row.marketIdx === null) return NEUTRAL_COLOR;
-    return getMarketColorMap(dataset).get(row.marketIdx) ?? NEUTRAL_COLOR;
+    if (row.marketIdx === null || isWaterLocation(row)) return NEUTRAL_COLOR;
+    return getMarketInfo(dataset).get(row.marketIdx)?.color ?? NEUTRAL_COLOR;
   },
   getTooltipFields(row) {
+    const excluded = row.marketIdx === null || isWaterLocation(row);
     return [
       { label: "Location", value: row.name },
-      { label: "Market", value: row.marketIdx === null ? "No data" : `Market ${row.marketIdx}` },
+      { label: "Market", value: excluded ? "No data" : (row.marketName ?? `Market ${row.marketIdx}`) },
     ];
   },
   getLegend(dataset) {
-    const entries = Array.from(getMarketColorMap(dataset), ([marketIdx, color]) => ({
+    const entries = Array.from(getMarketInfo(dataset).values(), ({ color, name }) => ({
       color,
-      label: `Market ${marketIdx}`,
+      label: name,
     }));
     entries.sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
     return entries;

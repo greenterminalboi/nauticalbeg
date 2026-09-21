@@ -68,6 +68,19 @@ function rgbToCss([r, g, b]: [number, number, number]): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+// post-ship correction (2026-09-21): every location was previously drawn
+// as its own separate fill path with no stroke at all — adjacent
+// locations only looked visually separated where two independently-filled
+// paths happened to leave a sub-pixel anti-aliasing gap, an incidental
+// rendering artifact rather than a deliberate boundary. That gap shrinks
+// below a pixel and disappears entirely at low zoom (the whole world in
+// view), making same-owner regions read as one smooth blob instead of
+// many locations. A real stroke keeps location boundaries visibly
+// consistent at every zoom level, not just when zoomed in far enough for
+// the old incidental gaps to show.
+const BORDER_COLOR = "rgba(255, 255, 255, 0.35)";
+const BORDER_WIDTH_SCREEN_PX = 1;
+
 /**
  * specs/005-map-visualization research.md §8/§9: renders every decoded
  * location polygon on a single `<canvas>`, filled per the active
@@ -132,6 +145,13 @@ export function MapCanvas({
     ctx.clearRect(0, 0, cssWidth, cssHeight);
     ctx.setTransform(dpr * view.scale, 0, 0, dpr * view.scale, dpr * view.tx, dpr * view.ty);
 
+    // World-space line width that renders as a constant ~1 screen pixel
+    // regardless of zoom (the transform above already bakes dpr*scale
+    // into every drawn coordinate, so lineWidth needs the inverse to stay
+    // visually constant rather than growing with zoom).
+    ctx.lineWidth = BORDER_WIDTH_SCREEN_PX / (dpr * view.scale);
+    ctx.strokeStyle = BORDER_COLOR;
+
     for (const polygon of polygons) {
       const row = dataset.get(polygon.name);
       const fill = row ? activeLayer.getFill(row, dataset) : NEUTRAL_COLOR;
@@ -145,6 +165,7 @@ export function MapCanvas({
       }
       ctx.fillStyle = rgbToCss(fill);
       ctx.fill("evenodd");
+      ctx.stroke();
     }
   };
 

@@ -1439,3 +1439,32 @@ touching Population's own code), but Development/Tax Base/Soldiers each
 supply distinct low/high colors (amber, green, red) so a user can tell
 which of the resulting 12 layers is active without reading the sidebar
 label.
+
+**Post-ship corrections (2026-09-21, same day): a real stroke, and two
+Location Market fixes.** Three issues surfaced from user review against
+a live save (screenshots in `specs/debug_images/`):
+
+- `MapCanvas.tsx` never drew a stroke at all — every location was its
+  own separately-filled path with no border, so what looked like
+  location boundaries at a normal zoom was actually the page background
+  showing through incidental sub-pixel anti-aliasing gaps between
+  adjacent fills. That gap shrinks below a pixel and vanishes entirely
+  at world-zoom (the whole map in view), making same-owner regions read
+  as one smooth blob instead of thousands of individual locations — not
+  a rendering bug exactly, but confusing enough to fix properly. Now
+  draws a real `ctx.stroke()` per polygon, with `lineWidth` divided by
+  `dpr * view.scale` so the border stays a constant ~1 screen pixel at
+  any zoom level instead of growing with it.
+- The Location Market layer was coloring water tiles: a market's raw
+  save membership can include coastal/open-water locations for naval
+  trade-route purposes, but painting them as if they were land territory
+  misrepresented the layer. Fixed by cross-referencing `locationTerrain.ts`
+  (already generated for the Terrain layer) — any location whose
+  topography is one of 8 confirmed water categories is now excluded from
+  both the fill and the market color/name assignment.
+- The legend/tooltip showed a bare `Market <idx>`, not useful without
+  cross-referencing the Markets tab. `listMapLocationsArrow` now joins
+  `markets` then self-joins `locations` again on `center_location_idx`
+  (aliased `market_center`), reusing `listMarketsArrow`'s exact
+  `COALESCE(name, 'Location ' || idx, 'Market ' || idx)` fallback chain —
+  every market is labeled by the real location it's centered on.

@@ -25,6 +25,7 @@ export interface MapLocationRow {
   development: number | null;
   rank: string | null;
   marketIdx: number | null;
+  marketName: string | null;
   possibleTax: number | null;
   soldiers: number | null;
   cultureName: string | null;
@@ -77,6 +78,7 @@ export async function loadMapLocationDataset(db: SaveDatabase): Promise<MapLocat
       development: typeof r.development === "number" ? r.development : null,
       rank: typeof r.rank === "string" ? r.rank : null,
       marketIdx: typeof r.market_idx === "number" ? r.market_idx : null,
+      marketName: typeof r.market_name === "string" ? r.market_name : null,
       possibleTax: typeof r.possible_tax === "number" ? r.possible_tax : null,
       soldiers: typeof r.soldiers === "number" ? r.soldiers : null,
       cultureName: typeof r.culture_name === "string" ? r.culture_name : null,

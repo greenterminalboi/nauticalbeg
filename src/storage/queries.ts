@@ -378,6 +378,13 @@ export async function listWarsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
  * pre-aggregated per location in a subquery (`location_pops` joined to
  * `population`, summed) rather than a top-level `GROUP BY` across every
  * other selected column.
+ *
+ * `market_name` (post-ship correction, 2026-09-21, specs/011-atlas-map-
+ * modes): joins `markets` then self-joins `locations` again (aliased
+ * `market_center`) on `markets.center_location_idx`, reusing
+ * `listMarketsArrow`'s exact `COALESCE(name, 'Location ' || idx, 'Market '
+ * || idx)` fallback chain — the Location Market layer labels each market
+ * by the real location it's centered on, not a bare numeric id.
  */
 export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
   return queryArrowIPC(
@@ -401,6 +408,7 @@ export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuff
        locations.development as development,
        locations.rank as rank,
        locations.market_idx as market_idx,
+       COALESCE(market_center.name, 'Location ' || market_center.idx, 'Market ' || market.idx) as market_name,
        locations.possible_tax as possible_tax,
        locations.soldiers as soldiers,
        culture.name as culture_name,
@@ -416,6 +424,8 @@ export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuff
      LEFT JOIN nations controller ON controller.idx = locations.controller_idx
      LEFT JOIN cultures culture ON culture.idx = locations.culture_idx
      LEFT JOIN religions religion ON religion.idx = locations.religion_idx
+     LEFT JOIN markets market ON market.idx = locations.market_idx
+     LEFT JOIN locations market_center ON market_center.idx = market.center_location_idx
      LEFT JOIN (
        SELECT location_pops.location_idx as location_idx,
               SUM(population.size) as total_population

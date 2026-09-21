@@ -21,6 +21,7 @@ function makeRow(overrides: Partial<MapLocationRow> = {}): MapLocationRow {
     development: 20,
     rank: "city",
     marketIdx: 1,
+    marketName: "Stockholm",
     possibleTax: 10,
     soldiers: 5,
     cultureName: "swedish",
@@ -319,8 +320,8 @@ describe("mapLayers primary religion layer (specs/011-atlas-map-modes US5)", () 
 describe("mapLayers market layer (specs/011-atlas-map-modes US6)", () => {
   it("assigns two different markets visibly distinct colors, deterministically for the same dataset", () => {
     const layer = requireLayer("market");
-    const market1 = makeRow({ marketIdx: 1 });
-    const market2 = makeRow({ marketIdx: 2 });
+    const market1 = makeRow({ marketIdx: 1, marketName: "Stockholm" });
+    const market2 = makeRow({ marketIdx: 2, marketName: "Mazyr" });
     const dataset = datasetOf([market1, market2]);
     const fill1 = layer.getFill(market1, dataset);
     const fill2 = layer.getFill(market2, dataset);
@@ -330,16 +331,41 @@ describe("mapLayers market layer (specs/011-atlas-map-modes US6)", () => {
 
   it("falls back to the neutral color for a location with no market", () => {
     const layer = requireLayer("market");
-    const row = makeRow({ marketIdx: null });
+    const row = makeRow({ marketIdx: null, marketName: null });
     expect(layer.getFill(row, datasetOf([row]))).toEqual(NEUTRAL_COLOR);
   });
 
-  it("tooltip surfaces the location's name and market", () => {
+  it("tooltip surfaces the location's name and its market's real center-location name, not a bare index", () => {
     const layer = requireLayer("market");
-    const row = makeRow({ name: "Test Location", marketIdx: 7 });
+    const row = makeRow({ name: "Test Location", marketIdx: 7, marketName: "Novgorod" });
     expect(layer.getTooltipFields(row)).toEqual([
       { label: "Location", value: "Test Location" },
-      { label: "Market", value: "Market 7" },
+      { label: "Market", value: "Novgorod" },
+    ]);
+  });
+
+  it("excludes a water/sea location from the market fill and legend, even when it carries a market id", () => {
+    const layer = requireLayer("market");
+    // central_atlantic is real generated terrain data: "ocean_wasteland"
+    // (locationTerrain.ts) — a market's raw membership can include water
+    // tiles, but this layer must not color them (post-ship correction).
+    const sea = makeRow({ name: "central_atlantic", marketIdx: 1, marketName: "Stockholm" });
+    const land = makeRow({ marketIdx: 1, marketName: "Stockholm" });
+    const dataset = datasetOf([sea, land]);
+    expect(layer.getFill(sea, dataset)).toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(land, dataset)).not.toEqual(NEUTRAL_COLOR);
+    expect(layer.getTooltipFields(sea)).toEqual([
+      { label: "Location", value: "central_atlantic" },
+      { label: "Market", value: "No data" },
+    ]);
+  });
+
+  it("legend labels each market by its real name, not a bare index", () => {
+    const layer = requireLayer("market");
+    const row = makeRow({ marketIdx: 3, marketName: "Novgorod" });
+    const dataset = datasetOf([row]);
+    expect(layer.getLegend(dataset)).toEqual([
+      { color: layer.getFill(row, dataset), label: "Novgorod" },
     ]);
   });
 });
