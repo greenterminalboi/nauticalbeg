@@ -1037,3 +1037,12 @@ top 15 producers (by amount) fold into a second, distinct "Other
 producers" bucket, so a common good's treemap (dozens of real
 producers) stays legible without conflating "no real owner" with "many
 small real owners."
+
+**Post-ship follow-up, same day**: the World Goods/Markets switch moved
+from a top-of-content button group inside `MarketsTab.tsx` into the
+shell's side nav (`MarketsSideNav.tsx`, wired into `FileLoader.tsx`
+exactly like `LeaderboardSideNav`) — a primary page switch belongs in
+the side nav by this project's convention, not a `MarketsTab`-local
+toggle (that idiom is reserved for a secondary axis, like
+`LeaderboardTab.tsx`'s own graph/ranking/treemap toggle underneath its
+side-nav-selected metric).

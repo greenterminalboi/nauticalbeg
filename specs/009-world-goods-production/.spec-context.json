@@ -326,6 +326,11 @@
       "decision": "WorldGoodsOverview's onSelectGood carries the clicked row's has_production_coverage directly (onSelectGood(good, hasProductionCoverage)), rather than WorldGoodsPage doing a separate decodeWorldGoods fetch+lookup",
       "why": "the grid already has this value in the click payload as a real column; avoids a second query, an extra piece of state, and a real async race (selecting a good before a separate list finishes loading) that the original contract would have had",
       "rejected": "WorldGoodsPage loading and holding its own decodeWorldGoods list to look up coverage by good name, as originally planned in contracts/ui-components.md"
+    },
+    {
+      "decision": "Post-ship follow-up: moved the World Goods/Markets view switch from a MarketsTab-local top-of-content button group into the shell side nav (MarketsSideNav.tsx), mirroring LeaderboardSideNav exactly",
+      "why": "user feedback after ship: this project reserves the side nav for primary page switches (as Leaderboard/Countries already do), keeping MarketsTab-local toggles for a secondary axis only",
+      "rejected": "leaving the switch as a top-of-content button group, consistent with the initial ship but inconsistent with the rest of the app"
     }
   ],
   "step_summaries": {

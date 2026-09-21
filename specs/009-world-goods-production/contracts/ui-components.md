@@ -2,25 +2,45 @@
 
 ## `MarketsTab` (extended)
 
-Gains one more piece of state, mirroring `LeaderboardTab.tsx`'s
-`activeView`/`VIEWS` pattern exactly:
+```ts
+interface MarketsTabProps {
+  db: SaveDatabase;
+  activeView: MarketsView;
+}
+```
+
+**Post-ship follow-up (2026-09-21)**: `activeView` is a prop, not state
+`MarketsTab` owns itself. The initial ship put the World Goods/Markets
+switch in a top-of-content button group inside `MarketsTab` (mirroring
+`LeaderboardTab.tsx`'s internal `activeView`/`VIEWS` chart-type toggle);
+moved instead to the shell's side nav (`MarketsSideNav`, wired into
+`FileLoader.tsx` exactly like `LeaderboardSideNav`/`activeMetric`), since
+it's a primary page switch, not a secondary axis like Leaderboard's own
+graph/ranking/treemap toggle — this project's convention reserves the
+side nav for the former.
+
+Renders either `<WorldGoodsPage db={db} />` (`activeView === "worldGoods"`)
+or the existing Markets-list-and-drill-down block (`MarketList` +
+conditional `MarketGoodsTable` + conditional `MarketGoodPriceChart`,
+unchanged internally) for `"markets"`. The existing
+`selectedMarketId`/`selectedGoodId` state stays exactly as it is today —
+`WorldGoodsPage` owns its own, separate `selectedGood`.
+
+## `MarketsSideNav` (new, post-ship follow-up)
 
 ```ts
 type MarketsView = "worldGoods" | "markets";
-const VIEWS: { id: MarketsView; label: string }[] = [
-  { id: "worldGoods", label: "World Goods" },
-  { id: "markets", label: "Markets" },
-];
-const [activeView, setActiveView] = useState<MarketsView>("worldGoods");
+interface MarketsSideNavProps {
+  activeView: MarketsView;
+  onSelectView: (view: MarketsView) => void;
+}
 ```
 
-Renders a button group identical in shape to
-`.leaderboard-tab__view-toggle`, then either `<WorldGoodsPage db={db} />`
-(`activeView === "worldGoods"`) or the existing Markets-list-and-drill-down
-block (`MarketList` + conditional `MarketGoodsTable` + conditional
-`MarketGoodPriceChart`, unchanged internally) for `"markets"`. The
-existing `selectedMarketId`/`selectedGoodId` state stays exactly as it
-is today — `WorldGoodsPage` owns its own, separate `selectedGood`.
+Mirrors `LeaderboardSideNav` exactly (`.side-nav`/`.side-nav__list`/
+`.side-nav__item` styles, `grid-area: sidenav` box treatment). Owned and
+rendered by `FileLoader.tsx` (`showMarketsNav`, same `isFactbook &&
+encyclopediaTab === "markets" && isReady && !!readDbRef.current` gate
+as `showLeaderboardNav`), mutually exclusive with the other side navs.
 
 ## `WorldGoodsOverview` (extended)
 
