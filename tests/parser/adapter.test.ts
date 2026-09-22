@@ -882,4 +882,143 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
       primary_culture_idx: 884,
     });
   });
+
+  // specs/013-diplomatic-relations-chord: diplomacy_manager was
+  // previously in raw_sections only (never structured) — this proves
+  // scripted_mutual/scripted_oneway (filtered to object=alliance/
+  // guarantee/military_access/food_access/fleet_basing_rights),
+  // royal_marriage, economic_support, and per-country rivals_2.list all
+  // extract into diplomatic_relations, and relations.<target>.trust
+  // extracts into nation_relation_trust. The fixture's royal_marriage
+  // and economic_support blocks occur exactly once, so this also proves
+  // toArray's single-occurrence normalization (research.md §4) for those
+  // keys — without it, jomini would hand back a bare object instead of a
+  // one-element array and a naive .map()/.forEach() over it would
+  // silently parse zero rows; scripted_mutual/scripted_oneway now occur
+  // 3 and 2 times respectively, covering the genuine multi-occurrence
+  // array case jomini already groups on its own.
+  it("populates diplomatic_relations and nation_relation_trust from diplomacy_manager", async () => {
+    const database = await freshDb("adapter-diplomacy.db");
+    await parseAndStore(database, "save-diplomacy", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const relations = await queryAll(
+      database,
+      "SELECT first_nation_idx, second_nation_idx, relation_type, start_date, amount, is_one_way FROM diplomatic_relations ORDER BY relation_type",
+    );
+
+    // scripted_mutual, object=alliance, first=2025 second=33556892 —
+    // already in (first < second) order, unaffected by normalization.
+    // is_one_way=0: alliance is exhaustively confirmed mutual-only
+    // (research.md §8) — always scripted_mutual, never scripted_oneway.
+    expect(relations).toContainEqual({
+      first_nation_idx: 2025,
+      second_nation_idx: 33556892,
+      relation_type: "alliance",
+      start_date: "1615.3.2",
+      amount: null,
+      is_one_way: 0,
+    });
+
+    // scripted_oneway, object=guarantee, first=1141 second=2025 —
+    // is_one_way=1 (direction preserved, not min/max-normalized): every
+    // guarantee in the real save came from scripted_oneway too, not just
+    // the other treaty types.
+    expect(relations).toContainEqual({
+      first_nation_idx: 1141,
+      second_nation_idx: 2025,
+      relation_type: "guarantee",
+      start_date: "1618.6.1",
+      amount: null,
+      is_one_way: 1,
+    });
+
+    // royal_marriage, first=2025 second=1961 — no start_date field on
+    // this fixture entry, so it stays NULL, never fabricated. Symmetric
+    // (is_one_way=0), min/max-normalized like before this feature
+    // tracked direction at all.
+    expect(relations).toContainEqual({
+      first_nation_idx: 1961,
+      second_nation_idx: 2025,
+      relation_type: "royal_marriage",
+      start_date: null,
+      amount: null,
+      is_one_way: 0,
+    });
+
+    // rivals_2.list: recorded under BOTH 2025's and 1141's own
+    // per-country entries (a real mutual rivalry, same as the real
+    // save) — must collapse to exactly one row, not two. Symmetric
+    // (is_one_way=0).
+    const rivalries = relations.filter((r) => r.relation_type === "rivalry");
+    expect(rivalries).toHaveLength(1);
+    expect(rivalries[0]).toMatchObject({
+      first_nation_idx: 1141,
+      second_nation_idx: 2025,
+      start_date: "1620.1.1",
+      is_one_way: 0,
+    });
+
+    // Post-ship, 2026-09-22 (explicit user request): the newly-widened
+    // relation types, cross-checked against every distinct relation_type
+    // object= value confirmed present in the real save this session —
+    // all three are scripted_oneway in both the real save and this
+    // fixture, so is_one_way=1 and first/second preserve the raw save's
+    // own field order (no min/max normalization).
+    expect(relations).toContainEqual({
+      first_nation_idx: 2025,
+      second_nation_idx: 1961,
+      relation_type: "military_access",
+      start_date: "1616.4.3",
+      amount: null,
+      is_one_way: 1,
+    });
+    expect(relations).toContainEqual({
+      first_nation_idx: 33556892,
+      second_nation_idx: 1961,
+      relation_type: "fleet_basing_rights",
+      start_date: "1617.5.4",
+      amount: null,
+      is_one_way: 1,
+    });
+    expect(relations).toContainEqual({
+      first_nation_idx: 1141,
+      second_nation_idx: 33556892,
+      relation_type: "food_access",
+      start_date: "1619.7.6",
+      amount: null,
+      is_one_way: 1,
+    });
+    // economic_support: its own top-level entry type (not a
+    // scripted_mutual/scripted_oneway object=), same first/second/
+    // start_date shape as royal_marriage — a one-directional grant by
+    // nature (is_one_way=1, direction preserved), with the ducat amount
+    // read from named_targets' flag=amount/target.identity (not
+    // target.value, despite type=value).
+    expect(relations).toContainEqual({
+      first_nation_idx: 2025,
+      second_nation_idx: 1141,
+      relation_type: "economic_support",
+      start_date: "1614.2.1",
+      amount: 2500000,
+      is_one_way: 1,
+    });
+
+    // Exactly 8 rows total: one per relationship instance above, no
+    // duplicates, nothing extra.
+    expect(relations).toHaveLength(8);
+
+    // relations.<target>.trust under country 2025's own record — kept
+    // directional (owner=2025, target=33556892), never averaged or
+    // mirrored into the reverse direction at parse time. opinion_score
+    // is the sum of every timed_biases.Opinion[]/Antagonism[] value on
+    // that same entry: 30 + 20 + (-15) = 35 (research.md §9's derivation
+    // — the save has no single stored "Opinion" scalar).
+    const trust = await queryAll(
+      database,
+      "SELECT owner_nation_idx, target_nation_idx, trust, opinion_score FROM nation_relation_trust",
+    );
+    expect(trust).toEqual([
+      { owner_nation_idx: 2025, target_nation_idx: 33556892, trust: 45.5, opinion_score: 35 },
+    ]);
+  });
 });

@@ -1,5 +1,5 @@
 # Spec-Driven Development Status
-<!-- spec-status: project=nauticalbeg commit=76003bca6fe881da833379b73ee40fc2ce12bdcc updated=2026-09-22T07:06:11Z -->
+<!-- spec-status: project=nauticalbeg commit=3b8a87083d7327d2bd31d10c283febb8c8b3a28e updated=2026-09-22T12:30:36Z -->
 
 | Feature                      | Specify | Plan | Tasks | Implement |
 |------------------------------|---------|------|-------|-----------|
@@ -15,6 +15,7 @@
 | 010-societal-values-compass  | -       | ✓    | ✓     | ✓ Complete |
 | 011-atlas-map-modes          | -       | ✓    | ✓     | ✓ Complete |
 | 012-firepower-tab            | ✓       | ✓    | ✓     | ✓ Complete |
+| 013-diplomatic-relations-chord | ✓     | ✓    | ✓     | ✓ Complete |
 
 <!-- feature: 001-save-import-overview has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=46 tasks_completed=46 checklist_files=requirements.md -->
 <!-- feature: 002-db-technology-migration has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=86 tasks_completed=19 checklist_files=requirements.md -->
@@ -28,3 +29,4 @@
 <!-- feature: 010-societal-values-compass has_spec=false has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=false has_contracts=true has_checklists=true tasks_total=18 tasks_completed=18 checklist_files=requirements.md -->
 <!-- feature: 011-atlas-map-modes has_spec=false has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=false has_contracts=false has_checklists=true tasks_total=29 tasks_completed=29 checklist_files=requirements.md -->
 <!-- feature: 012-firepower-tab has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=34 tasks_completed=34 checklist_files=requirements.md -->
+<!-- feature: 013-diplomatic-relations-chord has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=32 tasks_completed=32 checklist_files=requirements.md -->

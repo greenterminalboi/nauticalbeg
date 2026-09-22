@@ -52,6 +52,10 @@ describe("buildSaveInventory against the committed fixture", () => {
         // to the fixture for the Firepower tab's own extraction tests.
         "unit_manager",
         "subunit_manager",
+        // specs/013-diplomatic-relations-chord: diplomacy_manager added
+        // to the fixture for the Diplomacy chord diagram's own
+        // extraction tests.
+        "diplomacy_manager",
       ].sort(),
     );
   });

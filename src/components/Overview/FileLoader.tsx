@@ -23,6 +23,7 @@ import {
 } from "../../storage/queries";
 import { ComingSoonPlaceholder } from "./ComingSoonPlaceholder";
 import { CountryViewerNav } from "./CountryViewerNav";
+import { DiplomacyTab } from "./DiplomacyTab";
 import { EncyclopediaNav } from "./EncyclopediaNav";
 import { EncyclopediaSection } from "./EncyclopediaSection";
 import { ErrorMessage } from "./ErrorMessage";
@@ -419,6 +420,10 @@ export function FileLoader() {
   // specs/012-firepower-tab: same full-width treatment — Army/Navy Stats
   // are wide comparison tables, not bounded page content.
   const isFirepowerTab = isFactbook && encyclopediaTab === "firepower" && isReady;
+  // specs/013-diplomatic-relations-chord: same full-width treatment —
+  // the chord diagram is a large circular chart, not bounded page content.
+  const isDiplomaticRelationsTab =
+    isFactbook && encyclopediaTab === "diplomatic-relations" && isReady && !!readDbRef.current;
   // The Map tab (once a save is actually loaded — the pre-load "select a
   // save" message stays in the normal padded/centered layout) wants the
   // full remaining viewport edge-to-edge, not just the full width
@@ -428,7 +433,12 @@ export function FileLoader() {
   const mainClassName = isMapTab ? "shell__main shell__main--flush" : "shell__main";
   const mainInnerClassName = isMapTab
     ? "shell__main-inner shell__main-inner--full-width shell__main-inner--flush"
-    : isTableTab || isEncyclopediaSection || isLeaderboardTab || isSocietalCompassTab || isFirepowerTab
+    : isTableTab ||
+        isEncyclopediaSection ||
+        isLeaderboardTab ||
+        isSocietalCompassTab ||
+        isFirepowerTab ||
+        isDiplomaticRelationsTab
       ? "shell__main-inner shell__main-inner--full-width"
       : "shell__main-inner";
 
@@ -537,6 +547,17 @@ export function FileLoader() {
                 // as Wars/Leaderboard/Markets/Societal Compass above.
                 isReady && readDbRef.current ? (
                   <FirepowerTab db={readDbRef.current} activeView={firepowerView} />
+                ) : (
+                  <p>Select a save file above to get started.</p>
+                )
+              )}
+              {isFactbook && encyclopediaTab === "diplomatic-relations" && (
+                // specs/013-diplomatic-relations-chord: save-wide, not
+                // nation-scoped, same isReady + readDbRef.current gate
+                // and idle wording as Wars/Leaderboard/Markets/Societal
+                // Compass/Firepower above.
+                isReady && readDbRef.current ? (
+                  <DiplomacyTab db={readDbRef.current} />
                 ) : (
                   <p>Select a save file above to get started.</p>
                 )

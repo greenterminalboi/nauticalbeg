@@ -1,0 +1,10 @@
+.diplomacy-chord-chart {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.diplomacy-chord-chart__canvas {
+  flex: 1;
+  min-height: 44rem;
+}

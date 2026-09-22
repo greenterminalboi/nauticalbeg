@@ -47,6 +47,7 @@ const STRUCTURED_KEYS = new Set([
   "provinces",
   "locations",
   "war_manager",
+  "diplomacy_manager",
   "played_country",
   "population",
   "market_manager",
@@ -195,6 +196,7 @@ const PARSE_MILESTONES = [
   "markets",
   "world-goods",
   "ruler-history",
+  "diplomacy",
   "raw-sections",
   "done",
 ] as const;
@@ -979,6 +981,209 @@ export async function parseAndStore(
     );
   }
   reportMilestone(); // "ruler-history"
+
+  // specs/013-diplomatic-relations-chord: diplomacy_manager, previously
+  // only in raw_sections (research.md §1). scripted_mutual/
+  // scripted_oneway carry a dozen+ treaty-type object= values
+  // (military_access, trade_access, embargo_nation, etc.) — only
+  // alliance and guarantee are extracted here, everything else is read
+  // and discarded (spec Assumptions' v1 scope). royal_marriage is its
+  // own dedicated entry type. rivals_2.list and relations.<target>.trust
+  // live per-country, keyed by that country's own idx as a top-level
+  // diplomacy_manager key (distinguished from the relation-type keys
+  // above by being purely numeric).
+  const diplomacyManager = asRecord(root.diplomacy_manager);
+  toArray(diplomacyManager, "royal_marriage");
+  toArray(diplomacyManager, "scripted_mutual");
+  toArray(diplomacyManager, "scripted_oneway");
+  toArray(diplomacyManager, "economic_support");
+
+  const asDiplomacyArray = (value: unknown): unknown[] =>
+    Array.isArray(value) ? value : value !== null && value !== undefined ? [value] : [];
+
+  function relationTypeObject(entry: Record<string, unknown>): string | null {
+    for (const target of asDiplomacyArray(entry.named_targets)) {
+      const t = asRecord(target);
+      if (t.flag === "scripted_relation_type") {
+        return asStringOrNull(asRecord(t.target).object);
+      }
+    }
+    return null;
+  }
+
+  // Post-ship, 2026-09-22 (explicit user request): economic_support's
+  // named_targets carries the ducat amount under flag=amount,
+  // target.identity (not target.object like relation-type entries, and
+  // not target.value despite type=value — confirmed against the real
+  // save).
+  function namedTargetAmount(entry: Record<string, unknown>): number | null {
+    for (const target of asDiplomacyArray(entry.named_targets)) {
+      const t = asRecord(target);
+      if (t.flag === "amount") {
+        return asNumberOrNull(asRecord(t.target).identity);
+      }
+    }
+    return null;
+  }
+
+  // Keyed by the UNORDERED pair (dedup only — a relation recorded under
+  // both sides, e.g. rivalry, must collapse to one row, never two).
+  // Stored first/second preserve the save's own field order for
+  // one-way relations (direction matters); for symmetric types
+  // (isOneWay=false) they're normalized to min/max instead, same as
+  // before this feature tracked direction at all, since no direction is
+  // implied either way and existing fixture/test expectations already
+  // assume that normalization for rivalry/alliance/royal_marriage.
+  const diplomaticRelationsMap = new Map<
+    string,
+    [number, number, string, string | null, number | null, boolean]
+  >();
+  function addRelation(
+    firstRaw: number | null,
+    secondRaw: number | null,
+    relationType: string,
+    startDate: string | null,
+    isOneWay: boolean,
+    amount: number | null = null,
+  ): void {
+    if (firstRaw === null || secondRaw === null || firstRaw === secondRaw) return;
+    const unorderedKey = `${Math.min(firstRaw, secondRaw)}:${Math.max(firstRaw, secondRaw)}:${relationType}`;
+    if (diplomaticRelationsMap.has(unorderedKey)) return;
+    const [first, second] = isOneWay
+      ? [firstRaw, secondRaw]
+      : [Math.min(firstRaw, secondRaw), Math.max(firstRaw, secondRaw)];
+    diplomaticRelationsMap.set(unorderedKey, [first, second, relationType, startDate, amount, isOneWay]);
+  }
+
+  for (const entry of asDiplomacyArray(diplomacyManager.royal_marriage)) {
+    const e = asRecord(entry);
+    addRelation(
+      asNumberOrNull(e.first),
+      asNumberOrNull(e.second),
+      "royal_marriage",
+      formatGameDate(e.start_date),
+      false,
+    );
+  }
+  // economic_support is its own top-level entry type (not a
+  // scripted_mutual/scripted_oneway object=), same first/second/
+  // start_date shape as royal_marriage (confirmed against the real
+  // save: first/second/named_targets.amount/start_date) — a one-
+  // directional grant by nature (first gives to second), so isOneWay=true.
+  for (const entry of asDiplomacyArray(diplomacyManager.economic_support)) {
+    const e = asRecord(entry);
+    addRelation(
+      asNumberOrNull(e.first),
+      asNumberOrNull(e.second),
+      "economic_support",
+      formatGameDate(e.start_date),
+      true,
+      namedTargetAmount(e),
+    );
+  }
+  // Post-ship, 2026-09-22 (explicit user request, cross-checked against
+  // every relation_type object= value the real save contains): widened
+  // from alliance/guarantee to also cover military_access, food_access,
+  // and fleet_basing_rights. Every other object= value stays parsed-and-
+  // discarded (trade_access, embargo_nation, etc. — still out of v1
+  // scope). isOneWay is derived from which container the entry came
+  // from, not guessed: exhaustively confirmed against the real save
+  // (every occurrence) that alliance is ALWAYS scripted_mutual and every
+  // other type, guarantee included, is ALWAYS scripted_oneway.
+  const EXTRACTED_RELATION_TYPES = new Set([
+    "alliance",
+    "guarantee",
+    "military_access",
+    "food_access",
+    "fleet_basing_rights",
+  ]);
+  for (const sourceKey of ["scripted_mutual", "scripted_oneway"] as const) {
+    for (const entry of asDiplomacyArray(diplomacyManager[sourceKey])) {
+      const e = asRecord(entry);
+      const relationType = relationTypeObject(e);
+      if (relationType === null || !EXTRACTED_RELATION_TYPES.has(relationType)) continue;
+      addRelation(
+        asNumberOrNull(e.first),
+        asNumberOrNull(e.second),
+        relationType,
+        formatGameDate(e.start_date),
+        sourceKey === "scripted_oneway",
+      );
+    }
+  }
+
+  // Post-ship, 2026-09-22 (explicit user request, "diplomatic score...
+  // 200 to -200"): the save has no single stored "Opinion" scalar
+  // (confirmed by exhaustively listing every field name a real
+  // relations.<target> entry carries: trust, disposition, timed_biases,
+  // last_war, war_score, diplomat_return_date, last_spy_discovery — no
+  // "opinion="). Derived here as the sum of every
+  // timed_biases.Opinion[].value and .Antagonism[].value entry, the same
+  // named modifier-stack the save itself groups under those two labels
+  // (Antagonism entries are already negative, e.g.
+  // antagonism_improve_relation=-59.47151 — a plain sum, no extra sign
+  // flip). Single-occurrence Opinion/Antagonism lists need the same
+  // asDiplomacyArray normalization as everywhere else in this file.
+  function opinionScoreFor(relationEntry: Record<string, unknown>): number | null {
+    const timedBiases = asRecord(relationEntry.timed_biases);
+    const opinionEntries = asDiplomacyArray(timedBiases.Opinion);
+    const antagonismEntries = asDiplomacyArray(timedBiases.Antagonism);
+    if (opinionEntries.length === 0 && antagonismEntries.length === 0) return null; // no timed_biases at all -- unknown, never a fabricated 0
+    let sum = 0;
+    for (const e of [...opinionEntries, ...antagonismEntries]) {
+      const v = asNumberOrNull(asRecord(e).value);
+      if (v !== null) sum += v;
+    }
+    return sum;
+  }
+
+  const trustRows: Array<[number, number, number, number | null]> = [];
+  for (const [ownerIdxStr, countryEntry] of Object.entries(diplomacyManager)) {
+    if (!/^\d+$/.test(ownerIdxStr)) continue; // skip royal_marriage/scripted_mutual/scripted_oneway/dependency
+    const ownerIdx = Number(ownerIdxStr);
+    const country = asRecord(countryEntry);
+
+    const rivalsList = asDiplomacyArray(asRecord(country.rivals_2).list);
+    for (const rival of rivalsList) {
+      const r = asRecord(rival);
+      addRelation(ownerIdx, asNumberOrNull(r.country), "rivalry", formatGameDate(r.date), false);
+    }
+
+    for (const [targetIdxStr, relationEntry] of Object.entries(asRecord(country.relations))) {
+      if (!/^\d+$/.test(targetIdxStr)) continue;
+      const r = asRecord(relationEntry);
+      const trust = asNumberOrNull(r.trust);
+      if (trust !== null) trustRows.push([ownerIdx, Number(targetIdxStr), trust, opinionScoreFor(r)]);
+    }
+  }
+
+  // insertRows' bulk Arrow-insert path only accepts string/number/null
+  // per row (same reasoning as market_goods.is_importing/is_exporting) —
+  // isOneWay converts to INTEGER 0/1 here, at the insert boundary.
+  const diplomaticRelationsRows: Array<[number, number, string, string | null, number | null, number]> =
+    Array.from(diplomaticRelationsMap.values()).map(([first, second, type, date, amount, isOneWay]) => [
+      first,
+      second,
+      type,
+      date,
+      amount,
+      isOneWay ? 1 : 0,
+    ]);
+  if (diplomaticRelationsRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO diplomatic_relations (first_nation_idx, second_nation_idx, relation_type, start_date, amount, is_one_way) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+      diplomaticRelationsRows,
+    );
+  }
+  if (trustRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO nation_relation_trust (owner_nation_idx, target_nation_idx, trust, opinion_score) VALUES (?1, ?2, ?3, ?4)",
+      trustRows,
+    );
+  }
+  reportMilestone(); // "diplomacy"
 
   // Every other top-level section: no real schema yet, so capture as
   // opaque JSON rather than guess at columns for structure nobody has

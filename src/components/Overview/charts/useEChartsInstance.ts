@@ -14,11 +14,18 @@ import type { EChartsOption } from "echarts";
  *
  * `option` must be a value the caller memoizes (e.g. `useMemo`) — a new
  * object identity on every render re-applies `setOption` every render.
+ *
+ * Returns the live chart instance ref (specs/013-diplomatic-relations-
+ * chord: `DiplomacyChordChart` needs it to bridge its `custom` arc
+ * series' hover into the `graph` series' native `focusNodeAdjacency`/
+ * `unfocusNodeAdjacency` actions via `dispatchAction`, research.md §2).
+ * Every existing caller ignores the return value, so this is additive,
+ * not a breaking change to the four charts already using this hook.
  */
 export function useEChartsInstance(
   containerRef: React.RefObject<HTMLDivElement | null>,
   option: EChartsOption | null,
-): void {
+): React.RefObject<echarts.ECharts | null> {
   const chartRef = useRef<echarts.ECharts | null>(null);
 
   useEffect(() => {
@@ -47,4 +54,6 @@ export function useEChartsInstance(
   useEffect(() => {
     if (option) chartRef.current?.setOption(option, true);
   }, [option]);
+
+  return chartRef;
 }

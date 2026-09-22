@@ -1714,3 +1714,75 @@ Four follow-ups from live-save user review, same day as the initial ship:
    left out. `doctrineModifiersForAxis` and the active/inactive modifier
    lines it drove were removed outright (no other caller) rather than
    left as dead code alongside the new sentence.
+
+## Diplomatic Relations Chord Diagram (013) ships: dual echarts series sharing one geometry, bounded on-demand queries, and a directional-treaty derivation confirmed against the real save (2026-09-22)
+
+A new Diplomacy tab (`DiplomacyTab.tsx`/`DiplomacyChordChart.tsx`/
+`DiplomacyFilters.tsx`/`diplomacyData.ts`/`hugboxClustering.ts`) renders
+countries as circle nodes on an ellipse, with chords for active diplomatic
+relationships (alliance, rivalry, royal marriage, guarantee, military
+access, food access, fleet basing rights, economic support) parsed from
+`diplomacy_manager` (`1.3.11.ts`) into two new tables, `diplomatic_relations`
+and `nation_relation_trust` (see `specs/013-diplomatic-relations-chord/`
+for full contracts).
+
+1. **echarts `graph` + `custom` dual-series chord diagram**, not a single
+   built-in chart type — `graph` gives native `emphasis.focus: "adjacency"`
+   hover-isolate almost for free but can't draw an arbitrary node shape with
+   per-node label rotation, so a `custom` series draws the visible circles/
+   labels on top of invisible `graph` nodes that own the actual edges. Two
+   real bugs came from these being two independent renderers:
+   - **Z-order**: even with correct `zIndex`, a `custom` series and a
+     `graph` series live on different internal render passes, so a chord
+     could paint over a node during hover regardless of declaration order.
+     Fixed with `zlevel` (a genuinely separate zrender paint layer, unlike
+     `z`/`zIndex` which only order *within* one layer) — `graph` at
+     `zlevel: 0`, both `custom` series at `zlevel: 1`.
+   - **Geometry drift**: `custom` series `renderItem` re-measured
+     `api.getWidth()/getHeight()` on every call while `graph` node
+     coordinates came from React's own `ResizeObserver`'d `size` state —
+     two independently-measured ellipses that could disagree by a pixel,
+     visible as a chord ending just short of its node's center (reported
+     via a debug screenshot, `specs/debug_images/`). Fixed by computing the
+     ellipse geometry once per `useMemo` and closing over that single object
+     in every `renderItem`, so there is exactly one source of truth.
+2. **Directional treaties derived from container type, not a stored flag**:
+   the save has no explicit "is this one-way" field on a
+   `scripted_mutual`/`scripted_oneway` entry — direction was derived by
+   exhaustively cross-tabulating every real occurrence in a loaded save:
+   `alliance` is always under `scripted_mutual` (symmetric), every other
+   treaty type including `guarantee` is always under `scripted_oneway`
+   (directional, first→second). `royal_marriage`/`rivalry` are symmetric by
+   construction (no directional container); `economic_support` is
+   directional by nature (a one-sided grant). This dictates a normalization
+   rule reversal in `addRelation()`: only symmetric rows get
+   `first_nation_idx < second_nation_idx` sorting for dedup purposes —
+   directional rows keep the save's own first/second order since it's now
+   semantically meaningful (which side arrows point at).
+3. **No stored "opinion" scalar** — confirmed by exhaustively listing every
+   field a real `diplomacy_manager.<idx>.relations.<target>` entry carries
+   (`trust`, `disposition`, `timed_biases`, `last_war`, `war_score`, etc.,
+   no `opinion=`). `opinion_score` is derived as a plain sum of every
+   `timed_biases.Opinion[].value` and `.Antagonism[].value` for that pair
+   (`Antagonism` entries are already negative in the save, no sign flip
+   needed) — disclosed in the UI as a derived figure, not claimed to match
+   the in-game ±200 display scale exactly (Constitution Principle IV).
+4. **Bounded, on-demand queries, not save-wide** — the diagram was
+   reported slow against a 100+-tag save. `listDiplomaticRelationsArrow`/
+   `listRelationTrustArrow` take `nationIdxs` and scope with
+   `WHERE first_nation_idx IN (...) AND second_nation_idx IN (...)`; player
+   (human-played) countries load automatically as the default selection,
+   every other country loads only once added via search, and a
+   relationship-type filter toggle never re-queries (still client-side, per
+   SC-003's under-1-second budget) — only a selection change does.
+5. **"Missing alliances" turned out to be a stale kept-save cache, not a
+   parser bug** — investigated by extracting all 38 real alliances from the
+   save via `awk` and cross-referencing against what the client actually
+   received (confirmed correct at every layer via temporary diagnostic
+   logging). Root cause: "Resume this save" reopens an already-parsed
+   OPFS-backed DuckDB database without re-running the parser, so newly
+   added parser logic (the relationship-type widening) was invisible until
+   a fresh upload. Reinforces the standing lesson from 011: a kept-save
+   session can silently mask a parser change — always suspect it first
+   before concluding a data bug when a save has been open since before an
+   edit to `version-adapters/`.

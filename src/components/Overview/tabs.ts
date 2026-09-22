@@ -34,7 +34,8 @@ export type EncyclopediaTab =
   | "characters"
   | "markets"
   | "societal-compass"
-  | "firepower";
+  | "firepower"
+  | "diplomatic-relations";
 
 /**
  * Which data category is active *within* Encyclopedia's "Countries"

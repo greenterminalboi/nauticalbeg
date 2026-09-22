@@ -964,3 +964,81 @@ export async function listNationMilitaryScalarsArrow(
     nationIdxs,
   );
 }
+
+/**
+ * specs/013-diplomatic-relations-chord (post-ship, 2026-09-22: bounded
+ * to the current selection — explicit user request after the original
+ * always-fetch-everything shape proved slow. Player countries load
+ * automatically (the default selection), everyone else loads on demand
+ * as they're added). Only relationships where BOTH sides are in
+ * `nationIdxs` are returned, matching `filterBySelection`'s old client-
+ * side semantics exactly — now enforced in SQL, one bounded round-trip
+ * per selection change (add/remove a country), never a full-save fetch.
+ * Relationship-type filtering still happens client-side in
+ * diplomacyData.ts, so toggling a filter checkbox never re-queries.
+ * `amount` is only ever non-NULL for `relation_type = 'economic_support'`
+ * rows (data-model.md).
+ */
+export async function listDiplomaticRelationsArrow(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<ArrayBuffer> {
+  if (nationIdxs.length === 0) {
+    return queryArrowIPC(
+      db,
+      "SELECT first_nation_idx, second_nation_idx, relation_type, start_date, amount, is_one_way FROM diplomatic_relations WHERE FALSE",
+    );
+  }
+  const firstPlaceholders = nationIdxPlaceholders(nationIdxs);
+  const secondPlaceholders = nationIdxs.map((_, i) => `?${nationIdxs.length + i + 1}`).join(", ");
+  return queryArrowIPC(
+    db,
+    `SELECT
+       first_nation_idx,
+       second_nation_idx,
+       relation_type,
+       start_date,
+       amount,
+       is_one_way
+     FROM diplomatic_relations
+     WHERE first_nation_idx IN (${firstPlaceholders})
+       AND second_nation_idx IN (${secondPlaceholders})`,
+    [...nationIdxs, ...nationIdxs],
+  );
+}
+
+/**
+ * specs/013-diplomatic-relations-chord (post-ship, 2026-09-22: bounded
+ * to the current selection, same reasoning as listDiplomaticRelationsArrow
+ * above). Every directional nation_relation_trust row between two
+ * currently-selected countries — joined against
+ * listDiplomaticRelationsArrow's rows client-side (chord thickness,
+ * spec FR-010's "average when both directions exist" rule applied in
+ * diplomacyData.ts, per data-model.md's note on why trust stays
+ * directional in storage).
+ */
+export async function listRelationTrustArrow(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<ArrayBuffer> {
+  if (nationIdxs.length === 0) {
+    return queryArrowIPC(
+      db,
+      "SELECT owner_nation_idx, target_nation_idx, trust, opinion_score FROM nation_relation_trust WHERE FALSE",
+    );
+  }
+  const ownerPlaceholders = nationIdxPlaceholders(nationIdxs);
+  const targetPlaceholders = nationIdxs.map((_, i) => `?${nationIdxs.length + i + 1}`).join(", ");
+  return queryArrowIPC(
+    db,
+    `SELECT
+       owner_nation_idx,
+       target_nation_idx,
+       trust,
+       opinion_score
+     FROM nation_relation_trust
+     WHERE owner_nation_idx IN (${ownerPlaceholders})
+       AND target_nation_idx IN (${targetPlaceholders})`,
+    [...nationIdxs, ...nationIdxs],
+  );
+}

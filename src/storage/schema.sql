@@ -512,6 +512,81 @@ ALTER TABLE nations ADD COLUMN IF NOT EXISTS primary_culture_idx INTEGER;
 -- specs/012-firepower-tab: same purpose, resolved culture-group name.
 ALTER TABLE cultures ADD COLUMN IF NOT EXISTS culture_group TEXT;
 
+-- specs/013-diplomatic-relations-chord: one row per active relationship
+-- instance between two countries, from diplomacy_manager (research.md
+-- §1). relation_type is a small fixed vocabulary derived at parse time,
+-- not a raw save field copied verbatim — scripted_mutual/scripted_oneway
+-- entries carry a dozen+ treaty-type object= values; only 'alliance' and
+-- 'guarantee' are extracted, the rest are read and discarded (spec
+-- Assumptions' v1 scope). first_nation_idx < second_nation_idx is
+-- enforced at insert time (adapter-side) so a mutual pair recorded under
+-- both sides (rivalry) collapses to one row, never two. INTEGER, not
+-- BIGINT: confirmed the same already-established nations.idx range
+-- (research.md §5), not the larger wars.idx-style space.
+CREATE TABLE IF NOT EXISTS diplomatic_relations (
+  first_nation_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  second_nation_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  relation_type TEXT NOT NULL, -- 'alliance' | 'rivalry' | 'royal_marriage' | 'guarantee' | 'military_access' | 'food_access' | 'fleet_basing_rights' | 'economic_support'
+  start_date TEXT, -- NULL when the source block carries no date
+  -- Post-ship, 2026-09-22 (explicit user request): economic_support's
+  -- named_targets={{flag=amount target={type=value identity=<n>}}} —
+  -- the ducat amount granted. NULL for every other relation_type (never
+  -- a fabricated 0 — a real economic_support entry with no readable
+  -- amount stays NULL too, distinct from a genuine zero-amount grant).
+  amount DOUBLE,
+  -- Post-ship, 2026-09-22 (explicit user request, "arrow changing
+  -- depending on if its a one way or two relationship"): which
+  -- diplomacy_manager container this row came from — exhaustively
+  -- confirmed against the real save (every occurrence, not a sample):
+  -- alliance is ALWAYS scripted_mutual (38/38); every other treaty type,
+  -- guarantee included, is ALWAYS scripted_oneway. royal_marriage and
+  -- rivalry (no scripted_mutual/scripted_oneway container at all) are
+  -- inherently symmetric, stored as FALSE; economic_support (its own
+  -- entry type, a one-directional grant by nature) stored as TRUE.
+  -- Direction, where 1, runs first_nation_idx -> second_nation_idx,
+  -- matching the save's own field order (not independently confirmed
+  -- against which side is semantically the "grantor" — see research.md).
+  -- INTEGER 0/1, not a native BOOLEAN column, same reasoning as
+  -- market_goods.is_importing/is_exporting above — insertRows' bulk
+  -- Arrow-insert path only accepts string/number/null per row.
+  is_one_way INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_diplomatic_relations_first ON diplomatic_relations (first_nation_idx);
+CREATE INDEX IF NOT EXISTS idx_diplomatic_relations_second ON diplomatic_relations (second_nation_idx);
+
+-- specs/013-diplomatic-relations-chord: one row per directional
+-- relations.<target_idx>.trust entry actually present in
+-- diplomacy_manager.<idx>.relations (research.md §1) — a general
+-- bilateral opinion ledger that exists independently of any active
+-- relationship type. Kept directional (not pre-averaged) so the
+-- "average when both directions exist, else use whichever does" rule
+-- (spec FR-010/Assumptions) applies at query time, not parse time —
+-- averaging here would lose which case applied (Constitution Principle
+-- IV: a derived figure must stay distinguishable from what was actually
+-- recorded).
+CREATE TABLE IF NOT EXISTS nation_relation_trust (
+  owner_nation_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  target_nation_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  trust DOUBLE NOT NULL,
+  -- Post-ship, 2026-09-22 (explicit user request, "diplomatic score...
+  -- 200 to -200"): a derived sum of every
+  -- relations.<target>.timed_biases.Opinion[].value and
+  -- .Antagonism[].value entry present for this directional pair — the
+  -- save has no single stored "Opinion" scalar (confirmed by field-name
+  -- exhaustive inspection of a real relations.<target> entry: only
+  -- trust/disposition/timed_biases/last_war/war_score/
+  -- diplomat_return_date/last_spy_discovery exist), so this is computed
+  -- at parse time from the same named modifier-stack entries the save's
+  -- own "Opinion"/"Antagonism" timed-bias lists carry (e.g.
+  -- opinion_improve_relation, opinion_dynasties_marrying,
+  -- broke_alliance_with_nobles). NULL when a relations.<target> entry
+  -- exists but has no timed_biases at all (never fabricated as 0,
+  -- constitution Principle IV) — distinct from a real computed zero.
+  opinion_score DOUBLE
+);
+CREATE INDEX IF NOT EXISTS idx_nation_relation_trust_pair
+  ON nation_relation_trust (owner_nation_idx, target_nation_idx);
+
 CREATE INDEX IF NOT EXISTS idx_provinces_owner ON provinces(owner_idx);
 CREATE INDEX IF NOT EXISTS idx_locations_owner ON locations(owner_idx);
 CREATE INDEX IF NOT EXISTS idx_locations_province ON locations(province_idx);
