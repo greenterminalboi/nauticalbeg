@@ -746,3 +746,221 @@ export async function cleanupSaveIfNotKept(saveId: string): Promise<void> {
     await deleteSaveDatabase(saveId);
   }
 }
+
+// specs/012-firepower-tab: Foundational queries shared by Army Stats and
+// Navy Stats. `regiments` can run into the tens of thousands of rows on
+// a large save (Constitution Principle V), so grouping by (owner_idx,
+// unit_type) happens here in SQL — callers classify unit_type into
+// display category/age/levy via the static Unit Type Reference and
+// re-aggregate client-side, never by pulling raw un-grouped rows.
+
+function nationIdxPlaceholders(nationIdxs: readonly number[]): string {
+  return nationIdxs.map((_, i) => `?${i + 1}`).join(", ");
+}
+
+/** One row per (nation_idx, unit_type) with aggregate regiment/ship
+ * counts, for the given countries only (never fetched for a save's full
+ * country list at once — bounded by whichever countries are currently
+ * selected in the UI). Same `country_type = 'Real'` + locations-liveness
+ * filter as `listLatestNationMetricArrow`. */
+export async function listRegimentSummaryArrow(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<ArrayBuffer> {
+  if (nationIdxs.length === 0) {
+    return queryArrowIPC(
+      db,
+      "SELECT owner_idx as nation_idx, unit_type, 0 as regiment_count, 0 as total_number, CAST(NULL AS DOUBLE) as avg_morale FROM regiments WHERE FALSE",
+    );
+  }
+  const placeholders = nationIdxPlaceholders(nationIdxs);
+  return queryArrowIPC(
+    db,
+    `SELECT
+       regiments.owner_idx as nation_idx,
+       regiments.unit_type as unit_type,
+       CAST(COUNT(*) AS INTEGER) as regiment_count,
+       SUM(regiments.number) as total_number,
+       AVG(regiments.morale) as avg_morale
+     FROM regiments
+     JOIN nations ON nations.idx = regiments.owner_idx
+     WHERE regiments.owner_idx IN (${placeholders})
+       AND nations.country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)
+     GROUP BY regiments.owner_idx, regiments.unit_type`,
+    nationIdxs,
+  );
+}
+
+/** One row per (nation_idx, advance) for every researched advance of the
+ * given countries — shared by Army Stats (discipline/tactics/fort
+ * limit/siege ability/fort defense advance-kind sources, and the
+ * Artillery/Infantry/Cavalry/Supply age columns) and Navy Stats (the
+ * Heavies/Lights/Transports/Galleys age columns), so Navy Stats never
+ * depends on Army Stats' `nation_reforms`/`nation_privileges`/
+ * `nation_laws` tables existing. */
+export async function listNationAdvanceNamesArrow(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<ArrayBuffer> {
+  if (nationIdxs.length === 0) {
+    return queryArrowIPC(db, "SELECT nation_idx, advance FROM nation_advances WHERE FALSE");
+  }
+  const placeholders = nationIdxPlaceholders(nationIdxs);
+  return queryArrowIPC(
+    db,
+    `SELECT nation_advances.nation_idx as nation_idx, nation_advances.advance as advance
+     FROM nation_advances
+     JOIN nations ON nations.idx = nation_advances.nation_idx
+     WHERE nation_advances.nation_idx IN (${placeholders})
+       AND nations.country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)`,
+    nationIdxs,
+  );
+}
+
+/** One row per (nation_idx, source_kind, source_name) for every
+ * currently-active government reform/estate privilege/military law
+ * choice of the given countries — `source_kind` is `'reform' |
+ * 'privilege' | 'law'`. US2 (Army Stats)-only: reduced against
+ * `militaryModifierReference.ts` alongside `listNationAdvanceNamesArrow`
+ * (Foundational, shared with US3) to compute discipline/tactics/fort
+ * limit/siege ability/fort defense — kept as a separate function from
+ * that one specifically so Navy Stats never depends on this table set
+ * existing (tasks.md's query-contract refinement note). */
+export async function listNationGovernanceSourcesArrow(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<ArrayBuffer> {
+  if (nationIdxs.length === 0) {
+    return queryArrowIPC(
+      db,
+      "SELECT nation_idx, 'reform' as source_kind, object as source_name FROM nation_reforms WHERE FALSE",
+    );
+  }
+  const placeholders = nationIdxPlaceholders(nationIdxs);
+  return queryArrowIPC(
+    db,
+    `SELECT nation_reforms.nation_idx as nation_idx, 'reform' as source_kind, nation_reforms.object as source_name
+     FROM nation_reforms
+     JOIN nations ON nations.idx = nation_reforms.nation_idx
+     WHERE nation_reforms.nation_idx IN (${placeholders})
+       AND nations.country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)
+     UNION ALL
+     SELECT nation_privileges.nation_idx as nation_idx, 'privilege' as source_kind, nation_privileges.object as source_name
+     FROM nation_privileges
+     JOIN nations ON nations.idx = nation_privileges.nation_idx
+     WHERE nation_privileges.nation_idx IN (${placeholders})
+       AND nations.country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)
+     UNION ALL
+     SELECT nation_laws.nation_idx as nation_idx, 'law' as source_kind, nation_laws.object as source_name
+     FROM nation_laws
+     JOIN nations ON nations.idx = nation_laws.nation_idx
+     WHERE nation_laws.nation_idx IN (${placeholders})
+       AND nations.country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)`,
+    // Same placeholder text (?1..?N) is reused verbatim across all three
+    // UNION ALL branches, so nationIdxs is bound once, not tripled —
+    // DuckDB's numbered placeholders bind by number, not by occurrence.
+    nationIdxs,
+  );
+}
+
+/** One row per (nation_idx, 'given' | 'taken') summing `war_unit_losses`
+ * filtered to `navy_%`-prefixed categories, across every war the nation
+ * participates in (as either attacker or defender) — "taken" is the
+ * nation's own losses, "given" is its opponent's losses in that same
+ * war. US3 (Navy Stats)-only. research.md §8: reuses the existing
+ * `wars`/`war_unit_losses` tables, no new save parsing. */
+export async function listNavyDamageArrow(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<ArrayBuffer> {
+  if (nationIdxs.length === 0) {
+    return queryArrowIPC(
+      db,
+      "SELECT nation_idx, direction, 0 as total_damage FROM war_unit_losses WHERE FALSE",
+    );
+  }
+  const placeholders = nationIdxPlaceholders(nationIdxs);
+  return queryArrowIPC(
+    db,
+    `SELECT nation_idx, direction, SUM(damage) as total_damage
+     FROM (
+       SELECT wars.attacker_idx as nation_idx, 'taken' as direction,
+              COALESCE(war_unit_losses.battle, 0) + COALESCE(war_unit_losses.attrition, 0) + COALESCE(war_unit_losses.capture, 0) as damage
+       FROM war_unit_losses
+       JOIN wars ON wars.idx = war_unit_losses.war_idx
+       WHERE war_unit_losses.side = 'attacker'
+         AND war_unit_losses.category LIKE 'navy\_%' ESCAPE '\'
+         AND wars.attacker_idx IN (${placeholders})
+       UNION ALL
+       SELECT wars.attacker_idx as nation_idx, 'given' as direction,
+              COALESCE(war_unit_losses.battle, 0) + COALESCE(war_unit_losses.attrition, 0) + COALESCE(war_unit_losses.capture, 0) as damage
+       FROM war_unit_losses
+       JOIN wars ON wars.idx = war_unit_losses.war_idx
+       WHERE war_unit_losses.side = 'defender'
+         AND war_unit_losses.category LIKE 'navy\_%' ESCAPE '\'
+         AND wars.attacker_idx IN (${placeholders})
+       UNION ALL
+       SELECT wars.defender_idx as nation_idx, 'taken' as direction,
+              COALESCE(war_unit_losses.battle, 0) + COALESCE(war_unit_losses.attrition, 0) + COALESCE(war_unit_losses.capture, 0) as damage
+       FROM war_unit_losses
+       JOIN wars ON wars.idx = war_unit_losses.war_idx
+       WHERE war_unit_losses.side = 'defender'
+         AND war_unit_losses.category LIKE 'navy\_%' ESCAPE '\'
+         AND wars.defender_idx IN (${placeholders})
+       UNION ALL
+       SELECT wars.defender_idx as nation_idx, 'given' as direction,
+              COALESCE(war_unit_losses.battle, 0) + COALESCE(war_unit_losses.attrition, 0) + COALESCE(war_unit_losses.capture, 0) as damage
+       FROM war_unit_losses
+       JOIN wars ON wars.idx = war_unit_losses.war_idx
+       WHERE war_unit_losses.side = 'attacker'
+         AND war_unit_losses.category LIKE 'navy\_%' ESCAPE '\'
+         AND wars.defender_idx IN (${placeholders})
+     ) as per_war
+     GROUP BY nation_idx, direction`,
+    // Same reused-placeholder-text reasoning as listNationGovernanceSourcesArrow.
+    nationIdxs,
+  );
+}
+
+/** One row per nation with the 8 military scalar columns
+ * (manpower/sailors/monthly_manpower/monthly_sailors/army_tradition/
+ * navy_tradition/last_months_army_maintenance/last_months_navy_maintenance)
+ * — same filter convention as the other Firepower queries above. */
+export async function listNationMilitaryScalarsArrow(
+  db: SaveDatabase,
+  nationIdxs: readonly number[],
+): Promise<ArrayBuffer> {
+  if (nationIdxs.length === 0) {
+    return queryArrowIPC(
+      db,
+      `SELECT idx as nation_idx, manpower, sailors, monthly_manpower, monthly_sailors,
+              army_tradition, navy_tradition, last_months_army_maintenance,
+              last_months_navy_maintenance
+       FROM nations WHERE FALSE`,
+    );
+  }
+  const placeholders = nationIdxPlaceholders(nationIdxs);
+  return queryArrowIPC(
+    db,
+    `SELECT
+       nations.idx as nation_idx,
+       nations.manpower as manpower,
+       nations.sailors as sailors,
+       nations.monthly_manpower as monthly_manpower,
+       nations.monthly_sailors as monthly_sailors,
+       nations.army_tradition as army_tradition,
+       nations.navy_tradition as navy_tradition,
+       nations.last_months_army_maintenance as last_months_army_maintenance,
+       nations.last_months_navy_maintenance as last_months_navy_maintenance
+     FROM nations
+     WHERE nations.idx IN (${placeholders})
+       AND nations.country_type = 'Real'
+       AND EXISTS (SELECT 1 FROM locations WHERE locations.owner_idx = nations.idx)`,
+    nationIdxs,
+  );
+}

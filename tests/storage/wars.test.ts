@@ -67,7 +67,10 @@ describe("storage/queries listWarsArrow (Encyclopedia Wars tab)", () => {
     expect(ongoingWar.duration_days).toBe(245);
     expect(ongoingWar.attacker_score).toBeNull();
     expect(Number(ongoingWar.defender_score)).toBe(8);
-    expect(ongoingWar.attacker_casualties).toBe(30474);
+    // 30474 + 15 (navy_heavy_ship Battle=12 + Attrition=3, added by
+    // specs/012-firepower-tab to prove war_unit_losses' navy-category
+    // rows are also folded into this pre-existing total).
+    expect(ongoingWar.attacker_casualties).toBe(30489);
     expect(ongoingWar.defender_casualties).toBe(53232);
   });
 

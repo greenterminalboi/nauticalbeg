@@ -124,6 +124,8 @@ countries={
 				prestige=68.51231
 				army_tradition=39.43998
 				navy_tradition=1.02852
+				monthly_manpower=1.55
+				monthly_sailors=0.12
 				government_power=100
 				karma=-11.40825
 				religious_influence=86.41319
@@ -131,6 +133,8 @@ countries={
 				righteousness=90
 				complacency=3.68323
 			}
+			last_months_army_maintenance=12.4
+			last_months_navy_maintenance=8.1
 			government={
 				type=monarchy
 				heir_selection=cognatic_primogeniture
@@ -142,7 +146,46 @@ countries={
 					centralization_vs_decentralization=-41.23
 					aristocracy_vs_plutocracy=67.5
 					absolutism_vs_liberalism=-999
+					land_vs_naval=62.4
+					offensive_vs_defensive=-18.9
+					quality_vs_quantity=-999
 				}
+				implemented_reforms={
+					{
+						date=1400.1.1
+						days=500
+						object=weapons_quality_standards
+					}
+				}
+				implemented_privileges={
+					{
+						date=1400.1.1
+						days=500
+						object=primacy_of_nobility
+					}
+				}
+				implemented_laws={
+					recruitment_law={
+						date=1400.1.1
+						days=500
+						object=expanded_levies_policy
+					}
+					maritime_law={
+						date=1400.1.1
+						days=500
+						object=navy_audits
+					}
+				}
+			}
+			primary_culture=884
+			researched_advances={
+				unlock_footmen_advance=yes
+				unlock_pikemen_advance=yes
+				fort_limit_1_advance=yes
+				military_administration=yes
+				marine_regiments=yes
+				ship_building_techniques_discovery=yes
+				naval_morale_advance_2=yes
 			}
 			historical_population={ 0 0 39.18862 39.55171 40.01348 }
 			historical_tax_base={ 0 0 10.44219 10.61903 10.79581 }
@@ -547,6 +590,10 @@ war_manager={
 					army_auxiliary={
 						Attrition=67
 					}
+					navy_heavy_ship={
+						Battle=12
+						Attrition=3
+					}
 				}
 			}
 			defender_losses={
@@ -634,6 +681,65 @@ population={
 				demand=pop_demand
 			}
 			owner=2065
+		}
+	}
+}
+unit_manager={
+	database={
+		1000001={
+			unit_formation_preference=balanced_army
+			country=2025
+			location=16777289
+			leader=100
+		}
+		1000002={
+			unit_formation_preference=balanced_navy
+			country=2025
+			food=none
+			location=16777289
+			last_port=16777289
+		}
+	}
+}
+subunit_manager={
+	database={
+		2000001={
+			owner=2025
+			controller=2025
+			unit=1000001
+			home=16777289
+			culture=884
+			religion=18
+			type=a_pikemen
+			morale=2.5
+			experience=0.1
+			strength=0.9
+			number=40
+		}
+		2000002={
+			owner=2025
+			controller=2025
+			unit=1000001
+			home=16777289
+			culture=884
+			religion=18
+			type=a_peasant_levy
+			morale=1.2
+			experience=0
+			strength=0.6
+			number=20
+		}
+		2000003={
+			owner=2025
+			controller=2025
+			unit=1000002
+			home=16777289
+			culture=884
+			religion=18
+			type=n_carrack
+			morale=3.1
+			experience=0.05
+			number=2
 		}
 	}
 }

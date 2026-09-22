@@ -1,0 +1,23 @@
+.firepower-tab__controls {
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.firepower-tab__compare-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+.firepower-tab__compare-note {
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+  margin-bottom: var(--space-sm);
+}

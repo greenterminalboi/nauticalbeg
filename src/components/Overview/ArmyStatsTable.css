@@ -1,0 +1,108 @@
+.army-stats-table__scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.army-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+}
+
+.army-stats-table th {
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+  white-space: nowrap;
+}
+
+.army-stats-table th:first-child {
+  text-align: left;
+}
+
+/* Post-ship, explicit user request: every column header is a real
+   button (keyboard-reachable), styled to look exactly like the plain
+   header text it replaces. `text-align: inherit` picks up the th's own
+   left/right alignment (first column vs. every other). */
+.army-stats-table__sort-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.army-stats-table__sort-button:hover,
+.army-stats-table__sort-button:focus-visible {
+  color: var(--color-on-surface);
+}
+
+.army-stats-table__sort-arrow {
+  display: inline-block;
+  width: 0.7em;
+}
+
+.army-stats-table td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface);
+  white-space: nowrap;
+}
+
+/* Alternating row background (zebra striping) so a wide, many-column
+   row is easier to track across the table without losing your place. */
+.army-stats-table tbody tr:nth-child(even) {
+  background: var(--color-surface-container-low);
+}
+
+.army-stats-table tbody tr:hover {
+  background: var(--color-surface-container);
+}
+
+.army-stats-table__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.army-stats-table__swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: var(--space-sm);
+  border: 1px solid var(--color-outline-variant);
+  vertical-align: middle;
+}
+
+.army-stats-table__partial-marker {
+  color: var(--color-on-surface-variant);
+  font-size: 0.7em;
+}
+
+/* Hoverable computed-stat cells (discipline/tactics/fort limit/siege
+   ability/fort defense) carry a full source breakdown in their `title`
+   tooltip — a dotted underline signals there's more to see on hover,
+   not just color (Constitution Principle VI). */
+.army-stats-table__value--hoverable {
+  cursor: help;
+  text-decoration: underline dotted var(--color-outline-variant);
+  text-underline-offset: 3px;
+}
+
+.army-stats-table__footnote {
+  font-size: 0.7rem;
+  color: var(--color-on-surface-variant);
+  margin-top: var(--space-xs);
+}

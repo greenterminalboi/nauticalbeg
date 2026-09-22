@@ -1,0 +1,60 @@
+.head-to-head-table {
+  width: 100%;
+  max-width: 40rem;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+.head-to-head-table th {
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  padding: var(--space-sm);
+  border-bottom: 2px solid var(--color-outline-variant);
+}
+
+.head-to-head-table__stat-header {
+  text-align: left;
+}
+
+.head-to-head-table td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface);
+}
+
+.head-to-head-table__stat-label {
+  color: var(--color-on-surface-variant);
+  font-size: 0.75rem;
+}
+
+.head-to-head-table__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.head-to-head-table__value--larger {
+  font-weight: 700;
+}
+
+.head-to-head-table__value--hoverable {
+  cursor: help;
+  text-decoration: underline dotted var(--color-outline-variant);
+  text-underline-offset: 3px;
+}
+
+.head-to-head-table__swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: var(--space-xs);
+  border: 1px solid var(--color-outline-variant);
+  vertical-align: middle;
+}
+
+.head-to-head-table tbody tr:nth-child(even) {
+  background: var(--color-surface-container-low);
+}

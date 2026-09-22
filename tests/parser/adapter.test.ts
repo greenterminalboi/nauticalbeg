@@ -218,8 +218,26 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
 
     const cultures = await queryAll(database, "SELECT * FROM cultures ORDER BY idx");
     expect(cultures).toEqual([
-      { idx: 884, name: "polesian_culture", color_r: 166, color_g: 133, color_b: 133 },
-      { idx: 1851, name: "swedish", color_r: 0, color_g: 104, color_b: 165 },
+      // culture_group is always NULL for now (specs/012-firepower-tab's
+      // documented, deferred gap — see the adapter's comment on this
+      // INSERT) — a real column with no populated source yet, not a
+      // fabricated value.
+      {
+        idx: 884,
+        name: "polesian_culture",
+        color_r: 166,
+        color_g: 133,
+        color_b: 133,
+        culture_group: null,
+      },
+      {
+        idx: 1851,
+        name: "swedish",
+        color_r: 0,
+        color_g: 104,
+        color_b: 165,
+        culture_group: null,
+      },
     ]);
 
     const religions = await queryAll(database, "SELECT * FROM religions ORDER BY idx");
@@ -495,9 +513,46 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
       duration_days: 245,
       attacker_score: null,
       defender_score: 8,
-      attacker_casualties: 30474,
+      // 30474 + 15 (navy_heavy_ship Battle=12 + Attrition=3, added by
+      // specs/012-firepower-tab to prove war_unit_losses' navy-category
+      // rows are also folded into this pre-existing total — additive,
+      // not a regression).
+      attacker_casualties: 30489,
       defender_casualties: 53232,
     });
+  });
+
+  // specs/012-firepower-tab: war_unit_losses preserves the category-level
+  // breakdown that the wars.attacker_casualties/defender_casualties sum
+  // above collapses — needed for Navy Stats' damage given/taken.
+  it("populates war_unit_losses with the per-category breakdown, including navy categories", async () => {
+    const database = await freshDb("adapter-war-unit-losses.db");
+    await parseAndStore(database, "save-war-losses", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const navyRow = await queryAll(
+      database,
+      `SELECT war_idx, side, category, battle, attrition, capture
+       FROM war_unit_losses
+       WHERE war_idx = 2030043139 AND category = 'navy_heavy_ship'`,
+    );
+    expect(navyRow).toEqual([
+      {
+        war_idx: 2030043139,
+        side: "attacker",
+        category: "navy_heavy_ship",
+        battle: 12,
+        attrition: 3,
+        capture: null,
+      },
+    ]);
+
+    const armyRowCount = await queryAll(
+      database,
+      `SELECT COUNT(*) as n FROM war_unit_losses WHERE war_idx = 2030043139 AND side = 'attacker'`,
+    );
+    // 6 army categories (light_infantry, heavy_infantry, light_cavalry,
+    // heavy_cavalry, artillery, auxiliary) + 1 navy category added above.
+    expect(Number(armyRowCount[0].n)).toBe(7);
   });
 
   it("populates markets from market_manager.database, including the no-center and no-goods edge cases (specs/007-production-trade-markets)", async () => {
@@ -664,18 +719,167 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
       database,
       "SELECT nation_idx, axis, value FROM nation_societal_values WHERE nation_idx = 2025 ORDER BY axis",
     );
-    // The fixture's third axis (absolutism_vs_liberalism=-999) must
+    // The fixture's locked axes (absolutism_vs_liberalism=-999,
+    // quality_vs_quantity=-999, added by specs/012-firepower-tab) must
     // produce no row at all — a missing row IS "not applicable"
     // (research.md), never a stored -999.
     expect(rows).toEqual([
       { nation_idx: 2025, axis: "aristocracy_vs_plutocracy", value: 67.5 },
       { nation_idx: 2025, axis: "centralization_vs_decentralization", value: -41.23 },
+      { nation_idx: 2025, axis: "land_vs_naval", value: 62.4 },
+      { nation_idx: 2025, axis: "offensive_vs_defensive", value: -18.9 },
     ]);
 
     const sentinelRows = await queryAll(
       database,
-      "SELECT * FROM nation_societal_values WHERE nation_idx = 2025 AND axis = 'absolutism_vs_liberalism'",
+      "SELECT * FROM nation_societal_values WHERE nation_idx = 2025 AND axis IN ('absolutism_vs_liberalism', 'quality_vs_quantity')",
     );
     expect(sentinelRows).toEqual([]);
+  });
+
+  // specs/012-firepower-tab: the three military-doctrine axes
+  // (land_vs_naval, offensive_vs_defensive, quality_vs_quantity) reuse
+  // this exact same nation_societal_values pipeline — no new parsing.
+  it("surfaces the three military-doctrine axes through the existing nation_societal_values pipeline", async () => {
+    const database = await freshDb("adapter-military-doctrine-axes.db");
+    await parseAndStore(
+      database,
+      "save-military-doctrine",
+      "rus-1628-minimal.eu5",
+      toBytes(fixtureText),
+    );
+    const rows = await queryAll(
+      database,
+      `SELECT axis, value FROM nation_societal_values
+       WHERE nation_idx = 2025 AND axis IN ('land_vs_naval', 'offensive_vs_defensive', 'quality_vs_quantity')
+       ORDER BY axis`,
+    );
+    expect(rows).toEqual([
+      { axis: "land_vs_naval", value: 62.4 },
+      { axis: "offensive_vs_defensive", value: -18.9 },
+    ]);
+  });
+
+  // specs/012-firepower-tab: subunit_manager.database → regiments.
+  it("populates regiments from subunit_manager.database, with strength NULL on navy rows", async () => {
+    const database = await freshDb("adapter-regiments.db");
+    await parseAndStore(database, "save-regiments", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(
+      database,
+      "SELECT idx, owner_idx, unit_type, morale, number, strength FROM regiments ORDER BY idx",
+    );
+    expect(rows).toEqual([
+      {
+        idx: 2000001,
+        owner_idx: 2025,
+        unit_type: "a_pikemen",
+        morale: 2.5,
+        number: 40,
+        strength: 0.9,
+      },
+      {
+        idx: 2000002,
+        owner_idx: 2025,
+        unit_type: "a_peasant_levy",
+        morale: 1.2,
+        number: 20,
+        strength: 0.6,
+      },
+      {
+        idx: 2000003,
+        owner_idx: 2025,
+        unit_type: "n_carrack",
+        morale: 3.1,
+        number: 2,
+        strength: null, // navy rows never have a fabricated strength
+      },
+    ]);
+  });
+
+  // specs/012-firepower-tab: researched_advances (=yes flags only) →
+  // nation_advances.
+  it("populates nation_advances from researched_advances, one row per =yes flag", async () => {
+    const database = await freshDb("adapter-nation-advances.db");
+    await parseAndStore(database, "save-advances", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(
+      database,
+      "SELECT advance FROM nation_advances WHERE nation_idx = 2025 ORDER BY advance",
+    );
+    expect(rows.map((r) => r.advance)).toEqual([
+      "fort_limit_1_advance",
+      "marine_regiments",
+      "military_administration",
+      "naval_morale_advance_2",
+      "ship_building_techniques_discovery",
+      "unlock_footmen_advance",
+      "unlock_pikemen_advance",
+    ]);
+  });
+
+  // specs/012-firepower-tab: implemented_reforms/implemented_privileges
+  // (flat lists, all entries currently active) → nation_reforms/
+  // nation_privileges; implemented_laws (grouped by category, one active
+  // choice per category) → nation_laws.
+  it("populates nation_reforms, nation_privileges, and nation_laws (with law_category preserved)", async () => {
+    const database = await freshDb("adapter-governance.db");
+    await parseAndStore(database, "save-governance", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const reforms = await queryAll(
+      database,
+      "SELECT nation_idx, object, date FROM nation_reforms WHERE nation_idx = 2025",
+    );
+    expect(reforms).toEqual([
+      { nation_idx: 2025, object: "weapons_quality_standards", date: "1400.1.1" },
+    ]);
+
+    const privileges = await queryAll(
+      database,
+      "SELECT nation_idx, object, date FROM nation_privileges WHERE nation_idx = 2025",
+    );
+    expect(privileges).toEqual([
+      { nation_idx: 2025, object: "primacy_of_nobility", date: "1400.1.1" },
+    ]);
+
+    const laws = await queryAll(
+      database,
+      "SELECT nation_idx, law_category, object, date FROM nation_laws WHERE nation_idx = 2025 ORDER BY law_category",
+    );
+    expect(laws).toEqual([
+      { nation_idx: 2025, law_category: "maritime_law", object: "navy_audits", date: "1400.1.1" },
+      {
+        nation_idx: 2025,
+        law_category: "recruitment_law",
+        object: "expanded_levies_policy",
+        date: "1400.1.1",
+      },
+    ]);
+  });
+
+  // specs/012-firepower-tab: currency_data + country-record military
+  // scalars → new nations columns; primary_culture → nations.primary_culture_idx.
+  it("populates the 8 new nations military scalar columns and primary_culture_idx", async () => {
+    const database = await freshDb("adapter-nation-scalars.db");
+    await parseAndStore(database, "save-scalars", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(
+      database,
+      `SELECT manpower, sailors, monthly_manpower, monthly_sailors, army_tradition,
+              navy_tradition, last_months_army_maintenance, last_months_navy_maintenance,
+              primary_culture_idx
+       FROM nations WHERE idx = 2025`,
+    );
+    expect(rows[0]).toMatchObject({
+      manpower: 429.10362,
+      sailors: 2.72637,
+      monthly_manpower: 1.55,
+      monthly_sailors: 0.12,
+      army_tradition: 39.43998,
+      navy_tradition: 1.02852,
+      last_months_army_maintenance: 12.4,
+      last_months_navy_maintenance: 8.1,
+      primary_culture_idx: 884,
+    });
   });
 });

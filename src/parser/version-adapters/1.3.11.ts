@@ -126,19 +126,50 @@ function asRgbOrNull(value: unknown): [number, number, number] | null {
     : null;
 }
 
+interface CategoryLoss {
+  category: string;
+  battle: number | null;
+  attrition: number | null;
+  capture: number | null;
+}
+
+/** specs/012-firepower-tab: the per-unit-category breakdown underlying
+ * `sumLosses` below, preserved (not just summed away) so Navy Stats can
+ * filter to `navy_%`-prefixed categories for damage given/taken
+ * (research.md §8). Same `null` (field never appeared) vs. `[]`
+ * (present but empty `losses` map, a real confirmed zero) distinction as
+ * `sumLosses`. */
+function extractLossesByCategory(lossesField: unknown): CategoryLoss[] | null {
+  const outer = asRecord(lossesField);
+  if (!("losses" in outer)) return null;
+  const result: CategoryLoss[] = [];
+  for (const [category, unitLosses] of Object.entries(asRecord(outer.losses))) {
+    const rec = asRecord(unitLosses);
+    result.push({
+      category,
+      battle: asNumberOrNull(rec.Battle),
+      attrition: asNumberOrNull(rec.Attrition),
+      capture: asNumberOrNull(rec.Capture),
+    });
+  }
+  return result;
+}
+
 /** Sums a war's `attacker_losses`/`defender_losses` field (shape:
  * `{ losses: { <unit_type>: { Battle?, Attrition?, Capture? } } }`) into
  * one total. Returns `null` — not `0` — when the field never appeared
  * at all (unknown, per constitution Principle IV), distinct from a
- * present-but-empty `losses` map, which is a real, confirmed zero. */
+ * present-but-empty `losses` map, which is a real, confirmed zero.
+ * Defined in terms of `extractLossesByCategory` so both stay in sync —
+ * this total is unchanged by specs/012-firepower-tab's addition (still
+ * the sum across every category), only the underlying data is now also
+ * preserved per-category via `war_unit_losses`. */
 function sumLosses(lossesField: unknown): number | null {
-  const outer = asRecord(lossesField);
-  if (!("losses" in outer)) return null;
+  const byCategory = extractLossesByCategory(lossesField);
+  if (byCategory === null) return null;
   let total = 0;
-  for (const unitLosses of Object.values(asRecord(outer.losses))) {
-    for (const amount of Object.values(asRecord(unitLosses))) {
-      if (typeof amount === "number") total += amount;
-    }
+  for (const c of byCategory) {
+    total += (c.battle ?? 0) + (c.attrition ?? 0) + (c.capture ?? 0);
   }
   return total;
 }
@@ -247,6 +278,15 @@ export async function parseAndStore(
       number | null,
       number | null,
       number,
+      number | null, // manpower
+      number | null, // sailors
+      number | null, // monthly_manpower
+      number | null, // monthly_sailors
+      number | null, // army_tradition
+      number | null, // navy_tradition
+      number | null, // last_months_army_maintenance
+      number | null, // last_months_navy_maintenance
+      number | null, // primary_culture_idx
     ]
   > = [];
   // specs/006-country-leaderboard research.md §1/§3: one row per
@@ -267,6 +307,21 @@ export async function parseAndStore(
   // applicable" for every downstream consumer).
   const SOCIETAL_VALUE_NOT_APPLICABLE = -999;
   const societalValueRows: Array<[number, string, number]> = [];
+  // specs/012-firepower-tab: one row per (nation, researched advance) —
+  // only `=yes` flags, matching nation_societal_values' "no row = not
+  // applicable" convention.
+  const nationAdvancesRows: Array<[number, string]> = [];
+  // specs/012-firepower-tab: government.implemented_reforms/
+  // .implemented_privileges are flat lists of {date, days, object} — all
+  // entries currently-active (reforms/privileges accumulate, they don't
+  // replace). toArray normalizes the single-entry case the same way
+  // played_country is normalized above.
+  const nationReformsRows: Array<[number, string, string | null]> = [];
+  const nationPrivilegesRows: Array<[number, string, string | null]> = [];
+  // specs/012-firepower-tab: government.implemented_laws is grouped by
+  // law_category (not a flat list) — exactly one active object per
+  // category.
+  const nationLawsRows: Array<[number, string, string, string | null]> = [];
   for (const [idxStr, tag] of Object.entries(tags)) {
     const record = asRecord(countryDatabase[idxStr]);
     const currencyData = asRecord(record.currency_data);
@@ -288,6 +343,15 @@ export async function parseAndStore(
       rgb ? rgb[1] : null,
       rgb ? rgb[2] : null,
       humanPlayedIdxs.has(idx) ? 1 : 0,
+      asNumberOrNull(currencyData.manpower),
+      asNumberOrNull(currencyData.sailors),
+      asNumberOrNull(currencyData.monthly_manpower),
+      asNumberOrNull(currencyData.monthly_sailors),
+      asNumberOrNull(currencyData.army_tradition),
+      asNumberOrNull(currencyData.navy_tradition),
+      asNumberOrNull(record.last_months_army_maintenance),
+      asNumberOrNull(record.last_months_navy_maintenance),
+      asNumberOrNull(record.primary_culture),
     ]);
     for (const [field, metric] of HISTORY_METRICS) {
       const values = asNumberArray(record[field]);
@@ -301,12 +365,64 @@ export async function parseAndStore(
         societalValueRows.push([idx, axis, value]);
       }
     }
+    const researchedAdvances = asRecord(record.researched_advances);
+    for (const [advance, value] of Object.entries(researchedAdvances)) {
+      if (value === true || value === "yes") {
+        nationAdvancesRows.push([idx, advance]);
+      }
+    }
+    toArray(government, "implemented_reforms");
+    for (const entry of Array.isArray(government.implemented_reforms) ? government.implemented_reforms : []) {
+      const reform = asRecord(entry);
+      const object = asStringOrNull(reform.object);
+      if (object) nationReformsRows.push([idx, object, formatGameDate(reform.date)]);
+    }
+    toArray(government, "implemented_privileges");
+    for (const entry of Array.isArray(government.implemented_privileges) ? government.implemented_privileges : []) {
+      const privilege = asRecord(entry);
+      const object = asStringOrNull(privilege.object);
+      if (object) nationPrivilegesRows.push([idx, object, formatGameDate(privilege.date)]);
+    }
+    const implementedLaws = asRecord(government.implemented_laws);
+    for (const [lawCategory, entry] of Object.entries(implementedLaws)) {
+      const law = asRecord(entry);
+      const object = asStringOrNull(law.object);
+      if (object) nationLawsRows.push([idx, lawCategory, object, formatGameDate(law.date)]);
+    }
   }
   await insertRows(
     db,
-    "INSERT INTO nations (idx, tag, name, country_type, is_player, treasury, stability, government_type, color_r, color_g, color_b, is_human_played) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+    "INSERT INTO nations (idx, tag, name, country_type, is_player, treasury, stability, government_type, color_r, color_g, color_b, is_human_played, manpower, sailors, monthly_manpower, monthly_sailors, army_tradition, navy_tradition, last_months_army_maintenance, last_months_navy_maintenance, primary_culture_idx) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)",
     nationRows,
   );
+  if (nationAdvancesRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO nation_advances (nation_idx, advance) VALUES (?1, ?2)",
+      nationAdvancesRows,
+    );
+  }
+  if (nationReformsRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO nation_reforms (nation_idx, object, date) VALUES (?1, ?2, ?3)",
+      nationReformsRows,
+    );
+  }
+  if (nationPrivilegesRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO nation_privileges (nation_idx, object, date) VALUES (?1, ?2, ?3)",
+      nationPrivilegesRows,
+    );
+  }
+  if (nationLawsRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO nation_laws (nation_idx, law_category, object, date) VALUES (?1, ?2, ?3, ?4)",
+      nationLawsRows,
+    );
+  }
   await insertRows(
     db,
     "INSERT INTO nation_history (nation_idx, year, metric, value) VALUES (?1, ?2, ?3, ?4)",
@@ -440,7 +556,20 @@ export async function parseAndStore(
   // (opaque, unresolved) a real name and the save's own in-game color —
   // never parsed before this feature needed them.
   const cultureDatabase = asRecord(asRecord(root.culture_manager).database);
-  const cultureRows: Array<[number, string | null, number | null, number | null, number | null]> = [];
+  // specs/012-firepower-tab: culture_group is always NULL here — it's a
+  // property of the game's own culture *definitions*, not something the
+  // save carries per culture entry, so it can't be read off `record`
+  // like color/name can. Resolving it needs a static culture->group
+  // reference table (regenerated from game/in_game/common/cultures/*.txt,
+  // same pattern as unitTypeReference.ts) that hasn't been built yet —
+  // an explicit, documented gap (data-model.md's "known accepted
+  // simplification"), not a silent omission: the column exists so a
+  // future pass can populate it without a schema change, and until then
+  // any culture-group-gated unit unlock is treated as ungated (never
+  // blocked on a NULL group) per that same documented fallback.
+  const cultureRows: Array<
+    [number, string | null, number | null, number | null, number | null, null]
+  > = [];
   for (const [idxStr, value] of Object.entries(cultureDatabase)) {
     const record = asRecord(value);
     const rgb = asRgbOrNull(record.color);
@@ -450,12 +579,13 @@ export async function parseAndStore(
       rgb ? rgb[0] : null,
       rgb ? rgb[1] : null,
       rgb ? rgb[2] : null,
+      null,
     ]);
   }
   if (cultureRows.length > 0) {
     await insertRows(
       db,
-      "INSERT INTO cultures (idx, name, color_r, color_g, color_b) VALUES (?1, ?2, ?3, ?4, ?5)",
+      "INSERT INTO cultures (idx, name, color_r, color_g, color_b, culture_group) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
       cultureRows,
     );
   }
@@ -525,6 +655,12 @@ export async function parseAndStore(
       number | null,
     ]
   > = [];
+  // specs/012-firepower-tab: additive alongside warsRows above (see
+  // war_unit_losses' schema.sql comment) — war_idx BIGINT-typed like
+  // wars.idx, side is 'attacker' | 'defender'.
+  const warUnitLossesRows: Array<
+    [number, string, string, number | null, number | null, number | null]
+  > = [];
   for (const [warIdxStr, warEntry] of Object.entries(warDatabase)) {
     const war = asRecord(warEntry);
     const startDateRaw = war.start_date;
@@ -535,6 +671,8 @@ export async function parseAndStore(
       ? Math.round((referenceEndRaw.getTime() - startDateRaw.getTime()) / 86_400_000)
       : null;
     const originalDefenders = Array.isArray(war.original_defenders) ? war.original_defenders : [];
+    const attackerLossesByCategory = extractLossesByCategory(war.attacker_losses);
+    const defenderLossesByCategory = extractLossesByCategory(war.defender_losses);
     warsRows.push([
       Number(warIdxStr),
       asStringOrNull(asRecord(war.war_name).name),
@@ -548,6 +686,26 @@ export async function parseAndStore(
       sumLosses(war.attacker_losses),
       sumLosses(war.defender_losses),
     ]);
+    for (const loss of attackerLossesByCategory ?? []) {
+      warUnitLossesRows.push([
+        Number(warIdxStr),
+        "attacker",
+        loss.category,
+        loss.battle,
+        loss.attrition,
+        loss.capture,
+      ]);
+    }
+    for (const loss of defenderLossesByCategory ?? []) {
+      warUnitLossesRows.push([
+        Number(warIdxStr),
+        "defender",
+        loss.category,
+        loss.battle,
+        loss.attrition,
+        loss.capture,
+      ]);
+    }
   }
   if (warsRows.length > 0) {
     await insertRows(
@@ -556,7 +714,42 @@ export async function parseAndStore(
       warsRows,
     );
   }
+  if (warUnitLossesRows.length > 0) {
+    // specs/012-firepower-tab
+    await insertRows(
+      db,
+      "INSERT INTO war_unit_losses (war_idx, side, category, battle, attrition, capture) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+      warUnitLossesRows,
+    );
+  }
   reportMilestone(); // "wars"
+
+  // specs/012-firepower-tab: subunit_manager.database, one row per
+  // regiment/ship. idx is BIGINT — sibling unit_manager stack ids
+  // already exceed INT32 in a real save. strength is army-only; the
+  // field is genuinely absent for navy subunits (never fabricated).
+  const subunitDatabase = asRecord(asRecord(root.subunit_manager).database);
+  const regimentRows: Array<
+    [number, number | null, string | null, number | null, number | null, number | null]
+  > = [];
+  for (const [subunitIdxStr, subunitEntry] of Object.entries(subunitDatabase)) {
+    const subunit = asRecord(subunitEntry);
+    regimentRows.push([
+      Number(subunitIdxStr),
+      asNumberOrNull(subunit.owner),
+      asStringOrNull(subunit.type),
+      asNumberOrNull(subunit.morale),
+      asNumberOrNull(subunit.number),
+      asNumberOrNull(subunit.strength),
+    ]);
+  }
+  if (regimentRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO regiments (idx, owner_idx, unit_type, morale, number, strength) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+      regimentRows,
+    );
+  }
 
   // population.database: one row per population group. Fixed-shape
   // scalar fields become real columns; `missing` (a variable-keyed

@@ -1,0 +1,20 @@
+.hover-tooltip-trigger {
+  position: relative;
+  display: inline;
+}
+
+.hover-tooltip {
+  position: fixed;
+  z-index: 1000;
+  max-width: 22rem;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-inverse-surface, #2b2622);
+  color: var(--color-inverse-on-surface, #fff8f5);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: pre-line;
+  border-radius: var(--space-xs);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}

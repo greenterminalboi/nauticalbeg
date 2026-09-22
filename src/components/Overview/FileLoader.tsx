@@ -26,6 +26,8 @@ import { CountryViewerNav } from "./CountryViewerNav";
 import { EncyclopediaNav } from "./EncyclopediaNav";
 import { EncyclopediaSection } from "./EncyclopediaSection";
 import { ErrorMessage } from "./ErrorMessage";
+import { FirepowerTab } from "./FirepowerTab";
+import { FirepowerSideNav, type FirepowerView } from "./FirepowerSideNav";
 import { KeptSaveOffer } from "./KeptSaveOffer";
 import { LeaderboardTab } from "./LeaderboardTab";
 import { LeaderboardSideNav } from "./LeaderboardSideNav";
@@ -117,6 +119,7 @@ export function FileLoader() {
   const [encyclopediaTab, setEncyclopediaTab] = useState<EncyclopediaTab>("countries");
   const [leaderboardPage, setLeaderboardPage] = useState<LeaderboardPage>("population");
   const [marketsView, setMarketsView] = useState<MarketsView>("worldGoods");
+  const [firepowerView, setFirepowerView] = useState<FirepowerView>("doctrine");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const workerRef = useRef<Worker | null>(null);
   // Tracks the most recently ready save's id so the beforeunload handler
@@ -378,8 +381,11 @@ export function FileLoader() {
   // showLeaderboardNav.
   const showMarketsNav =
     isFactbook && encyclopediaTab === "markets" && isReady && !!readDbRef.current;
+  // specs/012-firepower-tab: same gating as showMarketsNav.
+  const showFirepowerNav =
+    isFactbook && encyclopediaTab === "firepower" && isReady && !!readDbRef.current;
   const shellClassName =
-    showCountriesNav || showLeaderboardNav || showMarketsNav
+    showCountriesNav || showLeaderboardNav || showMarketsNav || showFirepowerNav
       ? "shell shell--with-nav"
       : isFactbook
         ? "shell shell--with-subnav"
@@ -410,6 +416,9 @@ export function FileLoader() {
   // page content.
   const isSocietalCompassTab =
     isFactbook && encyclopediaTab === "societal-compass" && isReady;
+  // specs/012-firepower-tab: same full-width treatment — Army/Navy Stats
+  // are wide comparison tables, not bounded page content.
+  const isFirepowerTab = isFactbook && encyclopediaTab === "firepower" && isReady;
   // The Map tab (once a save is actually loaded — the pre-load "select a
   // save" message stays in the normal padded/centered layout) wants the
   // full remaining viewport edge-to-edge, not just the full width
@@ -419,7 +428,7 @@ export function FileLoader() {
   const mainClassName = isMapTab ? "shell__main shell__main--flush" : "shell__main";
   const mainInnerClassName = isMapTab
     ? "shell__main-inner shell__main-inner--full-width shell__main-inner--flush"
-    : isTableTab || isEncyclopediaSection || isLeaderboardTab || isSocietalCompassTab
+    : isTableTab || isEncyclopediaSection || isLeaderboardTab || isSocietalCompassTab || isFirepowerTab
       ? "shell__main-inner shell__main-inner--full-width"
       : "shell__main-inner";
 
@@ -448,6 +457,9 @@ export function FileLoader() {
       )}
       {showMarketsNav && (
         <MarketsSideNav activeView={marketsView} onSelectView={setMarketsView} />
+      )}
+      {showFirepowerNav && (
+        <FirepowerSideNav activeView={firepowerView} onSelectView={setFirepowerView} />
       )}
       <main className={mainClassName}>
         <div className={mainInnerClassName}>
@@ -515,6 +527,16 @@ export function FileLoader() {
                 // gate and idle wording as Wars/Leaderboard/Markets above.
                 isReady && readDbRef.current ? (
                   <SocietalCompassPage db={readDbRef.current} />
+                ) : (
+                  <p>Select a save file above to get started.</p>
+                )
+              )}
+              {isFactbook && encyclopediaTab === "firepower" && (
+                // specs/012-firepower-tab: save-wide, not nation-scoped,
+                // same isReady + readDbRef.current gate and idle wording
+                // as Wars/Leaderboard/Markets/Societal Compass above.
+                isReady && readDbRef.current ? (
+                  <FirepowerTab db={readDbRef.current} activeView={firepowerView} />
                 ) : (
                   <p>Select a save file above to get started.</p>
                 )

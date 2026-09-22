@@ -48,6 +48,10 @@ describe("buildSaveInventory against the committed fixture", () => {
         "provinces",
         "rulerterm_manager",
         "war_manager",
+        // specs/012-firepower-tab: unit_manager/subunit_manager added
+        // to the fixture for the Firepower tab's own extraction tests.
+        "unit_manager",
+        "subunit_manager",
       ].sort(),
     );
   });

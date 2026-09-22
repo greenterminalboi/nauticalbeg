@@ -1,0 +1,38 @@
+/* specs/012-firepower-tab post-ship redesign: parallel-coordinates
+   chart replaced the old strip-plot rows — same "no grey box, fills the
+   panel" canvas convention as SocietalCompassChart.css/LeaderboardChart.css. */
+.military-doctrine-chart__canvas {
+  width: 100%;
+  height: min(60vh, 34rem);
+  min-height: 22rem;
+}
+
+/* A persistent country color key below the chart — hover/click on the
+   chart itself shows exact values (see the tooltip formatter), so this
+   list only needs to answer "which color is which country" without
+   permanent on-chart labels (which collide past a handful of countries). */
+.military-doctrine-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  font-size: 0.75rem;
+  color: var(--color-on-surface-variant);
+}
+
+.military-doctrine-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  white-space: nowrap;
+}
+
+.military-doctrine-chart__legend-swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-outline-variant);
+}

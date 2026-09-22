@@ -46,6 +46,11 @@ describe("storage/queries listSocietalValuesArrow (specs/010-societal-values-com
     expect(rusRows.sort((a, b) => String(a.axis).localeCompare(String(b.axis)))).toEqual([
       { nation_idx: 2025, axis: "aristocracy_vs_plutocracy", value: 67.5 },
       { nation_idx: 2025, axis: "centralization_vs_decentralization", value: -41.23 },
+      // specs/012-firepower-tab: the two non-locked military-doctrine
+      // axes added to the fixture (quality_vs_quantity=-999 stays
+      // excluded, same as absolutism_vs_liberalism).
+      { nation_idx: 2025, axis: "land_vs_naval", value: 62.4 },
+      { nation_idx: 2025, axis: "offensive_vs_defensive", value: -18.9 },
     ]);
     // No row anywhere holds the raw -999 sentinel.
     expect(rows.some((r) => r.value === -999)).toBe(false);
