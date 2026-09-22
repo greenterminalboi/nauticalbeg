@@ -45,7 +45,7 @@ const SORT_ACCESSORS: SortAccessor<ArmyStatsTableRow>[] = [
   { key: "supply", value: (r) => r.ageSupply },
 ];
 
-function formatNumber(value: number | null, digits = 1): string {
+export function formatNumber(value: number | null, digits = 1): string {
   return value === null ? "—" : value.toFixed(digits);
 }
 

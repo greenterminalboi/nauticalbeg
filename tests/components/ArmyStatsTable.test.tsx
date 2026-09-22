@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ArmyStatsTable, type ArmyStatsTableRow } from "../../src/components/Overview/ArmyStatsTable";
+import { ZERO_UNIT_TYPE_STATS } from "../helpers/unitTypeStatsFixture";
 
 function row(overrides: Partial<ArmyStatsTableRow> = {}): ArmyStatsTableRow {
   return {
@@ -36,8 +37,8 @@ function row(overrides: Partial<ArmyStatsTableRow> = {}): ArmyStatsTableRow {
     ageCavalry: 1,
     ageSupply: 1,
     regimentBreakdown: [
-      { unitType: "a_pikemen", displayCategory: "Infantry", isLevy: false, regimentCount: 1, totalNumber: 40 },
-      { unitType: "a_peasant_levy", displayCategory: "Infantry", isLevy: true, regimentCount: 1, totalNumber: 20 },
+      { unitType: "a_pikemen", displayCategory: "Infantry", isLevy: false, regimentCount: 1, totalNumber: 40, stats: ZERO_UNIT_TYPE_STATS, age: 1 },
+      { unitType: "a_peasant_levy", displayCategory: "Infantry", isLevy: true, regimentCount: 1, totalNumber: 20, stats: ZERO_UNIT_TYPE_STATS, age: 1 },
     ],
     ...overrides,
   };

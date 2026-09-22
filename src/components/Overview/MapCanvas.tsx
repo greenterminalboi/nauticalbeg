@@ -68,6 +68,23 @@ function rgbToCss([r, g, b]: [number, number, number]): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+// EXPERIMENTAL (prototype, unshipped): pseudo-3D "heat/elevation" effect
+// for map modes that opt in via MapLayer.getHeight (currently Population,
+// Development). Fakes an extruded look on a plain Canvas 2D surface —
+// there's no WebGL/shader layer in this codebase to build real 3D on —
+// by drawing each location twice: once unshifted in a darkened "side"
+// shade (the base/shadow), then again shifted up by a height-proportional
+// amount in its real fill color (the "roof"). Only locations with
+// nonzero height pay the extra fill; categorical layers (no getHeight)
+// are completely unaffected.
+const EXTRUSION_MAX_CSS_PX = 10;
+const EXTRUSION_MIN_T = 0.08;
+const EXTRUSION_SIDE_DARKEN = 0.45;
+
+function darken([r, g, b]: [number, number, number], amount: number): [number, number, number] {
+  return [Math.round(r * (1 - amount)), Math.round(g * (1 - amount)), Math.round(b * (1 - amount))];
+}
+
 // post-ship correction (2026-09-21): every location was previously drawn
 // as its own separate fill path with no stroke at all — adjacent
 // locations only looked visually separated where two independently-filled
@@ -152,20 +169,41 @@ export function MapCanvas({
     ctx.lineWidth = BORDER_WIDTH_SCREEN_PX / (dpr * view.scale);
     ctx.strokeStyle = BORDER_COLOR;
 
+    const context = ctx;
+    function tracePath(rings: Array<Array<[number, number]>>, dy: number) {
+      context.beginPath();
+      for (const ring of rings) {
+        ring.forEach(([x, y], i) => {
+          if (i === 0) context.moveTo(x, y + dy);
+          else context.lineTo(x, y + dy);
+        });
+        context.closePath();
+      }
+    }
+
     for (const polygon of polygons) {
       const row = dataset.get(polygon.name);
       const fill = row ? activeLayer.getFill(row, dataset) : NEUTRAL_COLOR;
-      ctx.beginPath();
-      for (const ring of polygon.rings) {
-        ring.forEach(([x, y], i) => {
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.closePath();
+      const height = row && activeLayer.getHeight ? activeLayer.getHeight(row, dataset) : 0;
+
+      if (height > EXTRUSION_MIN_T) {
+        // World-space offset for a constant *apparent* (CSS-pixel) height
+        // regardless of zoom — dividing by view.scale cancels the zoom
+        // factor the same way BORDER_WIDTH_SCREEN_PX does above.
+        const dy = -(height * EXTRUSION_MAX_CSS_PX) / view.scale;
+        tracePath(polygon.rings, 0);
+        ctx.fillStyle = rgbToCss(darken(fill, EXTRUSION_SIDE_DARKEN));
+        ctx.fill("evenodd");
+        tracePath(polygon.rings, dy);
+        ctx.fillStyle = rgbToCss(fill);
+        ctx.fill("evenodd");
+        ctx.stroke();
+      } else {
+        tracePath(polygon.rings, 0);
+        ctx.fillStyle = rgbToCss(fill);
+        ctx.fill("evenodd");
+        ctx.stroke();
       }
-      ctx.fillStyle = rgbToCss(fill);
-      ctx.fill("evenodd");
-      ctx.stroke();
     }
   };
 

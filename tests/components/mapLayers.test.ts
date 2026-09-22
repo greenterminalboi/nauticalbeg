@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAP_LAYERS, NEUTRAL_COLOR } from "../../src/components/Overview/mapLayers";
+import { MAP_LAYERS, NEUTRAL_COLOR, ZERO_COLOR } from "../../src/components/Overview/mapLayers";
 import type { MapLocationDataset, MapLocationRow } from "../../src/components/Overview/mapLocationData";
 
 let nextIdx = 1;
@@ -84,13 +84,21 @@ describe("mapLayers population layer (specs/005-map-visualization US3)", () => {
     expect(fill1).not.toEqual(fill3);
   });
 
-  it("shades a location with no population data distinctly from any populated one", () => {
+  it("shades a location with no confirmed data (development null) distinctly from a confirmed zero or a populated one", () => {
     const layer = requireLayer("population");
-    const empty = makeRow({ totalPopulation: 0 });
-    const populated = makeRow({ totalPopulation: 10 });
-    const dataset = datasetOf([empty, populated]);
-    expect(layer.getFill(empty, dataset)).toEqual(NEUTRAL_COLOR);
+    // Population piggybacks on `development`'s own null-ness (user
+    // request 2026-09-22: mapLayers.ts's populationLayer doc comment) —
+    // `totalPopulation` alone can never be null (the query's own
+    // COALESCE), so "no data" only shows through when development is
+    // null too.
+    const noData = makeRow({ development: null, totalPopulation: 0 });
+    const zero = makeRow({ development: 20, totalPopulation: 0 });
+    const populated = makeRow({ development: 20, totalPopulation: 10 });
+    const dataset = datasetOf([noData, zero, populated]);
+    expect(layer.getFill(noData, dataset)).toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(zero, dataset)).toEqual(ZERO_COLOR);
     expect(layer.getFill(populated, dataset)).not.toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(populated, dataset)).not.toEqual(ZERO_COLOR);
   });
 
   it("tooltip surfaces the location's name and population figure", () => {
@@ -371,13 +379,16 @@ describe("mapLayers market layer (specs/011-atlas-map-modes US6)", () => {
 });
 
 describe("mapLayers tax base layer (specs/011-atlas-map-modes US7)", () => {
-  it("shades a location with no tax base value distinctly from a taxed one", () => {
+  it("shades a location with no confirmed tax base distinctly from a confirmed zero or a taxed one", () => {
     const layer = requireLayer("taxBase");
-    const empty = makeRow({ possibleTax: 0 });
+    const noData = makeRow({ possibleTax: null });
+    const zero = makeRow({ possibleTax: 0 });
     const taxed = makeRow({ possibleTax: 40 });
-    const dataset = datasetOf([empty, taxed]);
-    expect(layer.getFill(empty, dataset)).toEqual(NEUTRAL_COLOR);
+    const dataset = datasetOf([noData, zero, taxed]);
+    expect(layer.getFill(noData, dataset)).toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(zero, dataset)).toEqual(ZERO_COLOR);
     expect(layer.getFill(taxed, dataset)).not.toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(taxed, dataset)).not.toEqual(ZERO_COLOR);
   });
 
   it("tooltip surfaces the location's name and tax base value", () => {
@@ -411,16 +422,19 @@ describe("mapLayers soldiers layer (specs/011-atlas-map-modes US8)", () => {
 });
 
 describe("mapLayers development layer (specs/011-atlas-map-modes US1)", () => {
-  it("shades a location with no development value distinctly from a developed one", () => {
+  it("shades a location with no confirmed development distinctly from a confirmed zero or a developed one", () => {
     const layer = requireLayer("development");
-    const empty = makeRow({ development: 0 });
+    const noData = makeRow({ development: null });
+    const zero = makeRow({ development: 0 });
     const developed = makeRow({ development: 40 });
-    const dataset = datasetOf([empty, developed]);
-    expect(layer.getFill(empty, dataset)).toEqual(NEUTRAL_COLOR);
+    const dataset = datasetOf([noData, zero, developed]);
+    expect(layer.getFill(noData, dataset)).toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(zero, dataset)).toEqual(ZERO_COLOR);
     expect(layer.getFill(developed, dataset)).not.toEqual(NEUTRAL_COLOR);
+    expect(layer.getFill(developed, dataset)).not.toEqual(ZERO_COLOR);
   });
 
-  it("colors low-to-high development red-to-green, spread evenly by rank regardless of how skewed the raw values are", () => {
+  it("colors low-to-high development purple-to-red on the spectral gradient, spread evenly by rank regardless of how skewed the raw values are", () => {
     const layer = requireLayer("development");
     // A deliberately skewed distribution (one huge outlier) — a
     // value-based scale would bunch small1/small2 into near-identical
@@ -441,9 +455,10 @@ describe("mapLayers development layer (specs/011-atlas-map-modes US1)", () => {
     expect(fill2).not.toEqual(fillMid);
     expect(fillMid).not.toEqual(fillOutlier);
 
-    // Lowest rank is pure red, highest rank is pure green.
-    expect(fill1).toEqual([178, 24, 43]);
-    expect(fillOutlier).toEqual([26, 152, 80]);
+    // Lowest rank is the spectral gradient's first (purple) stop,
+    // highest rank is its last (red) stop.
+    expect(fill1).toEqual([126, 47, 142]);
+    expect(fillOutlier).toEqual([215, 48, 39]);
   });
 
   it("tooltip surfaces the location's name and raw development value", () => {

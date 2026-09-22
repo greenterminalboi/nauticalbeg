@@ -10,7 +10,7 @@
 // a type this table hasn't been regenerated for) is logged and excluded
 // from the classification rather than crashing or silently miscounted
 // into the wrong category (Constitution Principle IV).
-import type { UnitTypeReferenceEntry } from "./unitTypeReference";
+import type { UnitTypeReferenceEntry, UnitTypeStats } from "./unitTypeReference";
 
 export interface RegimentSummaryRow {
   unitType: string;
@@ -32,6 +32,15 @@ export interface UnitTypeTotals extends CategoryTotals {
   unitType: string;
   displayCategory: string;
   isLevy: boolean;
+  /** user request 2026-09-22: the unit type's own combat stats (max
+   * strength, combat power, frontage, ...) straight from the reference
+   * table — constant per unit type, so carried as-is rather than
+   * aggregated across this nation's regiments of it. */
+  stats: UnitTypeStats;
+  /** user request 2026-09-22: this unit type's own age tier (I-VI),
+   * for a small badge next to its name in Army Composition's Regiment
+   * Composition table. */
+  age: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 export interface RegimentClassification {
@@ -102,6 +111,8 @@ export function classifyRegiments(
       isLevy: entry.isLevy,
       regimentCount: row.regimentCount,
       totalNumber: row.totalNumber,
+      stats: entry.stats,
+      age: entry.age,
     });
   }
 

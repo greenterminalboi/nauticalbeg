@@ -1,12 +1,31 @@
 import { describe, expect, it } from "vitest";
 import { classifyRegiments } from "../../src/components/Overview/regimentClassifier";
-import type { UnitTypeReferenceEntry } from "../../src/components/Overview/unitTypeReference";
+import type { UnitTypeReferenceEntry, UnitTypeStats } from "../../src/components/Overview/unitTypeReference";
+
+const STATS: UnitTypeStats = {
+  maxStrength: 0,
+  combatPower: 0,
+  frontage: 0,
+  combatSpeed: 0,
+  initiative: 0,
+  flankingAbility: 0,
+  secureFlanksDefense: 0,
+  moraleDamageTaken: 0,
+  strengthDamageTaken: 0,
+  moraleDamageDone: 0,
+  strengthDamageDone: 0,
+  foodStoragePerStrength: 0,
+  foodConsumptionPerStrength: 0,
+  movementSpeed: 0,
+  unitWeight: 0,
+  artilleryBarrage: 0,
+};
 
 const REFERENCE: Record<string, UnitTypeReferenceEntry> = {
-  a_pikemen: { category: "army_heavy_infantry", displayCategory: "Infantry", age: 3, isLevy: false },
-  a_peasant_levy: { category: "army_light_infantry", displayCategory: "Infantry", age: 1, isLevy: true },
-  n_carrack: { category: "navy_heavy_ship", displayCategory: "Heavies", age: 3, isLevy: false },
-  n_galiot: { category: "navy_galley", displayCategory: "Galleys", age: 2, isLevy: false },
+  a_pikemen: { category: "army_heavy_infantry", displayCategory: "Infantry", age: 3, isLevy: false, stats: STATS },
+  a_peasant_levy: { category: "army_light_infantry", displayCategory: "Infantry", age: 1, isLevy: true, stats: STATS },
+  n_carrack: { category: "navy_heavy_ship", displayCategory: "Heavies", age: 3, isLevy: false, stats: STATS },
+  n_galiot: { category: "navy_galley", displayCategory: "Galleys", age: 2, isLevy: false, stats: STATS },
 };
 
 describe("classifyRegiments (specs/012-firepower-tab)", () => {
@@ -69,8 +88,8 @@ describe("classifyRegiments (specs/012-firepower-tab)", () => {
       REFERENCE,
     );
     expect(result.byUnitType).toEqual([
-      { unitType: "a_pikemen", displayCategory: "Infantry", isLevy: false, regimentCount: 2, totalNumber: 40 },
-      { unitType: "a_peasant_levy", displayCategory: "Infantry", isLevy: true, regimentCount: 1, totalNumber: 20 },
+      { unitType: "a_pikemen", displayCategory: "Infantry", isLevy: false, regimentCount: 2, totalNumber: 40, stats: STATS, age: 3 },
+      { unitType: "a_peasant_levy", displayCategory: "Infantry", isLevy: true, regimentCount: 1, totalNumber: 20, stats: STATS, age: 1 },
     ]);
   });
 });

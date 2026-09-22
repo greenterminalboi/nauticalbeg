@@ -444,3 +444,15 @@ Task: "Add regimentClassifier.ts (category/age/levy grouping) to src/components/
 3. User Story 2 → Army Stats works → demo
 4. User Story 3 → Navy Stats works → demo
 5. Polish → performance/accessibility/regression pass across all three
+
+---
+
+## Post-Ship Additions
+
+### 2026-09-22, explicit user request
+
+- New "Army Composition" Firepower sub-view: `ArmyCompositionView.tsx`/`.css`, `CountrySelect.tsx`/`.css` (single-select combobox, mirrors `GoodSelect`), wired into `FirepowerSideNav.tsx`/`FirepowerTab.tsx` with its own independent country-selection state.
+- `tools/firepower-reference/generate-unit-types.ts` extended to resolve 16 per-unit-type combat stats (the 15 `unit_categories/readme.txt` documents, plus `artillery_barrage`) via the same `copy_from`-chain resolution already used for category/age/levy, falling back to each unit's raw category's own `unit_categories/*.txt` declaration; `unitTypeReference.ts` regenerated from the real game install. Threaded through `regimentClassifier.ts` → `armyNavyStats.ts` → `militaryStatFormat.ts` (`UnitTypeStats`, `RegimentBreakdownEntry.stats`/`.age`).
+- Regiment Composition table: all 16 stats as sortable columns (rotated vertical headers), plus colored age and display-category badges next to each unit type's name.
+- See research.md §9 for the full decision record, including confirmation that a regiment row's age badge is the *unit type's own* age (`UNIT_TYPE_REFERENCE`), never the country's unlocked age (`computeUnlockedAge()`) — the two were already independent code paths, verified rather than assumed.
+- Existing test fixtures (`ArmyStatsTable.test.tsx`, `NavyStatsTable.test.tsx`, `headToHeadRows.test.ts`, `militaryStatFormat.test.ts`, `regimentClassifier.test.ts`) updated for the new required `stats`/`age` fields on `RegimentBreakdownEntry`/`UnitTypeReferenceEntry`; new shared fixture at `tests/helpers/unitTypeStatsFixture.ts`.

@@ -18,6 +18,8 @@ function toRegimentBreakdown(entries: readonly UnitTypeTotals[]): RegimentBreakd
     isLevy: e.isLevy,
     regimentCount: e.regimentCount,
     totalNumber: e.totalNumber,
+    stats: e.stats,
+    age: e.age,
   }));
 }
 

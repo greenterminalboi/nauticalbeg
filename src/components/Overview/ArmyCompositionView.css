@@ -1,0 +1,205 @@
+.army-composition__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.army-composition__swatch {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--color-outline-variant);
+}
+
+.army-composition__title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.army-composition__section {
+  margin-bottom: var(--space-lg);
+}
+
+.army-composition__section h3 {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  margin: 0 0 var(--space-sm);
+}
+
+.army-composition__overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.army-composition__overview-grid > div {
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 4px;
+  padding: var(--space-sm);
+}
+
+.army-composition__overview-grid dt {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.army-composition__overview-grid dd {
+  margin: var(--space-xs) 0 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface);
+}
+
+.army-composition__stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-sm);
+}
+
+.army-composition__stat-card {
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 4px;
+  padding: var(--space-sm);
+}
+
+.army-composition__stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-xs);
+}
+
+.army-composition__stat-card-label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  color: var(--color-on-surface);
+}
+
+.army-composition__stat-card-value {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface);
+}
+
+.army-composition__partial-marker {
+  color: var(--color-on-surface-variant);
+  font-size: 0.7em;
+}
+
+.army-composition__stat-card-empty {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--color-on-surface-variant);
+  margin: 0;
+}
+
+.army-composition__stat-card-sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.75rem;
+}
+
+.army-composition__stat-card-sources li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.army-composition__stat-card-source-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface);
+  white-space: nowrap;
+}
+
+.army-composition__regiment-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.army-composition__regiment-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+/* user request 2026-09-22: with 16 stat columns the table ran very wide
+   under horizontal headers ("Strength Damage Taken" etc. each forcing
+   its whole column that wide even though the numbers underneath are
+   short) — rotating every header to vertical text lets each column
+   shrink to roughly its data's own width instead. Reads bottom-to-top,
+   the standard spreadsheet convention (vertical-rl + a 180deg flip,
+   rather than sideways-lr, for wider browser support). */
+.army-composition__regiment-table th {
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  border-bottom: 1px solid var(--color-outline-variant);
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  vertical-align: bottom;
+  padding: var(--space-sm) 2px var(--space-xs);
+}
+
+.army-composition__regiment-table td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface);
+}
+
+.army-composition__regiment-table tbody tr:nth-child(even) {
+  background: var(--color-surface-container-low);
+}
+
+/* user request 2026-09-22: tiny colored badges next to a unit type's
+   name — its age tier and display category, both fully visible in the
+   badge itself (never hidden behind a hover, and each still carries its
+   own text alongside the color — Constitution Principle VI: color is
+   never the only signal). Background color is set inline per-badge
+   (AGE_BADGE_COLORS / CATEGORY_BADGE_COLORS); white text reads clearly
+   against every one of those colors. */
+.army-composition__badge {
+  display: inline-block;
+  margin-left: var(--space-xs);
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #fff;
+}
+
+.army-composition__regiment-table-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.army-composition__footnote {
+  font-size: 0.7rem;
+  color: var(--color-on-surface-variant);
+}

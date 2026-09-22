@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildArmyHeadToHeadRows, buildNavyHeadToHeadRows } from "../../src/components/Overview/headToHeadRows";
 import type { ArmyStatsTableRow } from "../../src/components/Overview/ArmyStatsTable";
 import type { NavyStatsTableRow } from "../../src/components/Overview/NavyStatsTable";
+import { ZERO_UNIT_TYPE_STATS } from "../helpers/unitTypeStatsFixture";
 
 function armyRow(overrides: Partial<ArmyStatsTableRow> = {}): ArmyStatsTableRow {
   return {
@@ -26,7 +27,7 @@ function armyRow(overrides: Partial<ArmyStatsTableRow> = {}): ArmyStatsTableRow 
     ageCavalry: 1,
     ageSupply: 1,
     regimentBreakdown: [
-      { unitType: "a_pikemen", displayCategory: "Infantry", isLevy: false, regimentCount: 1, totalNumber: 40 },
+      { unitType: "a_pikemen", displayCategory: "Infantry", isLevy: false, regimentCount: 1, totalNumber: 40, stats: ZERO_UNIT_TYPE_STATS, age: 1 },
     ],
     ...overrides,
   };
@@ -52,7 +53,9 @@ function navyRow(overrides: Partial<NavyStatsTableRow> = {}): NavyStatsTableRow 
     ageTransports: 1,
     ageLights: 1,
     ageGalleys: 1,
-    heavyShipBreakdown: [{ unitType: "n_carrack", displayCategory: "Heavies", isLevy: false, regimentCount: 1, totalNumber: 2 }],
+    heavyShipBreakdown: [
+      { unitType: "n_carrack", displayCategory: "Heavies", isLevy: false, regimentCount: 1, totalNumber: 2, stats: ZERO_UNIT_TYPE_STATS, age: 1 },
+    ],
     lightShipBreakdown: [],
     transportBreakdown: [],
     galleyBreakdown: [],

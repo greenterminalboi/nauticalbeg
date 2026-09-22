@@ -1,21 +1,21 @@
 # Spec-Driven Development Status
-<!-- spec-status: project=nauticalbeg commit=3b8a87083d7327d2bd31d10c283febb8c8b3a28e updated=2026-09-22T12:30:36Z -->
+<!-- spec-status: project=nauticalbeg commit=436ecc1bae776b616bc2eb1f130d4b983d73ac40 updated=2026-09-22T15:03:04Z -->
 
-| Feature                      | Specify | Plan | Tasks | Implement |
-|------------------------------|---------|------|-------|-----------|
-| 001-save-import-overview     | ✓       | ✓    | ✓     | ✓ Complete |
-| 002-db-technology-migration  | ✓       | ✓    | ✓     | ● 19/86 (22%) |
-| 003-province-map-generation  | ✓       | ✓    | ✓     | ● 32/33 (96%) |
-| 004-full-schema-mapping      | ✓       | ✓    | ✓     | ✓ Complete |
-| 005-map-visualization        | ✓       | ✓    | ✓     | ✓ Complete |
-| 006-country-leaderboard      | ✓       | ✓    | ✓     | ✓ Complete |
-| 007-production-trade-markets | ✓       | ✓    | ✓     | ✓ Complete |
-| 008-game-encyclopedia        | ✓       | ✓    | ✓     | ✓ Complete |
-| 009-world-goods-production   | ✓       | ✓    | ✓     | ✓ Complete |
-| 010-societal-values-compass  | -       | ✓    | ✓     | ✓ Complete |
-| 011-atlas-map-modes          | -       | ✓    | ✓     | ✓ Complete |
-| 012-firepower-tab            | ✓       | ✓    | ✓     | ✓ Complete |
-| 013-diplomatic-relations-chord | ✓     | ✓    | ✓     | ✓ Complete |
+| Feature                        | Specify | Plan | Tasks | Implement |
+|--------------------------------|---------|------|-------|-----------|
+| 001-save-import-overview       | ✓       | ✓    | ✓     | ✓ Complete |
+| 002-db-technology-migration    | ✓       | ✓    | ✓     | ● 19/86 (22%) |
+| 003-province-map-generation    | ✓       | ✓    | ✓     | ● 32/33 (96%) |
+| 004-full-schema-mapping        | ✓       | ✓    | ✓     | ✓ Complete |
+| 005-map-visualization          | ✓       | ✓    | ✓     | ✓ Complete |
+| 006-country-leaderboard        | ✓       | ✓    | ✓     | ✓ Complete |
+| 007-production-trade-markets   | ✓       | ✓    | ✓     | ✓ Complete |
+| 008-game-encyclopedia          | ✓       | ✓    | ✓     | ✓ Complete |
+| 009-world-goods-production     | ✓       | ✓    | ✓     | ✓ Complete |
+| 010-societal-values-compass    | -       | ✓    | ✓     | ✓ Complete |
+| 011-atlas-map-modes            | -       | ✓    | ✓     | ✓ Complete |
+| 012-firepower-tab              | ✓       | ✓    | ✓     | ✓ Complete |
+| 013-diplomatic-relations-chord | ✓       | ✓    | ✓     | ✓ Complete |
 
 <!-- feature: 001-save-import-overview has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=46 tasks_completed=46 checklist_files=requirements.md -->
 <!-- feature: 002-db-technology-migration has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=86 tasks_completed=19 checklist_files=requirements.md -->

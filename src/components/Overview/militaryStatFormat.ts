@@ -1,4 +1,5 @@
 // specs/012-firepower-tab: shared display helpers for Army/Navy Stats.
+import type { UnitTypeStats } from "./unitTypeReference";
 
 const ROMAN_AGES: Record<1 | 2 | 3 | 4 | 5 | 6, string> = {
   1: "I",
@@ -47,6 +48,13 @@ function formatSourceName(sourceName: string): string {
   return sourceName.replace(/_/g, " ");
 }
 
+/** Same "kind: name" label `formatBreakdownTooltip` builds per line, for
+ * a caller that wants to render a breakdown as real markup (e.g. Army
+ * Composition's always-visible source list) rather than tooltip text. */
+export function formatModifierSource(entry: ModifierBreakdownEntry): string {
+  return `${SOURCE_KIND_LABELS[entry.sourceKind]}: ${formatSourceName(entry.sourceName)}`;
+}
+
 /** Renders a PartialStat's breakdown as multi-line plain text, for a
  * hover tooltip (spec-independent formatting helper so Army/Navy Stats
  * tables don't duplicate this string-building logic). */
@@ -70,6 +78,12 @@ export interface RegimentBreakdownEntry {
   isLevy: boolean;
   regimentCount: number;
   totalNumber: number;
+  /** user request 2026-09-22: this unit type's own combat stats, for
+   * Army Composition's always-visible Regiment Composition table. */
+  stats: UnitTypeStats;
+  /** user request 2026-09-22: this unit type's own age tier, for a
+   * small badge next to its name in the same table. */
+  age: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 /** Strips the `a_`/`n_` save-internal prefix and renders the rest as

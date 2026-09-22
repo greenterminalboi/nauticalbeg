@@ -5,6 +5,7 @@ import {
   formatUnitTypeName,
   toRomanAge,
 } from "../../src/components/Overview/militaryStatFormat";
+import { ZERO_UNIT_TYPE_STATS } from "../helpers/unitTypeStatsFixture";
 
 describe("toRomanAge (specs/012-firepower-tab)", () => {
   it("renders all six age tiers as their roman numeral", () => {
@@ -50,8 +51,8 @@ describe("formatRegimentBreakdownTooltip (specs/012-firepower-tab post-ship)", (
   it("lists each unit type's real headcount and regiment count, flagging levy types", () => {
     const text = formatRegimentBreakdownTooltip(
       [
-        { unitType: "a_pikemen", displayCategory: "Infantry", isLevy: false, regimentCount: 1, totalNumber: 40 },
-        { unitType: "a_peasant_levy", displayCategory: "Infantry", isLevy: true, regimentCount: 1, totalNumber: 20 },
+        { unitType: "a_pikemen", displayCategory: "Infantry", isLevy: false, regimentCount: 1, totalNumber: 40, stats: ZERO_UNIT_TYPE_STATS, age: 1 },
+        { unitType: "a_peasant_levy", displayCategory: "Infantry", isLevy: true, regimentCount: 1, totalNumber: 20, stats: ZERO_UNIT_TYPE_STATS, age: 1 },
       ],
       "regiment",
     );
@@ -61,7 +62,7 @@ describe("formatRegimentBreakdownTooltip (specs/012-firepower-tab post-ship)", (
 
   it("pluralizes the noun for a multi-regiment type", () => {
     const text = formatRegimentBreakdownTooltip(
-      [{ unitType: "n_carrack", displayCategory: "Heavies", isLevy: false, regimentCount: 3, totalNumber: 6 }],
+      [{ unitType: "n_carrack", displayCategory: "Heavies", isLevy: false, regimentCount: 3, totalNumber: 6, stats: ZERO_UNIT_TYPE_STATS, age: 1 }],
       "ship",
     );
     expect(text).toContain("Carrack: 6 (3 ships)");

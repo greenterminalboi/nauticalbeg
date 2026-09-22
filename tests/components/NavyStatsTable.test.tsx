@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { NavyStatsTable, type NavyStatsTableRow } from "../../src/components/Overview/NavyStatsTable";
+import { ZERO_UNIT_TYPE_STATS } from "../helpers/unitTypeStatsFixture";
 
 function row(overrides: Partial<NavyStatsTableRow> = {}): NavyStatsTableRow {
   return {
@@ -22,7 +23,9 @@ function row(overrides: Partial<NavyStatsTableRow> = {}): NavyStatsTableRow {
     ageTransports: 1,
     ageLights: 1,
     ageGalleys: 1,
-    heavyShipBreakdown: [{ unitType: "n_carrack", displayCategory: "Heavies", isLevy: false, regimentCount: 1, totalNumber: 2 }],
+    heavyShipBreakdown: [
+      { unitType: "n_carrack", displayCategory: "Heavies", isLevy: false, regimentCount: 1, totalNumber: 2, stats: ZERO_UNIT_TYPE_STATS, age: 1 },
+    ],
     lightShipBreakdown: [],
     transportBreakdown: [],
     galleyBreakdown: [],

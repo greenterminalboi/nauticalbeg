@@ -14,6 +14,16 @@ import { LOCATION_TERRAIN } from "./locationTerrain";
  * label/tooltip, never color as the only signal). */
 export const NEUTRAL_COLOR: [number, number, number] = [200, 200, 200];
 
+/** user request 2026-09-22: a confirmed value of exactly 0 (e.g. a
+ * location with genuinely zero development) is a different fact than
+ * "no data" (the field is null) — NEUTRAL_COLOR above must mean only the
+ * latter, so a location known to be at zero doesn't visually read the
+ * same as one this project never got a reading for at all. Dark
+ * charcoal: distinct from both NEUTRAL_COLOR's light gray and
+ * SPECTRAL_STOPS' purple low end, so "zero" isn't mistaken for "lowest
+ * nonzero" either. */
+export const ZERO_COLOR: [number, number, number] = [58, 58, 58];
+
 export interface LegendEntry {
   color: [number, number, number];
   label: string;
@@ -36,6 +46,14 @@ export interface MapLayer {
   getFill(row: MapLocationRow, dataset: MapLocationDataset): [number, number, number];
   getTooltipFields(row: MapLocationRow): TooltipField[];
   getLegend(dataset: MapLocationDataset): LegendEntry[];
+  /** EXPERIMENTAL (prototype, unshipped): 0..1 "how tall" this location
+   * should read on the pseudo-3D extrusion effect MapCanvas draws for
+   * layers that opt in, normally the same normalized value each layer
+   * already computes for its own color gradient (so height and color
+   * intensity agree — a location never reads "short but hot-colored").
+   * Omitted entirely by every categorical/ownership layer (Political,
+   * Terrain, Culture, ...), for which "height" has no meaning. */
+  getHeight?(row: MapLocationRow, dataset: MapLocationDataset): number;
 }
 
 /** Registry of available layers, in sidebar display order. Starts empty
@@ -64,61 +82,125 @@ const politicalLayer: MapLayer = {
 };
 MAP_LAYERS.push(politicalLayer);
 
-// --- User Story 3: Location Population ---------------------------------
-
-const POPULATION_LOW: [number, number, number] = [224, 236, 244];
-const POPULATION_HIGH: [number, number, number] = [8, 81, 156];
-
-// Memoized per dataset reference (interface doc comment above) — a
-// dataset's max population is scanned once, not once per row, since
-// getFill runs once per visible location every redraw.
-const populationMaxCache = new WeakMap<MapLocationDataset, number>();
-function getMaxPopulation(dataset: MapLocationDataset): number {
-  const cached = populationMaxCache.get(dataset);
-  if (cached !== undefined) return cached;
-  let max = 0;
-  for (const row of dataset.values()) {
-    if (row.totalPopulation > max) max = row.totalPopulation;
-  }
-  populationMaxCache.set(dataset, max);
-  return max;
-}
-
 function lerp(a: number, b: number, t: number): number {
   return Math.round(a + (b - a) * t);
 }
 
-const populationLayer: MapLayer = {
-  id: "population",
-  label: "Location Population",
-  getFill(row, dataset) {
-    if (row.totalPopulation <= 0) return NEUTRAL_COLOR;
-    const max = getMaxPopulation(dataset);
-    if (max <= 0) return NEUTRAL_COLOR;
-    // log-normalized, not linear min-max (spec Edge Cases: one huge
-    // location must not wash out variation among the rest — research.md
-    // §4's rationale for a perceptual, not raw-linear, scale).
-    const t = Math.log1p(row.totalPopulation) / Math.log1p(max);
-    return [
-      lerp(POPULATION_LOW[0], POPULATION_HIGH[0], t),
-      lerp(POPULATION_LOW[1], POPULATION_HIGH[1], t),
-      lerp(POPULATION_LOW[2], POPULATION_HIGH[2], t),
-    ];
-  },
-  getTooltipFields(row) {
-    return [
-      { label: "Location", value: row.name },
-      { label: "Population", value: row.totalPopulation.toLocaleString() },
-    ];
-  },
-  getLegend() {
-    return [
-      { color: NEUTRAL_COLOR, label: "No population data" },
-      { color: POPULATION_LOW, label: "Sparse" },
-      { color: POPULATION_HIGH, label: "Dense" },
-    ];
-  },
-};
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+// user request 2026-09-22: a wider, more differentiable heat gradient for
+// Population/Development/Tax Base than a single low/high color pair —
+// purple (lowest) through blue, green, light green, yellow, orange, to
+// red (highest), the classic "cold to hot" spectral order so red reads
+// as "hottest" regardless of which of these three layers is active.
+const SPECTRAL_STOPS: Array<[number, number, number]> = [
+  [126, 47, 142], // purple
+  [49, 104, 196], // blue
+  [26, 152, 80], // green
+  [145, 207, 96], // light green
+  [255, 224, 96], // yellow
+  [253, 141, 60], // orange
+  [215, 48, 39], // red
+];
+const SPECTRAL_LABELS = ["Lowest", "Low", "Below average", "Average", "Above average", "High", "Highest"];
+
+function spectralColor(t: number): [number, number, number] {
+  const scaled = clamp01(t) * (SPECTRAL_STOPS.length - 1);
+  const i = Math.min(SPECTRAL_STOPS.length - 2, Math.floor(scaled));
+  const localT = scaled - i;
+  const a = SPECTRAL_STOPS[i];
+  const b = SPECTRAL_STOPS[i + 1];
+  return [lerp(a[0], b[0], localT), lerp(a[1], b[1], localT), lerp(a[2], b[2], localT)];
+}
+
+// Percentile rank, not raw-value normalization (log or linear): every
+// location lands an even 1/(N-1) apart on the gradient regardless of how
+// skewed the real values are, so two adjacent locations are always
+// visually distinguishable — the same fix Development's percentile rank
+// already applied below, generalized here so Population/Tax Base share it
+// (spectralColor's 7 stops need an even spread to read correctly; a
+// skewed log/linear scale would still bunch most locations in one or two
+// stops). Memoized per dataset reference, same pattern as every other
+// per-dataset cache in this file.
+function rankSpectralLayer(
+  id: string,
+  label: string,
+  tooltipLabel: string,
+  getValue: (row: MapLocationRow) => number | null,
+): MapLayer {
+  const rankCache = new WeakMap<MapLocationDataset, Map<string, number>>();
+  function getRanks(dataset: MapLocationDataset): Map<string, number> {
+    const cached = rankCache.get(dataset);
+    if (cached) return cached;
+    const withValue = Array.from(dataset.values()).filter((row) => {
+      const value = getValue(row);
+      return value !== null && value > 0;
+    });
+    withValue.sort((a, b) => getValue(a)! - getValue(b)!);
+    const ranks = new Map<string, number>();
+    withValue.forEach((row, i) => {
+      ranks.set(row.name, withValue.length > 1 ? i / (withValue.length - 1) : 1);
+    });
+    rankCache.set(dataset, ranks);
+    return ranks;
+  }
+
+  return {
+    id,
+    label,
+    getFill(row, dataset) {
+      // Confirmed zero (getRanks' own >0 filter excludes it, same as
+      // null) reads as ZERO_COLOR, not NEUTRAL_COLOR — "we know this
+      // location is at zero" is a different fact than "no data" (see
+      // ZERO_COLOR's doc comment).
+      if (getValue(row) === 0) return ZERO_COLOR;
+      const t = getRanks(dataset).get(row.name);
+      return t === undefined ? NEUTRAL_COLOR : spectralColor(t);
+    },
+    getHeight(row, dataset) {
+      // EXPERIMENTAL (prototype, unshipped): extrusion height agrees with
+      // the same rank the fill color uses (MapCanvas's own doc comment).
+      return getRanks(dataset).get(row.name) ?? 0;
+    },
+    getTooltipFields(row) {
+      const value = getValue(row);
+      return [
+        { label: "Location", value: row.name },
+        {
+          label: tooltipLabel,
+          value: value === null ? "No data" : value.toLocaleString(undefined, { maximumFractionDigits: 1 }),
+        },
+      ];
+    },
+    getLegend() {
+      return [
+        { color: NEUTRAL_COLOR, label: "No data" },
+        { color: ZERO_COLOR, label: "Zero" },
+        ...SPECTRAL_STOPS.map((color, i) => ({ color, label: SPECTRAL_LABELS[i] })),
+      ];
+    },
+  };
+}
+
+// --- User Story 3: Location Population ---------------------------------
+
+// user request 2026-09-22: `totalPopulation` (mapLocationData.ts) comes
+// from a `COALESCE(..., 0)` query, so it can never be null by itself —
+// unlike `development`, which stays null wherever this project has no
+// confirmed reading for a location (water, or a location this save
+// simply never populated data for). Per the user's own rule: wherever
+// development has no data, population is treated the same way (null,
+// not a bare 0) rather than trusting the COALESCE default — a location
+// this project can't confirm anything about shouldn't read as a
+// confirmed zero.
+const populationLayer = rankSpectralLayer(
+  "population",
+  "Location Population",
+  "Population",
+  (row) => (row.development === null ? null : row.totalPopulation),
+);
 MAP_LAYERS.push(populationLayer);
 
 // --- User Story 4: RGO (Raw Goods) --------------------------------------
@@ -198,10 +280,6 @@ const rgoLayer: MapLayer = {
 MAP_LAYERS.push(rgoLayer);
 
 // --- User Story 5: Control -----------------------------------------------
-
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
-}
 
 const controlLayer: MapLayer = {
   id: "control",
@@ -310,66 +388,20 @@ function numericLayer(
 
 // --- User Story 1 (specs/011-atlas-map-modes): Development ---------------
 
-// post-ship correction (2026-09-21, user request): a red (low) to green
-// (high) gradient, colored by each location's *percentile rank* among
-// every developed location rather than `numericLayer`'s log-normalized
-// value scale. Rank spreads every location evenly across the full
-// gradient by construction (each rank step is exactly 1/N apart), so
-// differences stay visually telling regardless of how skewed the real
-// development values are — value-based normalization (log or linear)
-// unavoidably bunches most locations near one end when the distribution
-// is skewed, which is what "more visually telling" was asking to fix.
-const DEVELOPMENT_LOW: [number, number, number] = [178, 24, 43]; // red
-const DEVELOPMENT_HIGH: [number, number, number] = [26, 152, 80]; // green
-
-const developmentRankCache = new WeakMap<MapLocationDataset, Map<string, number>>();
-function getDevelopmentRanks(dataset: MapLocationDataset): Map<string, number> {
-  const cached = developmentRankCache.get(dataset);
-  if (cached) return cached;
-  const developed = Array.from(dataset.values()).filter(
-    (row) => row.development !== null && row.development > 0,
-  );
-  developed.sort((a, b) => a.development! - b.development!);
-  const ranks = new Map<string, number>();
-  developed.forEach((row, i) => {
-    ranks.set(row.name, developed.length > 1 ? i / (developed.length - 1) : 1);
-  });
-  developmentRankCache.set(dataset, ranks);
-  return ranks;
-}
-
-const developmentLayer: MapLayer = {
-  id: "development",
-  label: "Development",
-  getFill(row, dataset) {
-    const t = getDevelopmentRanks(dataset).get(row.name);
-    if (t === undefined) return NEUTRAL_COLOR;
-    return [
-      lerp(DEVELOPMENT_LOW[0], DEVELOPMENT_HIGH[0], t),
-      lerp(DEVELOPMENT_LOW[1], DEVELOPMENT_HIGH[1], t),
-      lerp(DEVELOPMENT_LOW[2], DEVELOPMENT_HIGH[2], t),
-    ];
-  },
-  getTooltipFields(row) {
-    return [
-      { label: "Location", value: row.name },
-      {
-        label: "Development",
-        value:
-          row.development === null
-            ? "No data"
-            : row.development.toLocaleString(undefined, { maximumFractionDigits: 1 }),
-      },
-    ];
-  },
-  getLegend() {
-    return [
-      { color: NEUTRAL_COLOR, label: "No data" },
-      { color: DEVELOPMENT_LOW, label: "Low (bottom percentile)" },
-      { color: DEVELOPMENT_HIGH, label: "High (top percentile)" },
-    ];
-  },
-};
+// post-ship correction (2026-09-21, user request): colored by each
+// location's *percentile rank* among every developed location rather than
+// `numericLayer`'s log-normalized value scale — rank spreads every
+// location evenly across the gradient by construction (each rank step is
+// exactly 1/N apart), so differences stay visually telling regardless of
+// how skewed the real development values are. user request 2026-09-22:
+// now shares rankSpectralLayer's 7-stop purple→red gradient with
+// Population/Tax Base rather than its own bespoke red→green pair.
+const developmentLayer = rankSpectralLayer(
+  "development",
+  "Development",
+  "Development",
+  (row) => row.development,
+);
 MAP_LAYERS.push(developmentLayer);
 
 // --- User Story 2 (specs/011-atlas-map-modes): Location Terrain ----------
@@ -580,14 +612,11 @@ MAP_LAYERS.push(marketLayer);
 
 // --- User Story 7 (specs/011-atlas-map-modes): Tax Base -------------------
 
-const taxBaseLayer = numericLayer(
-  "taxBase",
-  "Tax Base",
-  "Tax Base",
-  (row) => row.possibleTax,
-  [229, 245, 224],
-  [0, 109, 44],
-);
+// user request 2026-09-22: shares rankSpectralLayer's percentile-rank +
+// 7-stop purple→red gradient with Population/Development, rather than
+// numericLayer's log-normalized low/high pair (still used by Soldiers
+// below, untouched).
+const taxBaseLayer = rankSpectralLayer("taxBase", "Tax Base", "Tax Base", (row) => row.possibleTax);
 MAP_LAYERS.push(taxBaseLayer);
 
 // --- User Story 8 (specs/011-atlas-map-modes): Soldiers -------------------

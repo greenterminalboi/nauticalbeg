@@ -2,12 +2,13 @@
 // reuses Country Viewer's `.side-nav` styles verbatim.
 import "./SideNav.css";
 
-export type FirepowerView = "doctrine" | "army" | "navy";
+export type FirepowerView = "doctrine" | "army" | "navy" | "composition";
 
 export const FIREPOWER_VIEWS: { id: FirepowerView; label: string }[] = [
   { id: "doctrine", label: "Military Doctrine" },
   { id: "army", label: "Army Stats" },
   { id: "navy", label: "Navy Stats" },
+  { id: "composition", label: "Army Composition" },
 ];
 
 interface FirepowerSideNavProps {

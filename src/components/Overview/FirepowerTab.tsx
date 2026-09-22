@@ -16,6 +16,8 @@ import {
   loadRegimentSummary,
 } from "./firepowerData";
 import { AddCountryInput } from "./AddCountryInput";
+import { CountrySelect } from "./CountrySelect";
+import { ArmyCompositionView, type ArmyCompositionRow } from "./ArmyCompositionView";
 import type { FirepowerView } from "./FirepowerSideNav";
 import "./FirepowerTab.css";
 
@@ -32,6 +34,19 @@ const MILITARY_DOCTRINE_AXES: MilitaryDoctrineAxis[] = [
   "offensive_vs_defensive",
   "quality_vs_quantity",
 ];
+
+/** Flattens axisReadings' per-nation reading lists into the flat row
+ * shape computeArmyStats expects — shared by the Army Stats and Army
+ * Composition effects below rather than duplicated. */
+function toSocietalValueRows(axisReadings: Map<number, { axis: string; value: number }[]>): NationSocietalValueRow[] {
+  const rows: NationSocietalValueRow[] = [];
+  for (const [nationIdx, readings] of axisReadings) {
+    for (const reading of readings) {
+      rows.push({ nationIdx, axis: reading.axis, value: reading.value });
+    }
+  }
+  return rows;
+}
 
 /**
  * specs/012-firepower-tab: Factbook's Firepower page — Military Doctrine
@@ -50,6 +65,14 @@ export function FirepowerTab({ db, activeView }: FirepowerTabProps) {
   const [armyStatsError, setArmyStatsError] = useState<string | null>(null);
   const [navyStats, setNavyStats] = useState<NavyStatsTableRow[] | null>(null);
   const [navyStatsError, setNavyStatsError] = useState<string | null>(null);
+  // specs/012-firepower-tab (post-ship, explicit user request): Army
+  // Composition picks its one country independently of `selectedIdxs`
+  // above (that multi-select drives Doctrine/Army/Navy's comparisons;
+  // Composition is a single-country detail view, picked via CountrySelect
+  // the same way WorldGoodsPage's GoodSelect picks one good).
+  const [compositionIdx, setCompositionIdx] = useState<number | null>(null);
+  const [compositionStats, setCompositionStats] = useState<ArmyCompositionRow[] | null>(null);
+  const [compositionError, setCompositionError] = useState<string | null>(null);
   // specs/012-firepower-tab (post-ship, explicit user request): only
   // meaningful (and only shown) when exactly two countries are selected
   // — with more or fewer selected, the wide table is what's shown.
@@ -60,6 +83,7 @@ export function FirepowerTab({ db, activeView }: FirepowerTabProps) {
     setCountries(null);
     setAxisReadings(null);
     setSelectedIdxs([]);
+    setCompositionIdx(null);
     setError(null);
 
     Promise.all([loadLeaderboardCountries(db), decodeSocietalValuesByNation(db)])
@@ -68,6 +92,7 @@ export function FirepowerTab({ db, activeView }: FirepowerTabProps) {
         setCountries(loadedCountries);
         setAxisReadings(readingsByNation);
         setSelectedIdxs(computeDefaultSelection(loadedCountries));
+        setCompositionIdx(computeDefaultSelection(loadedCountries)[0] ?? loadedCountries[0]?.idx ?? null);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -91,12 +116,7 @@ export function FirepowerTab({ db, activeView }: FirepowerTabProps) {
     setArmyStats(null);
     setArmyStatsError(null);
 
-    const societalValueRows: NationSocietalValueRow[] = [];
-    for (const [nationIdx, readings] of axisReadings) {
-      for (const reading of readings) {
-        societalValueRows.push({ nationIdx, axis: reading.axis, value: reading.value });
-      }
-    }
+    const societalValueRows = toSocietalValueRows(axisReadings);
 
     Promise.all([
       loadRegimentSummary(db, selectedIdxs),
@@ -168,6 +188,50 @@ export function FirepowerTab({ db, activeView }: FirepowerTabProps) {
     };
   }, [db, activeView, countries, selectedIdxs]);
 
+  // specs/012-firepower-tab (post-ship, explicit user request): Army
+  // Composition's own data — the exact same computeArmyStats pipeline
+  // Army Stats uses, just scoped to compositionIdx alone rather than the
+  // shared multi-select, so picking a country here never disturbs
+  // Doctrine/Army/Navy's own comparison set.
+  useEffect(() => {
+    if (activeView !== "composition" || compositionIdx === null || !countries || !axisReadings) return;
+    let cancelled = false;
+    setCompositionStats(null);
+    setCompositionError(null);
+
+    const societalValueRows = toSocietalValueRows(axisReadings);
+    const idxs = [compositionIdx];
+
+    Promise.all([
+      loadRegimentSummary(db, idxs),
+      loadAdvanceSources(db, idxs),
+      loadGovernanceSources(db, idxs),
+      loadMilitaryScalars(db, idxs),
+    ])
+      .then(([regimentRows, advanceRows, governanceRows, scalarRows]) => {
+        if (cancelled) return;
+        const summaries = computeArmyStats(regimentRows, advanceRows, governanceRows, societalValueRows, scalarRows);
+        const countryByIdx = new Map(countries.map((c) => [c.idx, c]));
+        const rows: ArmyCompositionRow[] = summaries
+          .map((summary) => {
+            const country = countryByIdx.get(summary.nationIdx);
+            if (!country) return null;
+            return { ...summary, tag: country.tag, name: country.name ?? country.tag, colorRgb: country.color };
+          })
+          .filter((r): r is ArmyCompositionRow => r !== null);
+        setCompositionStats(rows);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setCompositionError(err instanceof Error ? err.message : "Failed to load Army Composition.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [db, activeView, countries, axisReadings, compositionIdx]);
+
   function toggleCountry(idx: number) {
     setSelectedIdxs((current) => (current.includes(idx) ? current.filter((i) => i !== idx) : [...current, idx]));
   }
@@ -209,12 +273,21 @@ export function FirepowerTab({ db, activeView }: FirepowerTabProps) {
   return (
     <div className="firepower-tab">
       <div className="firepower-tab__controls">
-        <AddCountryInput
-          countries={countries}
-          selectedIdxs={selectedIdxs}
-          onToggle={toggleCountry}
-          placeholder="Search countries…"
-        />
+        {activeView === "composition" ? (
+          <CountrySelect
+            countries={countries}
+            selectedIdx={compositionIdx}
+            onSelect={setCompositionIdx}
+            placeholder="Search countries…"
+          />
+        ) : (
+          <AddCountryInput
+            countries={countries}
+            selectedIdxs={selectedIdxs}
+            onToggle={toggleCountry}
+            placeholder="Search countries…"
+          />
+        )}
         {(activeView === "army" || activeView === "navy") && selectedIdxs.length === 2 && (
           <label className="firepower-tab__compare-toggle">
             <input type="checkbox" checked={compareMode} onChange={(e) => setCompareMode(e.target.checked)} />
@@ -265,6 +338,18 @@ export function FirepowerTab({ db, activeView }: FirepowerTabProps) {
             )}
             <NavyStatsTable rows={navyStats} />
           </>
+        ))}
+      {activeView === "composition" &&
+        (compositionIdx === null ? (
+          <p>Search for a country above to view its army composition.</p>
+        ) : compositionError ? (
+          <p role="alert">{compositionError}</p>
+        ) : !compositionStats ? (
+          <p>Loading Army Composition…</p>
+        ) : compositionStats.length === 0 ? (
+          <p>This country has no army regiment yet.</p>
+        ) : (
+          <ArmyCompositionView row={compositionStats[0]} />
         ))}
     </div>
   );

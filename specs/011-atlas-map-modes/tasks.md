@@ -262,3 +262,14 @@
 - **US1, US3-US8** all depend on Foundational's T008 (dataset); US1/US7/US8 additionally depend on T009 (shared numeric helper).
 - Within each story phase, its `[P]`-tagged test task can run alongside any other story's test task; each story's single implementation task touches `mapLayers.ts` and so runs sequentially relative to every other story's implementation task (never `[P]` against another story).
 - Polish (T028-T029) depends on every story phase being complete.
+
+---
+
+## Post-Ship Additions
+
+### 2026-09-22, explicit user request
+
+- Population/Development/Tax Base share a new `rankSpectralLayer` factory in `mapLayers.ts`: percentile-rank normalization + a 7-stop purple→blue→green→light green→yellow→orange→red gradient, replacing the old per-layer two-color scales. Soldiers untouched.
+- New `ZERO_COLOR` (dark charcoal), reserved for a confirmed value of exactly `0`, distinct from `NEUTRAL_COLOR`'s "no data" — applies to Development/Tax Base directly, and to Population via a new rule: `populationLayer` now treats a location as "no data" whenever `development` is null (population's own SQL source can't otherwise distinguish "confirmed zero" from "never recorded" — `queries.ts`'s `COALESCE(..., 0)`).
+- See research.md §9 for the full decision record. Verified live against the real save (`tests/components/mapLayers.test.ts` updated to match).
+- A related pseudo-3D "heat/elevation" extrusion prototype for these same three layers also shipped this session but is explicitly experimental/unshipped, outside this feature's formal scope — see `ARCHITECTURE.md`'s decision log.
