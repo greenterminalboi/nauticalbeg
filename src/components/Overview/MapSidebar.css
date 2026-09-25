@@ -77,3 +77,43 @@
   background: var(--color-surface-container-high);
   font-weight: 600;
 }
+
+/* specs/014-country-province-map-modes US1: Location/Province/Country
+   section headers. Smaller, uppercase, variant-colored text sets them
+   apart from the selectable items below; the ▾/▸ glyph (not color)
+   carries the expanded/collapsed state alongside aria-expanded. */
+.map-sidebar__section + .map-sidebar__section {
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+.map-sidebar__section-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  background: none;
+  border: none;
+  text-align: left;
+  padding: var(--space-sm) var(--space-md) var(--space-xs);
+  cursor: pointer;
+}
+
+.map-sidebar__section-toggle:hover {
+  background: var(--color-surface-container-high);
+}
+
+.map-sidebar__section-toggle:focus-visible {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: -2px;
+}
+
+.map-sidebar__section-indicator {
+  display: inline-block;
+  width: 0.9em;
+}

@@ -375,7 +375,7 @@ export async function listWarsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
  * `controller_idx`, which can differ during occupation) mirror
  * `listWarsArrow`'s attacker/defender double-join, including its
  * `COALESCE(name, tag, 'Unknown')` display-name fallback. Population is
- * pre-aggregated per location in a subquery (`location_pops` joined to
+ * pre-aggregated per location in a CTE (`pop_totals`) (`location_pops` joined to
  * `population`, summed) rather than a top-level `GROUP BY` across every
  * other selected column.
  *
@@ -385,11 +385,80 @@ export async function listWarsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
  * `listMarketsArrow`'s exact `COALESCE(name, 'Location ' || idx, 'Market '
  * || idx)` fallback chain — the Location Market layer labels each market
  * by the real location it's centered on, not a bare numeric id.
+ *
+ * specs/014-country-province-map-modes (contracts/queries.md): adds
+ * `owner_*` (country-grain) and `province_*` (province-grain) columns,
+ * each aggregated once per country/province in a CTE and repeated onto
+ * every location row — so the Country/Province map layers stay a pure
+ * client-side switch over this one load-once result (spec FR-021), and
+ * every location of one country/province reads one identical value by
+ * construction (SC-006). `pop_totals` is a CTE (was an inline subquery)
+ * so the location and province population figures share it.
+ * `owner_advances`/`owner_works_of_art` are a confirmed 0 for an owned
+ * country with no rows, but NULL when the whole source table is empty —
+ * a kept save resumed from before that table existed (research.md §6),
+ * where 0 would be a fabricated reading.
  */
 export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
   return queryArrowIPC(
     db,
-    `SELECT
+    `WITH
+     pop_totals AS (
+       SELECT location_pops.location_idx as location_idx,
+              SUM(population.size) as total_population
+       FROM location_pops
+       JOIN population ON population.idx = location_pops.pop_idx
+       GROUP BY location_pops.location_idx
+     ),
+     live_owners AS (
+       SELECT DISTINCT owner_idx FROM locations WHERE owner_idx IS NOT NULL
+     ),
+     latest AS (
+       SELECT nation_idx,
+              arg_max(value, year) FILTER (WHERE metric = 'population') as population,
+              arg_max(value, year) FILTER (WHERE metric = 'economical_base') as economical_base
+       FROM nation_history
+       WHERE metric IN ('population', 'economical_base')
+         AND nation_idx IN (SELECT owner_idx FROM live_owners)
+       GROUP BY nation_idx
+     ),
+     literacy AS (
+       SELECT locations.owner_idx as owner_idx,
+              SUM(population.size * population.literacy) / NULLIF(SUM(population.size), 0) as value
+       FROM location_pops
+       JOIN locations ON locations.idx = location_pops.location_idx
+       JOIN population ON population.idx = location_pops.pop_idx
+       WHERE locations.owner_idx IS NOT NULL
+         AND population.literacy IS NOT NULL
+         AND population.size > 0
+       GROUP BY locations.owner_idx
+     ),
+     advances AS (
+       SELECT nation_idx, COUNT(*) as n FROM nation_advances GROUP BY nation_idx
+     ),
+     art AS (
+       SELECT owner_idx, COUNT(*) as n
+       FROM works_of_art
+       WHERE owner_idx IS NOT NULL AND destroyed_date IS NULL
+       GROUP BY owner_idx
+     ),
+     flags AS (
+       SELECT EXISTS (SELECT 1 FROM nation_advances) as advances_ok,
+              EXISTS (SELECT 1 FROM works_of_art) as art_ok
+     ),
+     province_totals AS (
+       SELECT locations.province_idx as province_idx,
+              SUM(locations.development) as development,
+              SUM(locations.possible_tax) as tax_base,
+              SUM(locations.soldiers) as soldiers,
+              SUM(CASE WHEN locations.development IS NOT NULL
+                       THEN COALESCE(pop_totals.total_population, 0) END) as population
+       FROM locations
+       LEFT JOIN pop_totals ON pop_totals.location_idx = locations.idx
+       WHERE locations.province_idx IS NOT NULL
+       GROUP BY locations.province_idx
+     )
+     SELECT
        locations.idx as idx,
        locations.name as name,
        locations.owner_idx as owner_idx,
@@ -418,21 +487,39 @@ export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuff
        religion.name as religion_name,
        religion.color_r as religion_color_r,
        religion.color_g as religion_color_g,
-       religion.color_b as religion_color_b
+       religion.color_b as religion_color_b,
+       owner.treasury as owner_treasury,
+       owner.stability as owner_stability,
+       owner.government_type as owner_government_type,
+       latest.population as owner_population,
+       latest.economical_base as owner_economical_base,
+       literacy.value as owner_literacy,
+       CASE WHEN locations.owner_idx IS NULL OR NOT flags.advances_ok THEN NULL
+            ELSE COALESCE(advances.n, 0) END as owner_advances,
+       CASE WHEN locations.owner_idx IS NULL OR NOT flags.art_ok THEN NULL
+            ELSE COALESCE(art.n, 0) END as owner_works_of_art,
+       locations.province_idx as province_idx,
+       CASE WHEN locations.province_idx IS NULL THEN NULL
+            ELSE COALESCE(province.name, 'Province ' || locations.province_idx) END as province_name,
+       province_totals.development as province_development,
+       province_totals.tax_base as province_tax_base,
+       province_totals.soldiers as province_soldiers,
+       province_totals.population as province_population
      FROM locations
+     CROSS JOIN flags
      LEFT JOIN nations owner ON owner.idx = locations.owner_idx
      LEFT JOIN nations controller ON controller.idx = locations.controller_idx
      LEFT JOIN cultures culture ON culture.idx = locations.culture_idx
      LEFT JOIN religions religion ON religion.idx = locations.religion_idx
      LEFT JOIN markets market ON market.idx = locations.market_idx
      LEFT JOIN locations market_center ON market_center.idx = market.center_location_idx
-     LEFT JOIN (
-       SELECT location_pops.location_idx as location_idx,
-              SUM(population.size) as total_population
-       FROM location_pops
-       JOIN population ON population.idx = location_pops.pop_idx
-       GROUP BY location_pops.location_idx
-     ) pop_totals ON pop_totals.location_idx = locations.idx
+     LEFT JOIN pop_totals ON pop_totals.location_idx = locations.idx
+     LEFT JOIN latest ON latest.nation_idx = locations.owner_idx
+     LEFT JOIN literacy ON literacy.owner_idx = locations.owner_idx
+     LEFT JOIN advances ON advances.nation_idx = locations.owner_idx
+     LEFT JOIN art ON art.owner_idx = locations.owner_idx
+     LEFT JOIN provinces province ON province.idx = locations.province_idx
+     LEFT JOIN province_totals ON province_totals.province_idx = locations.province_idx
      ORDER BY locations.idx`,
   );
 }

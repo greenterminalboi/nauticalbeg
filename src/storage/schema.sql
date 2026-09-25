@@ -597,3 +597,21 @@ CREATE INDEX IF NOT EXISTS idx_wars_attacker ON wars(attacker_idx);
 CREATE INDEX IF NOT EXISTS idx_wars_defender ON wars(defender_idx);
 CREATE INDEX IF NOT EXISTS idx_locations_controller ON locations(controller_idx);
 CREATE INDEX IF NOT EXISTS idx_location_pops_location ON location_pops(location_idx);
+
+-- specs/014-country-province-map-modes: one row per
+-- work_of_art_manager.database entry (research.md §2), destroyed and
+-- unowned works included — the map query (queries.ts
+-- listMapLocationsArrow) is what filters to live, owned works. owner_idx
+-- is a country idx, confirmed against the real save (not a character
+-- id). A kept save resumed from before this table existed gets it back
+-- empty (load-save.ts resumeSave), which the Works of Art layer detects
+-- and labels rather than showing a fabricated zero (research.md §6).
+CREATE TABLE IF NOT EXISTS works_of_art (
+  idx INTEGER PRIMARY KEY,
+  owner_idx INTEGER, -- logically REFERENCES nations(idx)
+  type TEXT,
+  quality DOUBLE,
+  location_idx INTEGER, -- logically REFERENCES locations(idx)
+  destroyed_date TEXT -- non-NULL = destroyed, excluded from every count
+);
+CREATE INDEX IF NOT EXISTS idx_works_of_art_owner ON works_of_art (owner_idx);

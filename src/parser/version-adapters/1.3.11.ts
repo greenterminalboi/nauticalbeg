@@ -55,6 +55,7 @@ const STRUCTURED_KEYS = new Set([
   "character_db",
   "culture_manager",
   "religion_manager",
+  "work_of_art_manager",
 ]);
 
 /** jomini narrows an unquoted date-like token (e.g. `1628.8.14`) to a
@@ -1184,6 +1185,34 @@ export async function parseAndStore(
     );
   }
   reportMilestone(); // "diplomacy"
+
+  // specs/014-country-province-map-modes research.md §2: one row per
+  // work_of_art_manager.database entry, destroyed and unowned works
+  // included (the map query filters, this table stays a faithful copy).
+  // `owner` is a country idx — confirmed against the real save (289 =
+  // GBR holding the Bayeux Tapestry), not a character id. Small enough
+  // (~5k entries on a real save) to ride the "diplomacy" milestone rather
+  // than shift every progress percentage with a new one.
+  const workOfArtDatabase = asRecord(asRecord(root.work_of_art_manager).database);
+  const worksOfArtRows: Array<[number, number | null, string | null, number | null, number | null, string | null]> = [];
+  for (const [idxStr, value] of Object.entries(workOfArtDatabase)) {
+    const record = asRecord(value);
+    worksOfArtRows.push([
+      Number(idxStr),
+      asNumberOrNull(record.owner),
+      asStringOrNull(record.type),
+      asNumberOrNull(record.quality),
+      asNumberOrNull(record.location),
+      formatGameDate(record.destroyed_date),
+    ]);
+  }
+  if (worksOfArtRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO works_of_art (idx, owner_idx, type, quality, location_idx, destroyed_date) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+      worksOfArtRows,
+    );
+  }
 
   // Every other top-level section: no real schema yet, so capture as
   // opaque JSON rather than guess at columns for structure nobody has

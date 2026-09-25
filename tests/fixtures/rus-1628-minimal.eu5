@@ -791,6 +791,46 @@ diplomacy_manager={
 cheats={
 	cheat_type={ }
 }
+work_of_art_manager={
+	database={
+		0={
+			owner=2025
+			quality=75
+			type=painting
+			creation_date=1077.1.1
+			location=1550
+			origin=1563
+			key="bayeux_tapestry_key"
+		}
+		1={
+			artist=2976
+			owner=2025
+			quality=50
+			type=statue
+			creation_date=1100.1.1
+			destroyed_date=1356.4.25
+			location=16903
+			origin=16903
+		}
+		2={
+			quality=70
+			type=scripture
+			creation_date=800.1.1
+			location=1860
+			origin=1737
+			key="book_of_kells"
+		}
+		3={
+			artist=3218
+			owner=33556892
+			quality=40
+			type=temple_tower
+			creation_date=1336.1.1
+			location=3127
+			origin=3127
+		}
+	}
+}
 population={
 	database={
 		943={

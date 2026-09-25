@@ -32,9 +32,38 @@ export interface MapLocationRow {
   cultureColor: [number, number, number] | null;
   religionName: string | null;
   religionColor: [number, number, number] | null;
+  // specs/014-country-province-map-modes data-model.md: country-grain
+  // (the owner's value, repeated on every location it owns; null when
+  // unowned) and province-grain (the province's sum over its locations)
+  // aggregates, computed once in listMapLocationsArrow's SQL.
+  ownerTreasury: number | null;
+  ownerStability: number | null;
+  ownerGovernmentType: string | null;
+  ownerPopulation: number | null;
+  ownerEconomicalBase: number | null;
+  ownerLiteracy: number | null;
+  ownerAdvances: number | null;
+  ownerWorksOfArt: number | null;
+  provinceIdx: number | null;
+  provinceName: string | null;
+  provinceDevelopment: number | null;
+  provinceTaxBase: number | null;
+  provinceSoldiers: number | null;
+  provincePopulation: number | null;
 }
 
 export type MapLocationDataset = Map<string, MapLocationRow>;
+
+function numberOrNull(value: unknown): number | null {
+  // DuckDB's COUNT(*) comes back through Arrow as a BigInt — narrowed
+  // here rather than letting every count layer handle two numeric types.
+  if (typeof value === "bigint") return Number(value);
+  return typeof value === "number" ? value : null;
+}
+
+function stringOrNull(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
 
 function rgbOrNull(
   r: unknown,
@@ -85,6 +114,20 @@ export async function loadMapLocationDataset(db: SaveDatabase): Promise<MapLocat
       cultureColor: rgbOrNull(r.culture_color_r, r.culture_color_g, r.culture_color_b),
       religionName: typeof r.religion_name === "string" ? r.religion_name : null,
       religionColor: rgbOrNull(r.religion_color_r, r.religion_color_g, r.religion_color_b),
+      ownerTreasury: numberOrNull(r.owner_treasury),
+      ownerStability: numberOrNull(r.owner_stability),
+      ownerGovernmentType: stringOrNull(r.owner_government_type),
+      ownerPopulation: numberOrNull(r.owner_population),
+      ownerEconomicalBase: numberOrNull(r.owner_economical_base),
+      ownerLiteracy: numberOrNull(r.owner_literacy),
+      ownerAdvances: numberOrNull(r.owner_advances),
+      ownerWorksOfArt: numberOrNull(r.owner_works_of_art),
+      provinceIdx: numberOrNull(r.province_idx),
+      provinceName: stringOrNull(r.province_name),
+      provinceDevelopment: numberOrNull(r.province_development),
+      provinceTaxBase: numberOrNull(r.province_tax_base),
+      provinceSoldiers: numberOrNull(r.province_soldiers),
+      provincePopulation: numberOrNull(r.province_population),
     });
   }
   return dataset;

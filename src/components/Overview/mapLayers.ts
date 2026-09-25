@@ -24,6 +24,14 @@ export const NEUTRAL_COLOR: [number, number, number] = [200, 200, 200];
  * nonzero" either. */
 export const ZERO_COLOR: [number, number, number] = [58, 58, 58];
 
+/** specs/014-country-province-map-modes research.md §5: a country with a
+ * negative treasury is in debt — a categorical fact the player cares
+ * about, so it gets its own legend entry rather than being folded into
+ * the rank gradient's "Lowest" end (constitution Principle IV). Dark
+ * teal: distinct from ZERO_COLOR's charcoal, NEUTRAL_COLOR's gray, and
+ * every SPECTRAL_STOPS entry. */
+export const DEBT_COLOR: [number, number, number] = [1, 102, 94];
+
 export interface LegendEntry {
   color: [number, number, number];
   label: string;
@@ -34,9 +42,15 @@ export interface TooltipField {
   value: string;
 }
 
+/** specs/014-country-province-map-modes: which sidebar section a layer
+ * belongs to (spec FR-018) — "location" shades each location by its own
+ * value, "province"/"country" by its province's/owner's aggregate. */
+export type MapLayerGrain = "location" | "province" | "country";
+
 export interface MapLayer {
   id: string;
   label: string;
+  grain: MapLayerGrain;
   /** `dataset` is the same object every call within one save's session
    * (research.md §7) — a layer that needs cross-row context (a min/max
    * for a shading scale, a per-save color assignment) should memoize
@@ -66,6 +80,7 @@ export const MAP_LAYERS: MapLayer[] = [];
 const politicalLayer: MapLayer = {
   id: "political",
   label: "Political",
+  grain: "location",
   getFill(row) {
     // Owner color alone determines fill — no cross-row context needed.
     return row.ownerColor ?? NEUTRAL_COLOR;
@@ -124,64 +139,137 @@ function spectralColor(t: number): [number, number, number] {
 // skewed log/linear scale would still bunch most locations in one or two
 // stops). Memoized per dataset reference, same pattern as every other
 // per-dataset cache in this file.
+function defaultFormat(value: number): string {
+  return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
+}
+
+export interface GroupedRankOptions {
+  id: string;
+  label: string;
+  grain: MapLayerGrain;
+  tooltipLabel: string;
+  /** Rows sharing a key share one rank and one fill (spec SC-006); null
+   * means "belongs to no group" and always reads as NEUTRAL_COLOR. */
+  getGroupKey: (row: MapLocationRow) => string | number | null;
+  /** Tooltip line naming the group (e.g. "Owner"/"Province"); omitted
+   * for location grain, where the group is the location itself. */
+  groupLabel?: string;
+  getGroupName?: (row: MapLocationRow) => string;
+  getValue: (row: MapLocationRow) => number | null;
+  formatValue?: (value: number) => string;
+  /** Treasury only: a negative value is "In debt" (DEBT_COLOR), not
+   * no-data (research.md §5). */
+  negativeAs?: "debt";
+  /** Legend text for a save whose source table came back empty — every
+   * grouped row's value is null (research.md §6: a kept save resumed
+   * from before its table existed), so "No data" everywhere would hide
+   * the real reason. */
+  unavailableHint?: string;
+}
+
+interface GroupedRankState {
+  ranks: Map<string | number, number>;
+  unavailable: boolean;
+}
+
+// specs/014-country-province-map-modes research.md §4: ranks *distinct
+// group keys*, not rows — ranking every location row of a country layer
+// would let a country's thousands of identical-value locations crowd the
+// rest of the world into a sliver of the gradient. Location-grain layers
+// use the row's own name as its key, which reduces to exactly the
+// per-location percentile rank below always did.
+function groupedRankSpectralLayer(options: GroupedRankOptions): MapLayer {
+  const { getGroupKey, getValue } = options;
+  const format = options.formatValue ?? defaultFormat;
+  const stateCache = new WeakMap<MapLocationDataset, GroupedRankState>();
+  function getState(dataset: MapLocationDataset): GroupedRankState {
+    const cached = stateCache.get(dataset);
+    if (cached) return cached;
+    const groupValues = new Map<string | number, number | null>();
+    for (const row of dataset.values()) {
+      const key = getGroupKey(row);
+      if (key === null || groupValues.has(key)) continue;
+      groupValues.set(key, getValue(row));
+    }
+    const positive = Array.from(groupValues).filter(
+      (entry): entry is [string | number, number] => entry[1] !== null && entry[1] > 0,
+    );
+    positive.sort((a, b) => a[1] - b[1]);
+    const ranks = new Map<string | number, number>();
+    positive.forEach(([key], i) => {
+      ranks.set(key, positive.length > 1 ? i / (positive.length - 1) : 1);
+    });
+    const unavailable =
+      options.unavailableHint !== undefined &&
+      groupValues.size > 0 &&
+      Array.from(groupValues.values()).every((value) => value === null);
+    const state = { ranks, unavailable };
+    stateCache.set(dataset, state);
+    return state;
+  }
+
+  return {
+    id: options.id,
+    label: options.label,
+    grain: options.grain,
+    getFill(row, dataset) {
+      const key = getGroupKey(row);
+      const value = getValue(row);
+      if (key === null || value === null) return NEUTRAL_COLOR;
+      // Confirmed zero reads as ZERO_COLOR, not NEUTRAL_COLOR — "we know
+      // this is at zero" is a different fact than "no data" (see
+      // ZERO_COLOR's doc comment).
+      if (value === 0) return ZERO_COLOR;
+      if (value < 0) return options.negativeAs === "debt" ? DEBT_COLOR : NEUTRAL_COLOR;
+      const t = getState(dataset).ranks.get(key);
+      return t === undefined ? NEUTRAL_COLOR : spectralColor(t);
+    },
+    getHeight(row, dataset) {
+      // EXPERIMENTAL (prototype, unshipped): extrusion height agrees with
+      // the same rank the fill color uses (MapCanvas's own doc comment).
+      const key = getGroupKey(row);
+      return key === null ? 0 : (getState(dataset).ranks.get(key) ?? 0);
+    },
+    getTooltipFields(row) {
+      const value = getValue(row);
+      const fields: TooltipField[] = [{ label: "Location", value: row.name }];
+      if (options.groupLabel) {
+        fields.push({
+          label: options.groupLabel,
+          value: getGroupKey(row) === null ? "No data" : (options.getGroupName?.(row) ?? "No data"),
+        });
+      }
+      fields.push({ label: options.tooltipLabel, value: value === null ? "No data" : format(value) });
+      return fields;
+    },
+    getLegend(dataset) {
+      if (getState(dataset).unavailable) {
+        return [{ color: NEUTRAL_COLOR, label: options.unavailableHint! }];
+      }
+      return [
+        { color: NEUTRAL_COLOR, label: "No data" },
+        { color: ZERO_COLOR, label: "Zero" },
+        ...(options.negativeAs === "debt" ? [{ color: DEBT_COLOR, label: "In debt" }] : []),
+        ...SPECTRAL_STOPS.map((color, i) => ({ color, label: SPECTRAL_LABELS[i] })),
+      ];
+    },
+  };
+}
+
 function rankSpectralLayer(
   id: string,
   label: string,
   tooltipLabel: string,
   getValue: (row: MapLocationRow) => number | null,
 ): MapLayer {
-  const rankCache = new WeakMap<MapLocationDataset, Map<string, number>>();
-  function getRanks(dataset: MapLocationDataset): Map<string, number> {
-    const cached = rankCache.get(dataset);
-    if (cached) return cached;
-    const withValue = Array.from(dataset.values()).filter((row) => {
-      const value = getValue(row);
-      return value !== null && value > 0;
-    });
-    withValue.sort((a, b) => getValue(a)! - getValue(b)!);
-    const ranks = new Map<string, number>();
-    withValue.forEach((row, i) => {
-      ranks.set(row.name, withValue.length > 1 ? i / (withValue.length - 1) : 1);
-    });
-    rankCache.set(dataset, ranks);
-    return ranks;
-  }
-
-  return {
+  return groupedRankSpectralLayer({
     id,
     label,
-    getFill(row, dataset) {
-      // Confirmed zero (getRanks' own >0 filter excludes it, same as
-      // null) reads as ZERO_COLOR, not NEUTRAL_COLOR — "we know this
-      // location is at zero" is a different fact than "no data" (see
-      // ZERO_COLOR's doc comment).
-      if (getValue(row) === 0) return ZERO_COLOR;
-      const t = getRanks(dataset).get(row.name);
-      return t === undefined ? NEUTRAL_COLOR : spectralColor(t);
-    },
-    getHeight(row, dataset) {
-      // EXPERIMENTAL (prototype, unshipped): extrusion height agrees with
-      // the same rank the fill color uses (MapCanvas's own doc comment).
-      return getRanks(dataset).get(row.name) ?? 0;
-    },
-    getTooltipFields(row) {
-      const value = getValue(row);
-      return [
-        { label: "Location", value: row.name },
-        {
-          label: tooltipLabel,
-          value: value === null ? "No data" : value.toLocaleString(undefined, { maximumFractionDigits: 1 }),
-        },
-      ];
-    },
-    getLegend() {
-      return [
-        { color: NEUTRAL_COLOR, label: "No data" },
-        { color: ZERO_COLOR, label: "Zero" },
-        ...SPECTRAL_STOPS.map((color, i) => ({ color, label: SPECTRAL_LABELS[i] })),
-      ];
-    },
-  };
+    grain: "location",
+    tooltipLabel,
+    getGroupKey: (row) => row.name,
+    getValue,
+  });
 }
 
 // --- User Story 3: Location Population ---------------------------------
@@ -261,6 +349,7 @@ function getRgoColorMap(dataset: MapLocationDataset): Map<string, [number, numbe
 const rgoLayer: MapLayer = {
   id: "rgo",
   label: "RGO",
+  grain: "location",
   getFill(row, dataset) {
     if (row.rawMaterial === null) return NEUTRAL_COLOR;
     return getRgoColorMap(dataset).get(row.rawMaterial) ?? NEUTRAL_COLOR;
@@ -284,6 +373,7 @@ MAP_LAYERS.push(rgoLayer);
 const controlLayer: MapLayer = {
   id: "control",
   label: "Control",
+  grain: "location",
   getFill(row) {
     if (row.controllerColor === null) return NEUTRAL_COLOR;
     // A missing `control` value (present for most, not all, locations —
@@ -354,6 +444,7 @@ function numericLayer(
   return {
     id,
     label,
+    grain: "location",
     getFill(row, dataset) {
       const value = getValue(row);
       if (value === null || value <= 0) return NEUTRAL_COLOR;
@@ -424,6 +515,7 @@ const TERRAIN_COLORS: Map<string, [number, number, number]> = (() => {
 const terrainLayer: MapLayer = {
   id: "terrain",
   label: "Location Terrain",
+  grain: "location",
   getFill(row) {
     const topography = LOCATION_TERRAIN[row.name];
     if (topography === undefined) return NEUTRAL_COLOR;
@@ -459,6 +551,7 @@ const RANK_COLORS: Record<string, [number, number, number]> = {
 const rankLayer: MapLayer = {
   id: "rank",
   label: "Location Rank",
+  grain: "location",
   getFill(row) {
     if (row.rank === null) return NEUTRAL_COLOR;
     return RANK_COLORS[row.rank] ?? NEUTRAL_COLOR;
@@ -480,6 +573,7 @@ MAP_LAYERS.push(rankLayer);
 const primaryCultureLayer: MapLayer = {
   id: "primaryCulture",
   label: "Primary Culture",
+  grain: "location",
   getFill(row) {
     return row.cultureColor ?? NEUTRAL_COLOR;
   },
@@ -508,6 +602,7 @@ MAP_LAYERS.push(primaryCultureLayer);
 const primaryReligionLayer: MapLayer = {
   id: "primaryReligion",
   label: "Primary Religion",
+  grain: "location",
   getFill(row) {
     return row.religionColor ?? NEUTRAL_COLOR;
   },
@@ -588,6 +683,7 @@ function getMarketInfo(dataset: MapLocationDataset): Map<number, MarketInfo> {
 const marketLayer: MapLayer = {
   id: "market",
   label: "Location Market",
+  grain: "location",
   getFill(row, dataset) {
     if (row.marketIdx === null || isWaterLocation(row)) return NEUTRAL_COLOR;
     return getMarketInfo(dataset).get(row.marketIdx)?.color ?? NEUTRAL_COLOR;
@@ -630,3 +726,248 @@ const soldiersLayer = numericLayer(
   [165, 15, 21],
 );
 MAP_LAYERS.push(soldiersLayer);
+
+// --- specs/014-country-province-map-modes: Province layers ---------------
+//
+// Each shades every location by its province's sum over its own
+// locations (queries.ts's `province_totals` CTE — research.md §8), ranked
+// once per province rather than once per location (research.md §4), so
+// one province reads as one shade (spec SC-006). Registered before the
+// Country layers: MapSidebar keeps registration order within a section.
+
+function provinceLayer(
+  id: string,
+  label: string,
+  tooltipLabel: string,
+  getValue: (row: MapLocationRow) => number | null,
+): MapLayer {
+  return groupedRankSpectralLayer({
+    id,
+    label,
+    grain: "province",
+    tooltipLabel,
+    getGroupKey: (row) => row.provinceIdx,
+    groupLabel: "Province",
+    getGroupName: (row) => row.provinceName ?? "No data",
+    getValue,
+  });
+}
+
+// User Story 5 / User Story 6
+MAP_LAYERS.push(
+  provinceLayer("provinceDevelopment", "Province Development", "Total development", (row) => row.provinceDevelopment),
+);
+MAP_LAYERS.push(provinceLayer("provinceTaxBase", "Province Tax Base", "Total tax base", (row) => row.provinceTaxBase));
+// User Story 10 / User Story 11
+MAP_LAYERS.push(provinceLayer("provinceSoldiers", "Province Soldiers", "Total soldiers", (row) => row.provinceSoldiers));
+MAP_LAYERS.push(
+  provinceLayer("provincePopulation", "Province Population", "Total population", (row) => row.provincePopulation),
+);
+
+// --- specs/014-country-province-map-modes: Country layers ----------------
+//
+// Each shades every location by its owner's value (repeated on every
+// owned row by queries.ts), ranked once per country (research.md §4);
+// an unowned location has a null value and reads as NEUTRAL_COLOR
+// (spec FR-013).
+
+function countryLayer(
+  options: Omit<GroupedRankOptions, "grain" | "getGroupKey" | "groupLabel" | "getGroupName">,
+): MapLayer {
+  return groupedRankSpectralLayer({
+    ...options,
+    grain: "country",
+    getGroupKey: (row) => row.ownerIdx,
+    groupLabel: "Owner",
+    getGroupName: (row) => row.ownerName,
+  });
+}
+
+// User Story 2: Country Treasury — negative = in debt (research.md §5).
+MAP_LAYERS.push(
+  countryLayer({
+    id: "countryTreasury",
+    label: "Country Treasury",
+    tooltipLabel: "Treasury",
+    getValue: (row) => row.ownerTreasury,
+    negativeAs: "debt",
+  }),
+);
+
+// User Story 3: Country Stability — a fixed −100..+100 diverging scale,
+// not a rank: 0 stability means the same thing in every save, and
+// negatives are common (284 countries in the real save — research.md §5).
+// Purple (unstable) → cream (0) → orange (stable): no red/green encoding
+// (constitution Principle VI), and the cream midpoint stays distinct
+// from NEUTRAL_COLOR's gray.
+const STABILITY_LOW: [number, number, number] = [94, 60, 153];
+const STABILITY_MID: [number, number, number] = [250, 240, 215];
+const STABILITY_HIGH: [number, number, number] = [230, 97, 1];
+
+function stabilityColor(stability: number): [number, number, number] {
+  const t = clamp01((stability + 100) / 200);
+  const [a, b, localT] = t < 0.5 ? [STABILITY_LOW, STABILITY_MID, t * 2] : [STABILITY_MID, STABILITY_HIGH, (t - 0.5) * 2];
+  return [lerp(a[0], b[0], localT), lerp(a[1], b[1], localT), lerp(a[2], b[2], localT)];
+}
+
+function formatSigned(value: number): string {
+  const rounded = value.toFixed(1);
+  return value > 0 ? `+${rounded}` : value < 0 ? `−${rounded.slice(1)}` : rounded;
+}
+
+MAP_LAYERS.push({
+  id: "countryStability",
+  label: "Country Stability",
+  grain: "country",
+  getFill(row) {
+    return row.ownerIdx === null || row.ownerStability === null ? NEUTRAL_COLOR : stabilityColor(row.ownerStability);
+  },
+  getHeight(row) {
+    // EXPERIMENTAL (prototype, unshipped): same normalized position as
+    // the diverging fill.
+    return row.ownerIdx === null || row.ownerStability === null ? 0 : clamp01((row.ownerStability + 100) / 200);
+  },
+  getTooltipFields(row) {
+    return [
+      { label: "Location", value: row.name },
+      { label: "Owner", value: row.ownerIdx === null ? "No data" : row.ownerName },
+      {
+        label: "Stability",
+        value: row.ownerIdx === null || row.ownerStability === null ? "No data" : formatSigned(row.ownerStability),
+      },
+    ];
+  },
+  getLegend() {
+    return [
+      { color: NEUTRAL_COLOR, label: "No data" },
+      ...[-100, -50, 0, 50, 100].map((value) => ({ color: stabilityColor(value), label: formatSigned(value) })),
+    ];
+  },
+});
+
+// User Story 4: Government Type — a small closed set in the real save
+// (monarchy/tribe/republic/theocracy/steppe_horde — research.md §10), so
+// a fixed table like Location Rank's, hues well apart and none relying
+// on a red/green contrast. An unknown type (a future game version) gets
+// RGO's golden-angle fallback rather than NEUTRAL_COLOR.
+const GOVERNMENT_COLORS: Record<string, [number, number, number]> = {
+  monarchy: [55, 126, 184], // blue
+  republic: [255, 187, 51], // amber
+  theocracy: [152, 78, 163], // purple
+  tribe: [166, 118, 29], // brown
+  steppe_horde: [102, 194, 165], // teal
+};
+
+function formatGovernmentType(type: string): string {
+  return type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+const governmentFallbackCache = new WeakMap<MapLocationDataset, Map<string, [number, number, number]>>();
+function getGovernmentColorMap(dataset: MapLocationDataset): Map<string, [number, number, number]> {
+  const cached = governmentFallbackCache.get(dataset);
+  if (cached) return cached;
+  const colors = new Map<string, [number, number, number]>();
+  let fallbackIndex = 0;
+  for (const row of dataset.values()) {
+    const type = row.ownerIdx === null ? null : row.ownerGovernmentType;
+    if (type === null || colors.has(type)) continue;
+    const known = GOVERNMENT_COLORS[type];
+    if (known) {
+      colors.set(type, known);
+    } else {
+      colors.set(type, hslToRgb(fallbackIndex * GOLDEN_ANGLE_DEG, RGO_SATURATION, RGO_LIGHTNESS));
+      fallbackIndex += 1;
+    }
+  }
+  governmentFallbackCache.set(dataset, colors);
+  return colors;
+}
+
+MAP_LAYERS.push({
+  id: "governmentType",
+  label: "Government Type",
+  grain: "country",
+  getFill(row, dataset) {
+    if (row.ownerIdx === null || row.ownerGovernmentType === null) return NEUTRAL_COLOR;
+    return getGovernmentColorMap(dataset).get(row.ownerGovernmentType) ?? NEUTRAL_COLOR;
+  },
+  getTooltipFields(row) {
+    const type = row.ownerIdx === null ? null : row.ownerGovernmentType;
+    return [
+      { label: "Location", value: row.name },
+      { label: "Owner", value: row.ownerIdx === null ? "No data" : row.ownerName },
+      { label: "Government", value: type === null ? "No data" : formatGovernmentType(type) },
+    ];
+  },
+  getLegend(dataset) {
+    const entries = Array.from(getGovernmentColorMap(dataset), ([type, color]) => ({
+      color,
+      label: formatGovernmentType(type),
+    }));
+    entries.sort((a, b) => a.label.localeCompare(b.label));
+    return [{ color: NEUTRAL_COLOR, label: "No data" }, ...entries];
+  },
+});
+
+// User Story 7 / User Story 8: the owner's most-recently-recorded
+// historical figure (queries.ts's `latest` CTE — the latest year's
+// value, not the peak).
+MAP_LAYERS.push(
+  countryLayer({
+    id: "countryPopulation",
+    label: "Country Population",
+    tooltipLabel: "Population (latest)",
+    getValue: (row) => row.ownerPopulation,
+  }),
+);
+MAP_LAYERS.push(
+  countryLayer({
+    id: "economicalBase",
+    label: "Economical Base",
+    tooltipLabel: "Economical base (latest)",
+    getValue: (row) => row.ownerEconomicalBase,
+  }),
+);
+
+// User Story 9: population-size-weighted mean over the pops in the
+// owner's locations (research.md §7) — a derived figure, labeled as an
+// average (constitution Principle IV).
+MAP_LAYERS.push(
+  countryLayer({
+    id: "countryLiteracy",
+    label: "Country Literacy",
+    tooltipLabel: "Average literacy",
+    getValue: (row) => row.ownerLiteracy,
+    formatValue: (value) => `${value.toFixed(1)}%`,
+  }),
+);
+
+// User Story 12 / User Story 13: counts — an owned country with none is
+// a confirmed zero (ZERO_COLOR, spec FR-015); a save whose source table
+// came back empty says so in the legend instead (research.md §6).
+const RELOAD_HINT = "Not in this save's data — reload the save file";
+const formatCount = (value: number): string => Math.round(value).toLocaleString();
+
+MAP_LAYERS.push(
+  countryLayer({
+    id: "techAdvances",
+    label: "Number of Tech Advances",
+    tooltipLabel: "Researched advances",
+    getValue: (row) => row.ownerAdvances,
+    formatValue: formatCount,
+    unavailableHint: RELOAD_HINT,
+  }),
+);
+MAP_LAYERS.push(
+  countryLayer({
+    id: "worksOfArt",
+    label: "Number of Works of Art",
+    tooltipLabel: "Works of art held",
+    getValue: (row) => row.ownerWorksOfArt,
+    formatValue: formatCount,
+    unavailableHint: RELOAD_HINT,
+  }),
+);

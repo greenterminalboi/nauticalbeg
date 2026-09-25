@@ -208,4 +208,120 @@ describe("storage/queries listMapLocationsArrow (Map tab)", () => {
     // no-op, not error on an already-added column.
     await applySchema(db);
   });
+
+  // specs/014-country-province-map-modes contracts/queries.md: owner_* and
+  // province_* aggregates, repeated onto every location row.
+  it("repeats the owner's treasury/stability/government and live works-of-art count onto every location it owns (fixture)", async () => {
+    db = await openSaveDatabase("map-locations-014-fixture.db");
+    await applySchema(db);
+    await parseAndStore(db, "save-014", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = decodeRows(await listMapLocationsArrow(db));
+    const rus = rows.filter((r) => r.owner_idx === 2025);
+    expect(rus.length).toBeGreaterThanOrEqual(1);
+    const nation = (
+      await db.conn.query("SELECT treasury, stability, government_type FROM nations WHERE idx = 2025")
+    ).toArray()[0].toJSON();
+    for (const row of rus) {
+      expect(row.owner_treasury).toBe(nation.treasury);
+      expect(row.owner_stability).toBe(nation.stability);
+      expect(row.owner_government_type).toBe(nation.government_type);
+      // Fixture: RUS owns one live work and one destroyed work; the
+      // unowned work counts for nobody (research.md §2).
+      expect(Number(row.owner_works_of_art)).toBe(1);
+    }
+
+    const unowned = rows.filter((r) => r.owner_idx === null);
+    for (const row of unowned) {
+      expect(row.owner_treasury).toBeNull();
+      expect(row.owner_works_of_art).toBeNull();
+      expect(row.owner_advances).toBeNull();
+    }
+  });
+
+  describe("synthetic world (specs/014-country-province-map-modes)", () => {
+    async function syntheticDb(name: string): Promise<SaveDatabase> {
+      db = await openSaveDatabase(name);
+      await applySchema(db);
+      const statements = [
+        "INSERT INTO nations (idx, tag, treasury, stability, government_type) VALUES (1, 'AAA', -50, -20, 'monarchy'), (2, 'BBB', 300, 40, 'republic')",
+        // Province 10: two AAA locations. Province 20: one BBB location
+        // and one with no development at all. Province 30: water only.
+        `INSERT INTO locations (idx, owner_idx, province_idx, development, name, possible_tax, soldiers) VALUES
+           (101, 1, 10, 5, 'a1', 2, 1),
+           (102, 1, 10, 7, 'a2', 3, NULL),
+           (201, 2, 20, 10, 'b1', 4, 6),
+           (202, 2, 20, NULL, 'b2', NULL, NULL),
+           (301, NULL, 30, NULL, 'sea', NULL, NULL)`,
+        "INSERT INTO provinces (idx, name) VALUES (10, 'Alpha'), (20, 'Beta')",
+        // AAA peaked in 1400 but its latest (1500) value is lower.
+        `INSERT INTO nation_history (nation_idx, year, metric, value) VALUES
+           (1, 1400, 'population', 900), (1, 1500, 'population', 400),
+           (1, 1400, 'economical_base', 80), (1, 1500, 'economical_base', 60)`,
+        // AAA pops: size 1 @ 10% and size 3 @ 50% → weighted 40%.
+        "INSERT INTO population (idx, size, literacy) VALUES (1, 1, 10), (2, 3, 50), (3, 2, 20)",
+        "INSERT INTO location_pops (location_idx, pop_idx) VALUES (101, 1), (102, 2), (202, 3)",
+        "INSERT INTO nation_advances (nation_idx, advance) VALUES (1, 'x'), (1, 'y')",
+        "INSERT INTO works_of_art (idx, owner_idx, type, quality, location_idx, destroyed_date) VALUES (1, 2, 'painting', 50, 201, NULL)",
+      ];
+      for (const sql of statements) await db.conn.query(sql);
+      return db;
+    }
+
+    function byName(rows: Record<string, unknown>[], name: string): Record<string, unknown> {
+      const row = rows.find((r) => r.name === name);
+      expect(row).toBeTruthy();
+      return row!;
+    }
+
+    it("sums province totals over the province's own locations, NULL when every value is NULL", async () => {
+      const rows = decodeRows(await listMapLocationsArrow(await syntheticDb("map-locations-014-province.db")));
+      for (const name of ["a1", "a2"]) {
+        expect(byName(rows, name)).toMatchObject({
+          province_idx: 10,
+          province_name: "Alpha",
+          province_development: 12,
+          province_tax_base: 5,
+          province_soldiers: 1,
+        });
+      }
+      // Province population only counts locations with development
+      // (b2's pop is excluded — the location Population layer's rule).
+      expect(byName(rows, "b1").province_population).toBe(0);
+      expect(byName(rows, "a1").province_population).toBe(4);
+      const sea = byName(rows, "sea");
+      expect(sea.province_development).toBeNull();
+      expect(sea.province_population).toBeNull();
+      expect(sea.province_name).toBe("Province 30");
+    });
+
+    it("uses the latest year's history value, not the peak", async () => {
+      const rows = decodeRows(await listMapLocationsArrow(await syntheticDb("map-locations-014-latest.db")));
+      expect(byName(rows, "a1").owner_population).toBe(400);
+      expect(byName(rows, "a2").owner_economical_base).toBe(60);
+      expect(byName(rows, "b1").owner_population).toBeNull();
+    });
+
+    it("computes a population-size-weighted literacy over the owner's locations", async () => {
+      const rows = decodeRows(await listMapLocationsArrow(await syntheticDb("map-locations-014-literacy.db")));
+      expect(Number(byName(rows, "a1").owner_literacy)).toBeCloseTo(40, 5);
+      expect(Number(byName(rows, "b1").owner_literacy)).toBeCloseTo(20, 5);
+    });
+
+    it("reports a confirmed 0 count for an owned country with none, but NULL once the source table is empty", async () => {
+      const database = await syntheticDb("map-locations-014-counts.db");
+      let rows = decodeRows(await listMapLocationsArrow(database));
+      expect(Number(byName(rows, "a1").owner_advances)).toBe(2);
+      expect(Number(byName(rows, "b1").owner_advances)).toBe(0);
+      expect(Number(byName(rows, "a1").owner_works_of_art)).toBe(0);
+      expect(Number(byName(rows, "b1").owner_works_of_art)).toBe(1);
+      expect(byName(rows, "sea").owner_advances).toBeNull();
+
+      await database.conn.query("DELETE FROM nation_advances");
+      await database.conn.query("DELETE FROM works_of_art");
+      rows = decodeRows(await listMapLocationsArrow(database));
+      expect(byName(rows, "a1").owner_advances).toBeNull();
+      expect(byName(rows, "b1").owner_works_of_art).toBeNull();
+    });
+  });
 });

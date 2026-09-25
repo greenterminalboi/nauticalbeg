@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAP_LAYERS, NEUTRAL_COLOR, ZERO_COLOR } from "../../src/components/Overview/mapLayers";
+import { DEBT_COLOR, MAP_LAYERS, NEUTRAL_COLOR, ZERO_COLOR } from "../../src/components/Overview/mapLayers";
 import type { MapLocationDataset, MapLocationRow } from "../../src/components/Overview/mapLocationData";
 
 let nextIdx = 1;
@@ -28,6 +28,20 @@ function makeRow(overrides: Partial<MapLocationRow> = {}): MapLocationRow {
     cultureColor: [0, 104, 165],
     religionName: "lutheran",
     religionColor: [0, 0, 178],
+    ownerTreasury: null,
+    ownerStability: null,
+    ownerGovernmentType: null,
+    ownerPopulation: null,
+    ownerEconomicalBase: null,
+    ownerLiteracy: null,
+    ownerAdvances: null,
+    ownerWorksOfArt: null,
+    provinceIdx: null,
+    provinceName: null,
+    provinceDevelopment: null,
+    provinceTaxBase: null,
+    provinceSoldiers: null,
+    provincePopulation: null,
     ...overrides,
   };
 }
@@ -468,5 +482,142 @@ describe("mapLayers development layer (specs/011-atlas-map-modes US1)", () => {
       { label: "Location", value: "Test Location" },
       { label: "Development", value: expect.stringContaining("42") },
     ]);
+  });
+});
+
+// --- specs/014-country-province-map-modes ----------------------------------
+
+const PURPLE: [number, number, number] = [126, 47, 142];
+const RED: [number, number, number] = [215, 48, 39];
+
+describe("map layer grains (specs/014-country-province-map-modes US1)", () => {
+  it("gives every registered layer a grain, with the 12 pre-014 layers under Location", () => {
+    for (const layer of MAP_LAYERS) {
+      expect(["location", "province", "country"]).toContain(layer.grain);
+    }
+    expect(MAP_LAYERS.filter((l) => l.grain === "location")).toHaveLength(12);
+    expect(MAP_LAYERS.filter((l) => l.grain === "province").map((l) => l.id)).toEqual([
+      "provinceDevelopment",
+      "provinceTaxBase",
+      "provinceSoldiers",
+      "provincePopulation",
+    ]);
+    expect(MAP_LAYERS.filter((l) => l.grain === "country").map((l) => l.id)).toEqual([
+      "countryTreasury",
+      "countryStability",
+      "governmentType",
+      "countryPopulation",
+      "economicalBase",
+      "countryLiteracy",
+      "techAdvances",
+      "worksOfArt",
+    ]);
+  });
+});
+
+describe("grouped rank layers (specs/014-country-province-map-modes research.md §4)", () => {
+  it("ranks countries, not locations: a 1000-location country doesn't crowd a 1-location one", () => {
+    const layer = requireLayer("countryPopulation");
+    const big = Array.from({ length: 1000 }, () => makeRow({ ownerIdx: 1, ownerName: "BIG", ownerPopulation: 10 }));
+    const small = makeRow({ ownerIdx: 2, ownerName: "SML", ownerPopulation: 20 });
+    const dataset = datasetOf([...big, small]);
+    // Two countries → exactly the two gradient ends, regardless of row count.
+    expect(layer.getFill(big[0], dataset)).toEqual(PURPLE);
+    expect(layer.getFill(big[999], dataset)).toEqual(PURPLE);
+    expect(layer.getFill(small, dataset)).toEqual(RED);
+  });
+
+  it("renders unowned as no-data, a confirmed zero as ZERO_COLOR, and a negative treasury as In debt", () => {
+    const treasury = requireLayer("countryTreasury");
+    const unowned = makeRow({ ownerIdx: null, ownerTreasury: null });
+    const broke = makeRow({ ownerIdx: 3, ownerTreasury: 0 });
+    const debtor = makeRow({ ownerIdx: 4, ownerTreasury: -120 });
+    const rich = makeRow({ ownerIdx: 5, ownerTreasury: 900 });
+    const dataset = datasetOf([unowned, broke, debtor, rich]);
+    expect(treasury.getFill(unowned, dataset)).toEqual(NEUTRAL_COLOR);
+    expect(treasury.getFill(broke, dataset)).toEqual(ZERO_COLOR);
+    expect(treasury.getFill(debtor, dataset)).toEqual(DEBT_COLOR);
+    expect(treasury.getFill(rich, dataset)).toEqual(RED);
+    expect(treasury.getLegend(dataset).map((e) => e.label)).toContain("In debt");
+  });
+
+  it("gives every location of one province the same fill and names the province in the tooltip", () => {
+    const layer = requireLayer("provinceDevelopment");
+    const a = makeRow({ provinceIdx: 10, provinceName: "Alpha", provinceDevelopment: 12 });
+    const b = makeRow({ provinceIdx: 10, provinceName: "Alpha", provinceDevelopment: 12 });
+    const c = makeRow({ provinceIdx: 20, provinceName: "Beta", provinceDevelopment: 3 });
+    const dataset = datasetOf([a, b, c]);
+    expect(layer.getFill(a, dataset)).toEqual(layer.getFill(b, dataset));
+    expect(layer.getFill(a, dataset)).not.toEqual(layer.getFill(c, dataset));
+    expect(layer.getTooltipFields(a)).toEqual([
+      { label: "Location", value: a.name },
+      { label: "Province", value: "Alpha" },
+      { label: "Total development", value: "12" },
+    ]);
+  });
+
+  it("switches the count layers' legend to the reload hint when the source table was empty", () => {
+    const layer = requireLayer("worksOfArt");
+    const dataset = datasetOf([
+      makeRow({ ownerIdx: 1, ownerWorksOfArt: null }),
+      makeRow({ ownerIdx: 2, ownerWorksOfArt: null }),
+      makeRow({ ownerIdx: null, ownerWorksOfArt: null }),
+    ]);
+    expect(layer.getLegend(dataset)).toEqual([
+      { color: NEUTRAL_COLOR, label: "Not in this save's data — reload the save file" },
+    ]);
+    const populated = datasetOf([makeRow({ ownerIdx: 1, ownerWorksOfArt: 0 }), makeRow({ ownerIdx: 2, ownerWorksOfArt: 4 })]);
+    expect(layer.getLegend(populated).map((e) => e.label)).toContain("Zero");
+    const zero = Array.from(populated.values())[0];
+    expect(layer.getFill(zero, populated)).toEqual(ZERO_COLOR);
+  });
+
+  it("formats literacy as a percentage and labels it as an average", () => {
+    const layer = requireLayer("countryLiteracy");
+    const row = makeRow({ ownerIdx: 1, ownerName: "RUS", ownerLiteracy: 23.456 });
+    expect(layer.getTooltipFields(row)).toEqual([
+      { label: "Location", value: row.name },
+      { label: "Owner", value: "RUS" },
+      { label: "Average literacy", value: "23.5%" },
+    ]);
+  });
+});
+
+describe("country stability layer (specs/014-country-province-map-modes US3)", () => {
+  const layer = () => requireLayer("countryStability");
+
+  it("maps −100/0/+100 onto a purple → cream → orange diverging scale", () => {
+    const fill = (stability: number) => layer().getFill(makeRow({ ownerIdx: 1, ownerStability: stability }), new Map());
+    expect(fill(-100)).toEqual([94, 60, 153]);
+    expect(fill(0)).toEqual([250, 240, 215]);
+    expect(fill(100)).toEqual([230, 97, 1]);
+    expect(fill(0)).not.toEqual(NEUTRAL_COLOR);
+  });
+
+  it("renders unowned as no-data and shows a signed value in the tooltip", () => {
+    expect(layer().getFill(makeRow({ ownerIdx: null, ownerStability: null }), new Map())).toEqual(NEUTRAL_COLOR);
+    const fields = (stability: number) =>
+      layer().getTooltipFields(makeRow({ ownerIdx: 1, ownerName: "RUS", ownerStability: stability }));
+    expect(fields(27.27082)[2]).toEqual({ label: "Stability", value: "+27.3" });
+    expect(fields(-1.35482)[2]).toEqual({ label: "Stability", value: "−1.4" });
+  });
+});
+
+describe("government type layer (specs/014-country-province-map-modes US4)", () => {
+  it("uses fixed colors for known types, a non-neutral fallback for unknown ones, and lists only present types", () => {
+    const layer = requireLayer("governmentType");
+    const monarchy = makeRow({ ownerIdx: 1, ownerGovernmentType: "monarchy" });
+    const horde = makeRow({ ownerIdx: 2, ownerGovernmentType: "steppe_horde" });
+    const future = makeRow({ ownerIdx: 3, ownerGovernmentType: "space_empire" });
+    const dataset = datasetOf([monarchy, horde, future]);
+    expect(layer.getFill(monarchy, dataset)).toEqual([55, 126, 184]);
+    expect(layer.getFill(future, dataset)).not.toEqual(NEUTRAL_COLOR);
+    expect(layer.getLegend(dataset).map((e) => e.label)).toEqual([
+      "No data",
+      "Monarchy",
+      "Space Empire",
+      "Steppe Horde",
+    ]);
+    expect(layer.getTooltipFields(horde)[2]).toEqual({ label: "Government", value: "Steppe Horde" });
   });
 });

@@ -351,6 +351,23 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
     expect(rows).toHaveLength(0);
   });
 
+  it("populates works_of_art from work_of_art_manager.database, keeping destroyed and unowned works as rows (specs/014-country-province-map-modes research.md §2)", async () => {
+    const database = await freshDb("adapter-works-of-art.db");
+    await parseAndStore(database, "save-woa", "rus-1628-minimal.eu5", toBytes(fixtureText));
+    const rows = await queryAll(
+      database,
+      "SELECT idx, owner_idx, type, quality, location_idx, destroyed_date FROM works_of_art ORDER BY idx",
+    );
+    expect(rows).toHaveLength(4);
+    expect(rows.map((r) => r.owner_idx)).toEqual([2025, 2025, null, 33556892]);
+    expect(rows[0]).toMatchObject({ type: "painting", quality: 75, location_idx: 1550, destroyed_date: null });
+    expect(rows[1].destroyed_date).toBe("1356.4.25");
+    expect(rows.filter((r) => r.destroyed_date !== null)).toHaveLength(1);
+
+    const raw = await queryAll(database, "SELECT key FROM raw_sections WHERE key = 'work_of_art_manager'");
+    expect(raw).toHaveLength(0);
+  });
+
   it("populates population from population.database (specs/004-full-schema-mapping US2)", async () => {
     const database = await freshDb("adapter-population.db");
     await parseAndStore(database, "save-11", "rus-1628-minimal.eu5", toBytes(fixtureText));
