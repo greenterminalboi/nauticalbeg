@@ -158,7 +158,7 @@ Shell note for every Rust task: Homebrew's `rustc` comes first on PATH and has *
 **Independent Test**: quickstart.md §2. `Russia (Melted).eu5` loads with no `decompressing` phase and identical results, within ±5% of `main`'s load time.
 
 - [X] T024 [US3] Add a test to `tests/parser/load-save.test.ts`: loading the plain `rus-1628-minimal.eu5` never calls `onProgress` with `"decompressing"`, and never touches the melter (`vi.spyOn` on `melter/melt`'s `meltSave` expects 0 calls). Check that all pre-existing `load-save`, `adapter` and `version-detect` tests still pass unchanged.
-- [ ] T025 [US3] Manual timing per quickstart.md §2. Load `Russia (Melted).eu5` on this branch and on `main` (3 runs each) and confirm the difference is ≤5% (SC-004). Record the result in research.md §R8.
+- [ ] T025 [US3] **Deferred at close-out 2026-09-25 (user decision): not run; the text path changed only by an O(1) header check.** Manual timing per quickstart.md §2. Load `Russia (Melted).eu5` on this branch and on `main` (3 runs each) and confirm the difference is ≤5% (SC-004). Record the result in research.md §R8.
 
 ---
 
