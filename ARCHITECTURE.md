@@ -1977,3 +1977,10 @@ Both are fixed. The file now passes 30/30 sequentially and 30/30 under
 still failed 15 of 30 under that stress, which is how the empty-history
 render was found.
 
+**Map view lock (post-016, 2026-09-25)**: `MapCanvas.tsx` no longer lets
+the map shrink below the canvas or be panned past its edges. The old fixed
+`MIN_SCALE = 0.5` allowed empty space around the map. `mapView.ts`'s
+`clampView` enforces a "cover" floor (the world fills the canvas) and edge
+clamping, and `draw()` applies it every time, so canvas resizes are
+re-clamped too. The view starts fully zoomed out at the cover scale.
+

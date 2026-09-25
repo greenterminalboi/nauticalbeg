@@ -9,6 +9,14 @@ description: "Task list for Public Hosting & Deployment Pipeline"
 
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/pipeline.md, contracts/hosting-headers.md, contracts/engine-loading.md, quickstart.md
 
+**Closed 2026-09-25 (owner's call, to move on to 017)**: the site is live and deploys automatically from `main`. Deferred, with the reason for each:
+- **T026**: C3 (real save on the live site) couldn't be automated, because Chrome blocks public-site fetches to localhost. The owner loaded the site but not the real save. Firefox/Safari, C6 keep/resume and C7 private window are unchecked on the live site. C1, C2 and C5 passed.
+- **T027/T031**: the PR preview and failure-path flow hasn't been exercised yet. Do it on 017's first PR.
+- **T028**: the rollback rehearsal is owner-only and hasn't been done. The steps are in `docs/hosting.md`.
+- **T033**: count flaky runs over the next 10 pipeline runs. So far 3 of 3 runs had passing checks.
+- **T034**: owner-only; check the bill after a week.
+- Post-close extras, already live in ff15674: the page title/tagline above the nav bar was removed, and map pan/zoom is locked to the map's edges (`mapView.ts`).
+
 **Implementation notes (2026-09-25)**:
 - **Flaky test**: T002's first fix, which moved the assertions into `waitFor`, wasn't enough. It still failed 4/30 sequentially and 15/30 under 10-way concurrent stress, always in the tooltip test. The actual race: before the country selection resolves, `RulerHistoryChart` sets `history` to an empty Map, so the chart renders once with the correct axis range but no series. That test waited on the axis range alone. It now waits for the loaded series too. Result: 30/30 sequential and 30/30 under stress. No `retry` was needed.
 - **T007**: the local `.wasm` imports became dynamic imports inside a `!import.meta.env.PROD` branch. The production build dropped from 126MB to 58MB and contains no engine `.wasm`. `1.32.0` is inlined into both the main and parser-worker bundles.
@@ -145,9 +153,9 @@ Shell note: if tests time out en masse locally, check `uptime` first (the owner'
   - what to do if a deploy fails at the wrangler step (expired or missing secrets)
 - [X] T024 [P] [US2] Update `README.md`: the public address from T019, a one-paragraph "How it's deployed" section pointing at `docs/hosting.md`, and a note that local development is unchanged (`npm run dev`).
 - [X] T025 [US2] First production deploy (**after T019 and T020**): commit Phases 1–4 and push to `main`. Watch the run with `gh run watch`. Then verify quickstart C1 (version label matches the pushed SHA, live within 15 minutes) and C2 (headers on `index.html` and `/assets/*`, and the fan-tool notice) with `curl -sI` plus claude-in-chrome.
-- [ ] T026 [US2] Hosted checks for US1: quickstart C3 (load `MP_RUS_1657` on the public site in Chrome; ask the owner to spot-check Firefox and Safari), C4 (network panel shows only the site's own origin and jsDelivr), C5 (reload with no deploy transfers under 1MB before the start screen), C6 (keep → reopen → resume) and C7 (Firefox private window shows the FR-008 message). Record the results in this file's notes.
-- [ ] T027 [US2] Failure path (FR-012): don't break `main` on purpose. `deploy` only runs after `check` passes (`needs: check`), and pushes and PRs use the same gate. So prove it with T031's deliberately failing PR commit: `check` fails naming the test, `deploy` shows as skipped, and the production version label is unchanged. Record the result against both T027 and T031.
-- [ ] T028 [US2] **(owner)** Rollback rehearsal (quickstart C10): with Claude timing it, roll back to the previous production deployment in the Pages dashboard, confirm the version label changes on a reload, then roll forward. Record the time. It must be under 5 minutes (SC-006).
+- [ ] T026 [US2] **Deferred at close-out 2026-09-25 (user decision), see notes at top.** Hosted checks for US1: quickstart C3 (load `MP_RUS_1657` on the public site in Chrome; ask the owner to spot-check Firefox and Safari), C4 (network panel shows only the site's own origin and jsDelivr), C5 (reload with no deploy transfers under 1MB before the start screen), C6 (keep → reopen → resume) and C7 (Firefox private window shows the FR-008 message). Record the results in this file's notes.
+- [ ] T027 [US2] **Deferred at close-out 2026-09-25 (user decision), see notes at top.** Failure path (FR-012): don't break `main` on purpose. `deploy` only runs after `check` passes (`needs: check`), and pushes and PRs use the same gate. So prove it with T031's deliberately failing PR commit: `check` fails naming the test, `deploy` shows as skipped, and the production version label is unchanged. Record the result against both T027 and T031.
+- [ ] T028 [US2] **Deferred at close-out 2026-09-25 (user decision), see notes at top.** **(owner)** Rollback rehearsal (quickstart C10): with Claude timing it, roll back to the previous production deployment in the Pages dashboard, confirm the version label changes on a reload, then roll forward. Record the time. It must be under 5 minutes (SC-006).
 
 **Checkpoint**: NauticalBeg is publicly live and deploys itself. This is the beta-ready MVP.
 
@@ -166,7 +174,7 @@ Shell note: if tests time out en masse locally, check `uptime` first (the owner'
   - `--branch=` is `main` for pushes and `${{ github.head_ref }}` for PRs
   - add `pull-requests: write` to `deploy`'s permissions
 - [X] T030 [US3] In the `deploy` job, for PRs only, post or update one sticky comment with the wrangler action's `deployment-url` output (give the wrangler step `id: wrangler` and read `steps.wrangler.outputs.deployment-url`). Use `actions/github-script@v7`: find an existing comment by a hidden marker `<!-- nauticalbeg-preview -->` and update it, otherwise create it. The body gives the preview URL and the short SHA.
-- [ ] T031 [US3] Verify quickstart C8 and C9: open a PR with a small visible change. Confirm the checks pass, the comment appears with a working preview URL, the preview shows the change, and production doesn't. Push a commit that breaks one test and confirm `check` fails naming the test, `deploy` is skipped, and production is unchanged. Revert the breaking commit, then close or merge the PR as the owner prefers.
+- [ ] T031 [US3] **Deferred at close-out 2026-09-25 (user decision), see notes at top.** Verify quickstart C8 and C9: open a PR with a small visible change. Confirm the checks pass, the comment appears with a working preview URL, the preview shows the change, and production doesn't. Push a commit that breaks one test and confirm `check` fails naming the test, `deploy` is skipped, and production is unchanged. Revert the breaking commit, then close or merge the PR as the owner prefers.
 
 **Checkpoint**: All three stories are working.
 
@@ -175,9 +183,9 @@ Shell note: if tests time out en masse locally, check `uptime` first (the owner'
 ## Phase 6: Polish & Cross-Cutting
 
 - [X] T032 [P] Run the full suite locally with `npx vitest run --maxWorkers=2` and `npx tsc -b`; all must pass (quickstart B5).
-- [ ] T033 Track quickstart C11: across the next 10 pipeline runs (including T025–T031), record any failure not caused by a real code problem. Target: zero (SC-005). Note the count in this file.
-- [ ] T034 **(owner)** Quickstart C12: after a week, confirm the Cloudflare bill shows $0 (SC-008).
-- [ ] T035 Session wrap-up per project convention: update `specs/spec-status.md`, fill in the implementation notes at the top of this file, make sure `ARCHITECTURE.md` matches what was built, then make a scoped commit and push.
+- [ ] T033 **Deferred at close-out 2026-09-25 (user decision), see notes at top.** Track quickstart C11: across the next 10 pipeline runs (including T025–T031), record any failure not caused by a real code problem. Target: zero (SC-005). Note the count in this file.
+- [ ] T034 **Deferred at close-out 2026-09-25 (user decision), see notes at top.** **(owner)** Quickstart C12: after a week, confirm the Cloudflare bill shows $0 (SC-008).
+- [X] T035 Session wrap-up per project convention: update `specs/spec-status.md`, fill in the implementation notes at the top of this file, make sure `ARCHITECTURE.md` matches what was built, then make a scoped commit and push.
 
 ---
 

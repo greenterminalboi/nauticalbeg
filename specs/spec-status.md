@@ -18,6 +18,7 @@
 | 013-diplomatic-relations-chord | ✓       | ✓    | ✓     | ✓ Complete |
 | 014-country-province-map-modes | ✓       | ✓    | ✓     | ● 49/53 (92%) |
 | 015-save-format-support        | ✓       | ✓    | ✓     | ● 35/36 (97%) |
+| 016-public-hosting-pipeline    | ✓       | ✓    | ✓     | ● 29/35 (83%) — closed, rest deferred |
 
 <!-- feature: 001-save-import-overview has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=46 tasks_completed=46 checklist_files=requirements.md -->
 <!-- feature: 002-db-technology-migration has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=86 tasks_completed=19 checklist_files=requirements.md -->
@@ -33,4 +34,5 @@
 <!-- feature: 012-firepower-tab has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=34 tasks_completed=34 checklist_files=requirements.md -->
 <!-- feature: 013-diplomatic-relations-chord has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=32 tasks_completed=32 checklist_files=requirements.md -->
 <!-- feature: 014-country-province-map-modes has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=53 tasks_completed=49 checklist_files=requirements.md -->
+<!-- feature: 016-public-hosting-pipeline has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=35 tasks_completed=29 checklist_files=requirements.md -->
 <!-- feature: 015-save-format-support has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=36 tasks_completed=35 checklist_files=requirements.md -->
