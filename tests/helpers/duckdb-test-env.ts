@@ -39,7 +39,11 @@ const nodeRequire = createRequire(import.meta.url);
 const nativeArrow = nodeRequire("apache-arrow") as Parameters<typeof configureArrowForTesting>[0];
 
 let configured = false;
-const tempDir = mkdtempSync(path.join(tmpdir(), "nauticalbeg-duckdb-test-"));
+// Inside the per-run folder tests/global-temp-dir.ts creates and deletes
+// afterwards (falls back to the OS temp dir if run without that setup).
+const tempDir = mkdtempSync(
+  path.join(process.env.NAUTICALBEG_TEST_TMP ?? tmpdir(), "nauticalbeg-duckdb-test-"),
+);
 const liveConnectionsByName = new Map<string, DuckDBConnectionLike>();
 
 /** Idempotent — safe to call from every test file that needs it. */

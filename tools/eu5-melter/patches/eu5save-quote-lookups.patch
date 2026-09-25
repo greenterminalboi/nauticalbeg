@@ -1,0 +1,54 @@
+--- a/crates/eu5save/src/melt.rs	2026-09-24 10:42:00
++++ b/crates/eu5save/src/melt.rs	2026-09-24 10:42:22
+@@ -107,6 +107,23 @@
+     Ok(doc)
+ }
+ 
++/// NauticalBeg patch (see PATCHED.md): a string from the save's lookup table
++/// can contain spaces or Clausewitz syntax characters (e.g. a custom country
++/// name like `Lil Israel`). Written unquoted, that produces
++/// `Custom_Name=Lil Israel`, which a text parser reads as `Custom_Name=Lil`
++/// plus a stray `Israel` token. Quote such strings; leave plain identifiers
++/// unquoted so output otherwise matches upstream byte-for-byte.
++fn write_lookup_str<W: Write>(wtr: &mut jomini::TextWriter<W>, s: &str) -> Result<(), jomini::Error> {
++    let needs_quote = s.is_empty()
++        || s.bytes()
++            .any(|b| b.is_ascii_whitespace() || matches!(b, b'=' | b'{' | b'}' | b'"' | b'#'));
++    if needs_quote {
++        wtr.write_quoted(s.as_bytes())
++    } else {
++        wtr.write_unquoted(s.as_bytes())
++    }
++}
++
+ /// How to write the value that comes after a given key.
+ ///
+ /// The binary format does not say if a value is a date, an integer, or a
+@@ -200,11 +217,11 @@
+                 known_int = hints.int;
+                 known_unquote = hints.unquote;
+                 known_quote = hints.quote;
+-                wtr.write_unquoted(pending.as_bytes())?;
++                write_lookup_str(wtr, pending)?;
+             } else if known_quote {
+                 wtr.write_quoted(pending.as_bytes())?;
+             } else {
+-                wtr.write_unquoted(pending.as_bytes())?;
++                write_lookup_str(wtr, pending)?;
+             }
+         }
+ 
+@@ -333,11 +350,11 @@
+                         known_int = hints.int;
+                         known_unquote = hints.unquote;
+                         known_quote = hints.quote;
+-                        wtr.write_unquoted(s.as_bytes())?
++                        write_lookup_str(wtr, s)?
+                     } else if known_quote {
+                         wtr.write_quoted(s.as_bytes())?
+                     } else {
+-                        wtr.write_unquoted(s.as_bytes())?
++                        write_lookup_str(wtr, s)?
+                     }
+                 }
+                 None => match options.on_failed_resolve {

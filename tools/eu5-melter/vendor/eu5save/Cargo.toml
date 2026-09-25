@@ -1,0 +1,25 @@
+# Vendored from https://github.com/rakaly/jomini/tree/4461f6e41b28cf7888e2a849858029f9fe4b5a52/crates/eu5save
+# (MIT) with NauticalBeg's patch applied — see PATCHED.md. Workspace-inherited
+# fields and path deps were rewritten to standalone values / pinned git deps.
+[package]
+name = "eu5save"
+version = "0.1.0"
+authors = ["Nick Babcock <nbabcock19@hotmail.com>"]
+edition = "2024"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/rakaly/jomini"
+publish = false
+description = "Ergonomically work with Europa Universalis V saves (debug and ironman)"
+
+[features]
+default = []
+# Declared only so upstream's `cfg_attr(feature = "tsify", ...)` compiles without warnings; never enabled.
+tsify = []
+
+[dependencies]
+arena-serde = { git = "https://github.com/rakaly/jomini", rev = "4461f6e41b28cf7888e2a849858029f9fe4b5a52" }
+bumpalo = { version = "3.20", features = ["collections"] }
+jomini = { git = "https://github.com/rakaly/jomini", rev = "4461f6e41b28cf7888e2a849858029f9fe4b5a52", features = ["envelope"] }
+serde = { version = "1.0.195", features = ["derive"] }
+thiserror = "2.0.0"

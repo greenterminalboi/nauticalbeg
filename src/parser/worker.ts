@@ -8,7 +8,7 @@
 // file-reading + parsing + storing (`load`/`cancel`) — "keep" moved to
 // the main thread (see FileLoader.tsx) since DuckDB has no SQLite-style
 // restriction requiring writes to originate from a dedicated Worker.
-import type { MainToWorkerMessage, WorkerToMainMessage } from "./protocol";
+import type { LoadWarning, MainToWorkerMessage, WorkerToMainMessage } from "./protocol";
 import { loadSave, resumeSave } from "./load-save";
 import { cleanupSaveIfNotKept } from "../storage/queries";
 
@@ -32,7 +32,12 @@ function post(message: WorkerToMainMessage): void {
  * the load/resume, not read fresh here — it needs to reflect whatever
  * was ready when this one started, regardless of how long it took. */
 async function reportReadyAndSupersede(
-  result: { saveId: string; inGameDate: string; playerNationTag: string },
+  result: {
+    saveId: string;
+    inGameDate: string;
+    playerNationTag: string;
+    warnings?: LoadWarning[];
+  },
   supersededSaveId: string | null,
 ): Promise<void> {
   lastReadySaveId = result.saveId;

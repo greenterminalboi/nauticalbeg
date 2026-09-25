@@ -28,7 +28,13 @@ export interface CancelMessage {
 
 export type MainToWorkerMessage = LoadMessage | CancelMessage;
 
-export type ParsePhase = "validating" | "detecting-version" | "parsing";
+/** `decompressing` (added in 015) is sent only for non-plain-text saves,
+ * while the melter converts them to plaintext. */
+export type ParsePhase =
+  | "validating"
+  | "decompressing"
+  | "detecting-version"
+  | "parsing";
 
 export interface ProgressMessage {
   type: "progress";
@@ -36,7 +42,15 @@ export interface ProgressMessage {
   percent: number | null;
 }
 
-export type ErrorKind = "not-a-save" | "unsupported-version" | "parse-failed";
+/** The last three were added in 015 (see
+ * specs/015-save-format-support/contracts/worker-protocol-delta.md). */
+export type ErrorKind =
+  | "not-a-save"
+  | "unsupported-version"
+  | "parse-failed"
+  | "unrecognized-format"
+  | "damaged-save"
+  | "binary-unavailable";
 
 export interface ErrorMessage {
   type: "error";
@@ -45,11 +59,20 @@ export interface ErrorMessage {
   message: string;
 }
 
+/** A non-blocking notice attached to a successful load (015 FR-009). */
+export interface LoadWarning {
+  kind: "unknown-tokens";
+  count: number;
+  message: string;
+}
+
 export interface ReadyMessage {
   type: "ready";
   saveId: string;
   inGameDate: string;
   playerNationTag: string;
+  /** Omitted when empty. */
+  warnings?: LoadWarning[];
 }
 
 export type WorkerToMainMessage = ProgressMessage | ErrorMessage | ReadyMessage;

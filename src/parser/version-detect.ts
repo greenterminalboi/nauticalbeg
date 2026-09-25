@@ -4,17 +4,9 @@
 // tokenizer in clausewitz.ts).
 import { Jomini } from "jomini";
 
-/** The literal bytes every real EU5 save starts with, before `metadata={`
- * (see research-save-format.md). Used for the FR-002 "is this even a
- * save file" check, kept here since it's checked right alongside version
- * detection in practice. */
-export const SAVE_HEADER_PREFIX = "SAV";
-const SAVE_HEADER_PREFIX_BYTES = new TextEncoder().encode(SAVE_HEADER_PREFIX);
-
-export function looksLikeSaveFile(data: Uint8Array): boolean {
-  if (data.length < SAVE_HEADER_PREFIX_BYTES.length) return false;
-  return SAVE_HEADER_PREFIX_BYTES.every((byte, i) => data[i] === byte);
-}
+// Header helpers moved to save-format.ts in 015; re-exported so existing
+// imports keep working.
+export { SAVE_HEADER_PREFIX, looksLikeSaveFile } from "./save-format";
 
 /**
  * Returns the save's `metadata.version` string (e.g. `"1.3.11"`), or

@@ -48,3 +48,8 @@ Thumbs.db
 # is a local, on-demand artifact.
 /tools/schema-mapping/inventories/*
 !/tools/schema-mapping/inventories/.gitkeep
+
+# Rust build output for the EU5 melter crate (015). The built WASM is
+# committed under src/parser/melter/generated/ instead.
+/tools/eu5-melter/target/
+*.rs.bk

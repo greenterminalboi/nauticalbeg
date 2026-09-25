@@ -2,7 +2,8 @@ import type { ErrorKind } from "../../parser/protocol";
 import "./ErrorMessage.css";
 
 interface ErrorMessageProps {
-  /** FR-009's three worker-reported kinds. `"unknown"` covers a failure
+  /** FR-009's three worker-reported kinds, plus 015's three save-format
+   * kinds (unrecognized-format / damaged-save / binary-unavailable). `"unknown"` covers a failure
    * that isn't one of those (e.g. the save parsed fine but reading its
    * overview afterward failed) — not itself an FR-009 category, but
    * still needs a clear message rather than a crash or blank screen. */
@@ -14,6 +15,10 @@ const TITLES: Record<ErrorKind, string> = {
   "not-a-save": "Not a Recognized Save File",
   "unsupported-version": "Unsupported Game Version",
   "parse-failed": "Save Could Not Be Read",
+  // 015 — save format support
+  "unrecognized-format": "Unrecognized Save Format",
+  "damaged-save": "Save File Damaged or Incomplete",
+  "binary-unavailable": "Ironman & Binary Saves Unavailable",
 };
 
 /**

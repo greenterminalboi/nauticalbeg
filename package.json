@@ -14,7 +14,9 @@
     "schema-map": "tsx tools/schema-mapping/generate.ts",
     "generate:encyclopedia": "tsx tools/encyclopedia-scraping/generate.ts",
     "generate:ruler-names": "tsx tools/ruler-names-scraping/generate.ts",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "build:melter": "bash tools/eu5-melter/build.sh",
+    "generate:save-fixtures": "cargo run --manifest-path tools/eu5-melter/Cargo.toml --features encoder --bin make-fixtures"
   },
   "keywords": [],
   "author": "",

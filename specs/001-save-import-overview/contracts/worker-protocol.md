@@ -17,11 +17,17 @@ loading flow depend on it staying stable.
 
 | Message | Payload | Meaning |
 |---|---|---|
-| `progress` | `{ phase: "validating" \| "detecting-version" \| "parsing", percent: number \| null }` | Sent at least once per second during any phase expected to exceed 1s (FR-008). `percent` is `null` when it can't yet be estimated (e.g., before the total size to parse is known). Not sent for a `keepAsDefaultSession` resume — there's nothing to parse. |
-| `error` | `{ kind: "not-a-save" \| "unsupported-version" \| "parse-failed", detectedVersion?: string, message: string }` | Terminal — parsing (or resuming) has stopped. `kind` maps 1:1 to the three FR-009 error categories; a resume failure (e.g. the kept save's data is missing/incomplete) is reported as `parse-failed`. |
-| `ready` | `{ saveId: string, inGameDate: string, playerNationTag: string }` | Parsing (or resuming) succeeded; `saveId` identifies the SQLite database the UI should now query via `storage/queries.ts`. |
+| `progress` | `{ phase: "validating" \| "decompressing" \| "detecting-version" \| "parsing", percent: number \| null }` | Sent at least once per second during any phase expected to exceed 1s (FR-008). `percent` is `null` when it can't yet be estimated (e.g., before the total size to parse is known). Not sent for a `keepAsDefaultSession` resume — there's nothing to parse. |
+| `error` | `{ kind: "not-a-save" \| "unsupported-version" \| "parse-failed" \| "unrecognized-format" \| "damaged-save" \| "binary-unavailable", detectedVersion?: string, message: string }` | Terminal — parsing (or resuming) has stopped. `kind` maps 1:1 to the three FR-009 error categories; a resume failure (e.g. the kept save's data is missing/incomplete) is reported as `parse-failed`. |
+| `ready` | `{ saveId: string, inGameDate: string, playerNationTag: string, warnings?: LoadWarning[] }` | Parsing (or resuming) succeeded; `saveId` identifies the SQLite database the UI should now query via `storage/queries.ts`. |
 | `kept` | `{ saveId: string, filename: string, inGameDate: string \| null }` | **Added 2026-09-18.** `keep` succeeded — the worker only did the SQL write; the main thread still needs to run `storage/queries.ts`'s `recordKeptSave` with this payload to finish the job, since that touches `localStorage`, which doesn't exist in a Worker's global scope at all (confirmed: this crashed outright the first time `keep`'s handler tried to do both from inside the worker). |
 | `keep-failed` | `{ saveId: string, message: string, quotaExceeded: boolean }` | **Added 2026-09-18 (FR-014).** `keep` failed — `quotaExceeded` distinguishes a storage-quota failure from any other. Never corrupts a previously kept save (see `storage/queries.ts`'s `markSaveKept`/`recordKeptSave` split and their ordering). |
+
+**Added 2026-09-24 (015 — save format support)**: the `decompressing`
+phase, the `unrecognized-format` / `damaged-save` / `binary-unavailable`
+error kinds, and `ready.warnings`. See
+`specs/015-save-format-support/contracts/worker-protocol-delta.md` for
+their exact meaning and player-facing messages.
 
 ## Rules
 

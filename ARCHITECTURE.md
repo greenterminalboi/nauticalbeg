@@ -1794,3 +1794,105 @@ Explored whether Population/Development/Tax Base map modes could read as a heat/
 **What shipped**: `MapLayer.getHeight?()`, an optional 0..1 value each numeric layer can supply alongside its existing `getFill()` — only Population/Development/Tax Base implement it (their existing rank value, reused as-is so height and color intensity always agree); every categorical layer is unaffected and pays zero extra draw cost. `MapCanvas.tsx` draws a location twice only when its active layer has height: an unshifted, darkened "shadow" copy first, then the real fill shifted up by `height * EXTRUSION_MAX_CSS_PX / view.scale` — dividing by `view.scale` cancels the zoom factor the same way `BORDER_WIDTH_SCREEN_PX` already does elsewhere in that file, so the apparent height stays a constant few CSS pixels regardless of zoom rather than growing/shrinking with it. Reads as a subtle embossed/relief look, not true 3D; verified live against the real save with no measurable pan/zoom performance regression.
 
 **Deliberately marked experimental in code** (`EXPERIMENTAL (prototype, unshipped)` doc comments throughout `MapCanvas.tsx`/`mapLayers.ts`) — this was never run through `/speckit-specify`, has no `specs/NNN-.../` directory of its own, and its tuning constants (`EXTRUSION_MAX_CSS_PX`, `EXTRUSION_SIDE_DARKEN`, `EXTRUSION_MIN_T`) are left as inline module constants rather than promoted to a settings/config layer, pending a decision on whether to formalize this as a real feature.
+
+## Save Format Support (015): every EU5 save format, melted in-browser (2026-09-25)
+
+Until 015 the app read only **uncompressed text** saves (`SAV…00`): debug-mode
+saves, or ones pre-converted with `rakaly melt`. The game actually writes
+**compressed binary** saves (`SAV…03`, ironman and multiplayer included):
+a binary metadata block, then a zip holding `gamestate` and `string_lookup`.
+Those used to pass the "is this a save" check and then fail deep inside
+jomini.
+
+**Design: melt, then reuse the one text pipeline.** `save-format.ts`
+reads the header's kind code (six kinds, from jomini's envelope: 00 text,
+01 binary, 02/03 zip text/binary, 04/05 split zip). Kind 00 goes to the
+existing parser untouched. Every other kind goes through
+`parser/melter/melt.ts`, which turns it into the same plaintext
+`rakaly melt` would produce, and then `detectVersion`, the `1.3.11`
+adapter and every tab run unchanged. One parser to maintain; downstream
+output is identical by construction. `tests/parser/load-save-formats.test.ts`
+checks this table by table.
+
+**The melter is our own Rust→WASM build of an MIT crate, not pdx-tools.**
+`tools/eu5-melter/` wraps rakaly/jomini's `eu5save` crate (MIT, vendored at
+rev `4461f6e` with one patch, see below). pdx-tools' compiled EU5 module
+was ruled out because pdx-tools is **AGPL-3.0**. The built WASM (~294KB,
+~120KB gzipped) and its glue are **committed** under
+`src/parser/melter/generated/`. `npm run dev`/`build`/`test` never need
+Rust; only `npm run build:melter` does, and it needs rustup's toolchain
+(Homebrew's `rustc` has no wasm32 target, so `build.sh` puts
+`~/.cargo/bin` first on PATH).
+
+**Token table: pdx.tools' file, used with permission.** Binary saves store
+field names as u16 IDs. Paradox doesn't publish the mapping. We ship
+pdx.tools' EU5 table as `public/tokens/eu5.flat`, used with permission
+granted 2026-09-24; `public/tokens/README.md` records provenance and
+hashes. The flat layout's ID rule has a gap at the breakpoint
+(`id > 9999 → entries[id - 1]`). A naive `entries[id]` looked almost right
+but silently shifted every high-range key by one slot. That was only
+caught by diffing against `rakaly melt`, and `tokens.rs` tests now pin it.
+
+**Version overrides.** The pdx.tools table comes from a newer game
+version. Token `0x28de` is `unused_strength` there but `strength` in 1.3.11
+saves, and without the fix the Firepower tab's regiment strength came out
+silently empty. `melter/token-overrides.ts` holds per-version corrections.
+`melt.ts` picks them by melting only the metadata first and reading
+`metadata.version`. `tools/eu5-melter/cross-check.mjs` compares our melt
+key-by-key against rakaly's. On the real 1.3.11 MP save it reports **no
+differences**; rerun it whenever the table, overrides or a supported
+version changes.
+
+**Upstream fixes carried locally** (`tools/eu5-melter/vendor/eu5save/PATCHED.md`, `src/lib.rs`):
+- Lookup-table strings containing spaces were melted unquoted
+  (`Custom_Name=Lil Israel`, 138× in the real save). They're now quoted.
+- Zipped *text* saves were rejected unless the zip also had a
+  `string_lookup` entry. They're now unzipped directly.
+- A truncated compressed save "melted" into garbage, because jomini falls
+  back to "uncompressed" when it can't find a zip. It's now reported as
+  `damaged-save` whenever the header declares a zip but none is found.
+
+**Memory.** Output streams out of WASM in 8MB chunks into a JS-owned
+buffer, pre-sized from the zip's declared gamestate size × 2.2 (a real
+save needs no regrowth), so the ~650MB result never lives in WASM linear
+memory. Linear memory never shrinks, so `melt.ts` calls wasm-bindgen's
+`__wbg_reset_state()` (built with `--experimental-reset-state-function`)
+after every melt. That hands the input copy and inflate buffers to the GC
+before DuckDB ingestion starts.
+
+**Cancellation (real bug found in the browser).** The melt runs
+synchronously inside the Worker, so a cancel or superseding load sent
+during it can only queue. A superseded binary load used to keep going
+after the melt: it posted "Parsing save…" over the newer load's result
+and left its OPFS database behind. `loadSave` now suppresses progress
+once aborted, yields to the event loop after the melt so a queued cancel
+is seen, and `signal.throwIfAborted()`s at every adapter milestone and
+before `onReady`, so an aborted load stops and `finally` deletes its
+database. One limitation remains: the newer load only starts once the
+in-flight melt returns, since the Worker is single-threaded.
+
+**Measured on the real 84MB `MP_RUS_1628` save** (dev server, Chrome
+automation tab):
+
+| | Compressed binary | Melted text (642MB) |
+|---|---|---|
+| decompress/melt | 23.4s | n/a |
+| total to Overview | **139.2s** | 112.3s |
+| Overview figures | identical | identical |
+
+That's 1.24× the melted file's load time, inside SC-003's 1.5×. The same
+melt takes **6.0s** in Node, including with forced unoptimised
+WebAssembly (`--liftoff --no-wasm-tier-up`), and 17.6s in a bare Chrome
+page with the automation debugger attached. So the in-browser melt time
+is inflated by the instrumented session; it still needs timing in an
+ordinary Chrome window.
+
+New error kinds: `unrecognized-format`, `damaged-save`,
+`binary-unavailable`. `ready` gains `warnings` (unknown tokens), shown by
+`LoadWarningNotice`. There is a new progress phase, `decompressing`.
+
+**Test-suite disk leak fixed along the way.** `tests/helpers/duckdb-test-env.ts`
+created a `nauticalbeg-duckdb-test-*` temp folder per test file and never
+deleted it. About 3,200 had built up to **166GB** and filled the disk
+mid-feature. It now removes its folder in `afterAll`, with a process-exit
+backstop.

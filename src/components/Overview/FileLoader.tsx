@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type {
   ErrorKind,
   ErrorMessage as WorkerErrorMessage,
+  LoadWarning,
   ParsePhase,
   ProgressMessage,
   ReadyMessage,
@@ -34,6 +35,7 @@ import { LeaderboardTab } from "./LeaderboardTab";
 import { LeaderboardSideNav } from "./LeaderboardSideNav";
 import type { LeaderboardPage } from "./leaderboardData";
 import { LoadingCircle } from "./LoadingCircle";
+import { LoadWarningNotice } from "./LoadWarningNotice";
 import { MapTab } from "./MapTab";
 import { MarketsTab } from "./MarketsTab";
 import { MarketsSideNav, type MarketsView } from "./MarketsSideNav";
@@ -55,6 +57,9 @@ type ReadyStatus = {
   kept: boolean;
   keepPending: boolean;
   keepError: string | null;
+  /** 015 FR-009: non-blocking load warnings (e.g. unrecognized fields in a
+   * binary save); emptied when the player dismisses the notice. */
+  warnings: LoadWarning[];
   /** plan.md Technical Context — which side-nav category is displayed
    * within Encyclopedia's "Countries" sub-tab; component state, not
    * routing (research.md §4). Defaults to "overview" and is never reset
@@ -241,6 +246,7 @@ export function FileLoader() {
         kept: meta.kept,
         keepPending: false,
         keepError: null,
+        warnings: message.warnings ?? [],
         activeTab: "overview",
       });
     } catch (err) {
@@ -481,6 +487,14 @@ export function FileLoader() {
             />
           ) : (
             <>
+              {isReady && status.warnings.length > 0 && (
+                <LoadWarningNotice
+                  warnings={status.warnings}
+                  onDismiss={() =>
+                    setStatus((prev) => (prev.kind === "ready" ? { ...prev, warnings: [] } : prev))
+                  }
+                />
+              )}
               {activeSection === "nauticalbot" && <ComingSoonPlaceholder feature="NauticalBot" />}
               {activeSection === "map" &&
                 // Save-wide, not nation-scoped, like Wars above — same
@@ -594,6 +608,7 @@ function StatusView({
       );
     case "resuming":
     case "validating":
+    case "decompressing":
     case "detecting-version":
     case "parsing":
     case "loading-overview":
@@ -635,7 +650,14 @@ function ActiveTabContent({ status, db }: { status: ReadyStatus; db: SaveDatabas
 // them, not just Countries (previously the only tab with any loading
 // feedback at all; every other tab just showed its own "select a save"
 // idle text while a load was clearly already in progress).
-const LOADING_STATUS_KINDS = ["resuming", "validating", "detecting-version", "parsing", "loading-overview"] as const;
+const LOADING_STATUS_KINDS = [
+  "resuming",
+  "validating",
+  "decompressing",
+  "detecting-version",
+  "parsing",
+  "loading-overview",
+] as const;
 
 function isLoadingStatus(status: Status): boolean {
   return (LOADING_STATUS_KINDS as readonly string[]).includes(status.kind);
@@ -648,7 +670,16 @@ function isLoadingStatus(status: Status): boolean {
 // sub-progress has gotten within the current one — never a fabricated
 // estimate of time remaining within a stage that reports no progress of
 // its own (constitution Principle IV).
-const LOADING_STAGE_ORDER = ["validating", "detecting-version", "parsing", "loading-overview"] as const;
+// "decompressing" (015) only happens for compressed/binary saves; a plain
+// text save reaches "detecting-version" straight from "validating", which
+// just reads as that stage completing quickly — still a real milestone.
+const LOADING_STAGE_ORDER = [
+  "validating",
+  "decompressing",
+  "detecting-version",
+  "parsing",
+  "loading-overview",
+] as const;
 
 function loadingLabel(status: Status): string {
   switch (status.kind) {
@@ -656,6 +687,8 @@ function loadingLabel(status: Status): string {
       return "Resuming kept save…";
     case "validating":
       return "Validating file…";
+    case "decompressing":
+      return "Decompressing save…";
     case "detecting-version":
       return "Detecting game version…";
     case "parsing":
@@ -671,7 +704,7 @@ function loadingLabel(status: Status): string {
  * stage — "validating" (bytes read) and "parsing" (the adapter's own
  * extraction milestones, 1.3.11.ts's PARSE_MILESTONES). Every other
  * stage has no finer signal than "reached." */
-const STAGES_WITH_SUB_PROGRESS = new Set<Status["kind"]>(["validating", "parsing"]);
+const STAGES_WITH_SUB_PROGRESS = new Set<Status["kind"]>(["validating", "decompressing", "parsing"]);
 
 function hasKnownSubProgress(status: Status): boolean {
   return STAGES_WITH_SUB_PROGRESS.has(status.kind) && "percent" in status && status.percent !== null;

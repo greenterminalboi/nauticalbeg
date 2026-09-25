@@ -1,5 +1,5 @@
 # Spec-Driven Development Status
-<!-- spec-status: project=nauticalbeg commit=436ecc1bae776b616bc2eb1f130d4b983d73ac40 updated=2026-09-22T15:03:04Z -->
+<!-- spec-status: project=nauticalbeg commit=55fa68634d62467792a94d140db4d9128752168a updated=2026-09-25T12:45:16Z -->
 
 | Feature                        | Specify | Plan | Tasks | Implement |
 |--------------------------------|---------|------|-------|-----------|
@@ -16,6 +16,8 @@
 | 011-atlas-map-modes            | -       | ✓    | ✓     | ✓ Complete |
 | 012-firepower-tab              | ✓       | ✓    | ✓     | ✓ Complete |
 | 013-diplomatic-relations-chord | ✓       | ✓    | ✓     | ✓ Complete |
+| 014-country-province-map-modes | ✓       | ✓    | ✓     | ● 49/53 (92%) |
+| 015-save-format-support        | ✓       | ✓    | ✓     | ● 35/36 (97%) |
 
 <!-- feature: 001-save-import-overview has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=46 tasks_completed=46 checklist_files=requirements.md -->
 <!-- feature: 002-db-technology-migration has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=86 tasks_completed=19 checklist_files=requirements.md -->
@@ -30,3 +32,5 @@
 <!-- feature: 011-atlas-map-modes has_spec=false has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=false has_contracts=false has_checklists=true tasks_total=29 tasks_completed=29 checklist_files=requirements.md -->
 <!-- feature: 012-firepower-tab has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=34 tasks_completed=34 checklist_files=requirements.md -->
 <!-- feature: 013-diplomatic-relations-chord has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=32 tasks_completed=32 checklist_files=requirements.md -->
+<!-- feature: 014-country-province-map-modes has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=53 tasks_completed=49 checklist_files=requirements.md -->
+<!-- feature: 015-save-format-support has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=36 tasks_completed=35 checklist_files=requirements.md -->

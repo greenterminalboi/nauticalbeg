@@ -16,6 +16,14 @@ composition method" section at the bottom for exactly how it was derived.
 
 ## File shape
 
+> **Update 2026-09-25 (015):** everything below describes the *melted*
+> (uncompressed text, `SAV…00`) form. What the game actually writes is a
+> **compressed binary** save (`SAV…03`): a binary metadata block followed by
+> a zip containing `gamestate` (binary, starting with the same metadata
+> block) and `string_lookup`. As of 015 those are melted in-browser to
+> exactly this text form before parsing. See
+> `specs/015-save-format-support/research.md`.
+
 - Plain ASCII text, Clausewitz key-value syntax: `key=value`, `key={ ... }`,
   nested arbitrarily deep. Tab-indented.
 - First line is a header/magic string before any `{`, e.g.

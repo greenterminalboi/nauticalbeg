@@ -1,0 +1,38 @@
+[package]
+name = "eu5_melter"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+description = "In-browser EU5 save melter (binary/compressed -> plaintext) for NauticalBeg — see specs/015-save-format-support"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "make-fixtures"
+path = "src/bin/make-fixtures.rs"
+required-features = ["encoder"]
+
+[features]
+default = []
+# Test-only text -> EU5 binary encoder used to generate committed fixtures
+# (research R7). Never compiled into the shipped WASM.
+encoder = ["dep:zip"]
+
+[dependencies]
+# Vendored copy of rakaly/jomini's `eu5save` at rev 4461f6e with our
+# lookup-quoting patch applied (research R5) — see vendor/eu5save/PATCHED.md.
+eu5save = { path = "vendor/eu5save" }
+jomini = { git = "https://github.com/rakaly/jomini", rev = "4461f6e41b28cf7888e2a849858029f9fe4b5a52", features = ["envelope"] }
+wasm-bindgen = "=0.2.128"
+js-sys = "0.3"
+zip = { version = "2", optional = true, default-features = false, features = ["deflate"] }
+
+[patch.crates-io]
+jomini = { git = "https://github.com/rakaly/jomini", rev = "4461f6e41b28cf7888e2a849858029f9fe4b5a52" }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

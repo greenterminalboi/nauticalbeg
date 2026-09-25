@@ -11,9 +11,11 @@ import {
 } from "../storage/db";
 import { getPlayerNationOverview, getSaveMeta } from "../storage/queries";
 import { readFileAsBytes } from "./save-reader";
-import { detectVersion, looksLikeSaveFile } from "./version-detect";
+import { parseSaveHeader, type HeaderErrorKind } from "./save-format";
+import { detectVersion } from "./version-detect";
+import { MelterUnavailableError, MeltFailedError, meltSave } from "./melter/melt";
 import { parseAndStore as parseAndStore_1_3_11 } from "./version-adapters/1.3.11";
-import type { ErrorKind, ParsePhase } from "./protocol";
+import type { ErrorKind, LoadWarning, ParsePhase } from "./protocol";
 
 type Adapter = typeof parseAndStore_1_3_11;
 
@@ -29,6 +31,7 @@ export interface LoadCallbacks {
     saveId: string;
     inGameDate: string;
     playerNationTag: string;
+    warnings?: LoadWarning[];
   }) => void;
   onError: (
     kind: ErrorKind,
@@ -38,6 +41,18 @@ export interface LoadCallbacks {
 }
 
 const PROGRESS_INTERVAL_MS = 1000; // FR-008: at least once per second
+
+// Player-facing copy for 015's error kinds — verbatim from
+// specs/015-save-format-support/contracts/worker-protocol-delta.md.
+const HEADER_ERROR_MESSAGES: Record<HeaderErrorKind, string> = {
+  "not-a-save": "This doesn't look like a recognized EU5 save file.",
+  "damaged-save":
+    "This save file appears damaged or incomplete. Try copying it again from your EU5 save games folder.",
+  "unrecognized-format":
+    "This save uses a format NauticalBeg doesn't recognize. It may come from a newer game version.",
+};
+const BINARY_UNAVAILABLE_MESSAGE =
+  "Ironman and binary saves can't be read right now. You can still load a text save (a debug-mode save, or one converted with rakaly melt).";
 
 /**
  * Reads, validates, detects the version of, and parses `file` into a new
@@ -74,17 +89,27 @@ export async function loadSave(
   let db: SaveDatabase | null = null;
   let saveId: string | null = null;
   let reachedReady = false;
+  // A cancelled/superseded load must go silent: before 015 the only
+  // synchronous gaps were short, but a binary save's melt blocks the
+  // Worker for many seconds, during which a cancel can only queue. Found
+  // live in 015's browser check — a superseded binary load kept posting
+  // "Parsing save…" over the newer load's result and left its database
+  // behind. So: no progress once aborted, re-check after every long step,
+  // and never report ready for an aborted load (see also throwIfAborted).
+  const progress: LoadCallbacks["onProgress"] = (phase, percent) => {
+    if (!signal.aborted) callbacks.onProgress(phase, percent);
+  };
   try {
-    callbacks.onProgress("validating", null);
+    progress("validating", null);
 
     let lastProgressPost = 0;
-    const data = await readFileAsBytes(
+    const rawData = await readFileAsBytes(
       file,
       ({ bytesRead, totalBytes }) => {
         const now = Date.now();
         if (now - lastProgressPost >= PROGRESS_INTERVAL_MS) {
           lastProgressPost = now;
-          callbacks.onProgress(
+          progress(
             "validating",
             totalBytes > 0 ? Math.round((bytesRead / totalBytes) * 100) : null,
           );
@@ -93,15 +118,63 @@ export async function loadSave(
       signal,
     );
 
-    if (!looksLikeSaveFile(data)) {
-      callbacks.onError(
-        "not-a-save",
-        "This doesn't look like a recognized EU5 save file.",
-      );
+    // 015: route by the header's declared format. Plain text (kind 00)
+    // goes straight to the existing parser; everything else — what the
+    // game actually writes, ironman included — is melted to that same
+    // plaintext first, so version detection, the adapter, and every tab
+    // are identical regardless of input format (FR-004).
+    const format = parseSaveHeader(rawData);
+    if ("error" in format) {
+      callbacks.onError(format.error, HEADER_ERROR_MESSAGES[format.error]);
       return;
     }
 
-    callbacks.onProgress("detecting-version", null);
+    let data = rawData;
+    const warnings: LoadWarning[] = [];
+    if (format.kindCode !== 0) {
+      progress("decompressing", 0);
+      let lastMeltPost = 0;
+      try {
+        const melted = await meltSave(rawData, {
+          signal,
+          onProgress: (percent) => {
+            const now = Date.now();
+            if (now - lastMeltPost >= PROGRESS_INTERVAL_MS) {
+              lastMeltPost = now;
+              progress("decompressing", percent);
+            }
+          },
+        });
+        data = melted.text;
+        const unknown = melted.unknownTokenCount + melted.unknownLookupCount;
+        if (unknown > 0) {
+          warnings.push({
+            kind: "unknown-tokens",
+            count: unknown,
+            message: `${unknown} ${unknown === 1 ? "field" : "fields"} in this save weren't recognized; some data may be incomplete.`,
+          });
+        }
+      } catch (err) {
+        if (signal.aborted) return;
+        if (err instanceof MelterUnavailableError) {
+          callbacks.onError("binary-unavailable", BINARY_UNAVAILABLE_MESSAGE);
+          return;
+        }
+        if (err instanceof MeltFailedError) {
+          callbacks.onError(err.kind, HEADER_ERROR_MESSAGES[err.kind]);
+          return;
+        }
+        throw err;
+      }
+      // melt is synchronous inside the Worker, so a cancel sent during it
+      // is still sitting in the message queue — yield once so it's
+      // processed before any database gets created.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (signal.aborted) return;
+      progress("decompressing", 100);
+    }
+
+    progress("detecting-version", null);
     const version = await detectVersion(data);
     const adapter = version ? ADAPTERS[version] : undefined;
     if (!version || !adapter) {
@@ -115,7 +188,8 @@ export async function loadSave(
       return;
     }
 
-    callbacks.onProgress("parsing", null);
+    if (signal.aborted) return;
+    progress("parsing", null);
     saveId = crypto.randomUUID();
     db = await openSaveDatabase(saveId);
     await applySchema(db);
@@ -124,9 +198,14 @@ export async function loadSave(
     // 007/009 made "parsing" long enough on a real large save that
     // reporting it exactly once, with no update until the whole function
     // returned, read as stuck rather than merely pulsing-but-working.
-    const summary = await adapter(db, saveId, file.name, data, (percent) =>
-      callbacks.onProgress("parsing", percent),
-    );
+    // Throwing from the milestone callback stops a cancelled adapter at
+    // its next milestone rather than letting it run to completion; the
+    // catch below treats it as a cancel and `finally` deletes the database.
+    const summary = await adapter(db, saveId, file.name, data, (percent) => {
+      signal.throwIfAborted();
+      progress("parsing", percent);
+    });
+    signal.throwIfAborted();
 
     // Close before signaling ready — see this function's doc comment.
     await closeSaveDatabase(db);
@@ -136,6 +215,7 @@ export async function loadSave(
       saveId,
       inGameDate: summary.inGameDate,
       playerNationTag: summary.playerNationTag,
+      ...(warnings.length > 0 ? { warnings } : {}),
     });
     reachedReady = true;
   } catch (err) {
