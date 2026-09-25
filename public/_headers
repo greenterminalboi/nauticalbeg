@@ -1,0 +1,13 @@
+# Cloudflare Pages response headers (016 contracts/hosting-headers.md).
+# The two cross-origin isolation headers must match vite.config.ts's
+# dev-server `headers` — change both together.
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Vite puts a content hash in every filename under /assets/, so a changed
+# file always gets a new URL and these can be cached for good.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

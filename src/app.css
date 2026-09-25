@@ -1,0 +1,34 @@
+/* 016: the unsupported-browser message (FR-008) and the site footer
+   (FR-007 version label, FR-016 fan-tool notice). Plain text in the
+   app's existing tokens; the muted footer text uses on-surface-variant,
+   which meets contrast on the surface color (constitution Principle VI). */
+.app-unsupported {
+  max-width: 40rem;
+  margin: var(--space-xl) auto;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+}
+
+.app-unsupported__title {
+  margin-top: 0;
+  font-family: var(--font-display);
+}
+
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface-variant);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+}
+
+.app-footer__version {
+  font-variant-numeric: tabular-nums;
+}

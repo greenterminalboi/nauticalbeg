@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { RulerHistoryChart } from "../../src/components/Overview/RulerHistoryChart";
 import { LeaderboardChart } from "../../src/components/Overview/LeaderboardChart";
@@ -56,6 +56,12 @@ beforeEach(() => {
   });
 });
 
+// vi.spyOn spies otherwise keep their call history across tests, so a
+// `toHaveBeenCalledWith` wait could pass on a previous test's call.
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("RulerHistoryChart", () => {
   it("defaults selection to every human-played country, like LeaderboardTab's own graph (spec FR-008)", async () => {
     vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue([
@@ -74,9 +80,13 @@ describe("RulerHistoryChart", () => {
     await waitFor(() =>
       expect(leaderboardData.loadRulerHistory).toHaveBeenCalledWith(fakeDb, [1]),
     );
-    const props = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0];
-    expect(props.series).toHaveLength(1);
-    expect(props.series[0]).toMatchObject({ nationIdx: 1, label: "RUS" });
+    // Assert inside waitFor: the chart re-renders with the loaded history
+    // a tick after loadRulerHistory is called, not synchronously.
+    await waitFor(() => {
+      const props = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0];
+      expect(props.series).toHaveLength(1);
+      expect(props.series[0]).toMatchObject({ nationIdx: 1, label: "RUS" });
+    });
   });
 
   it("falls back to a non-empty default when no country is human-played (spec FR-008)", async () => {
@@ -116,8 +126,10 @@ describe("RulerHistoryChart", () => {
     await waitFor(() =>
       expect(leaderboardData.loadRulerHistory).toHaveBeenLastCalledWith(fakeDb, [1, 2]),
     );
-    const series = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].series;
-    expect(series.map((s) => s.nationIdx).sort()).toEqual([1, 2]);
+    await waitFor(() => {
+      const series = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].series;
+      expect(series.map((s) => s.nationIdx).sort()).toEqual([1, 2]);
+    });
   });
 
   it("removing a country via the standard search input drops it from the selection and its series", async () => {
@@ -143,8 +155,10 @@ describe("RulerHistoryChart", () => {
     await waitFor(() =>
       expect(leaderboardData.loadRulerHistory).toHaveBeenLastCalledWith(fakeDb, [1]),
     );
-    const series = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].series;
-    expect(series.some((s) => s.nationIdx === 2)).toBe(false);
+    await waitFor(() => {
+      const series = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].series;
+      expect(series.some((s) => s.nationIdx === 2)).toBe(false);
+    });
   });
 
   it("passes step, a fixed 0-300 y-axis range, and a fixed [1337, current year] x-axis range to LeaderboardChart", async () => {
@@ -156,11 +170,12 @@ describe("RulerHistoryChart", () => {
 
     render(<RulerHistoryChart db={fakeDb} />);
 
-    await waitFor(() => expect(screen.getByTestId("leaderboard-chart")).toBeInTheDocument());
-    const props = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0];
-    expect(props.step).toBe(true);
-    expect(props.yAxisRange).toEqual([0, 300]);
-    expect(props.xAxisRange).toEqual([1337, 1450]);
+    await waitFor(() => {
+      const props = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0];
+      expect(props.step).toBe(true);
+      expect(props.yAxisRange).toEqual([0, 300]);
+      expect(props.xAxisRange).toEqual([1337, 1450]);
+    });
   });
 
   it("the x-axis range stays [1337, current year] regardless of which countries are selected (deadset, not auto-scaled)", async () => {
@@ -176,8 +191,9 @@ describe("RulerHistoryChart", () => {
 
     render(<RulerHistoryChart db={fakeDb} />);
 
-    await waitFor(() => expect(screen.getByTestId("leaderboard-chart")).toBeInTheDocument());
-    expect(vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].xAxisRange).toEqual([1337, 1450]);
+    await waitFor(() =>
+      expect(vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].xAxisRange).toEqual([1337, 1450]),
+    );
   });
 
   it("extends the last ruler's score to the save's current date, past their own reign-start point", async () => {
@@ -189,10 +205,11 @@ describe("RulerHistoryChart", () => {
 
     render(<RulerHistoryChart db={fakeDb} />);
 
-    await waitFor(() => expect(screen.getByTestId("leaderboard-chart")).toBeInTheDocument());
-    const points = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].series[0].points;
-    expect(points).toHaveLength(3);
-    expect(points[2]).toEqual({ year: 1450, value: 90 });
+    await waitFor(() => {
+      const points = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].series[0].points;
+      expect(points).toHaveLength(3);
+      expect(points[2]).toEqual({ year: 1450, value: 90 });
+    });
   });
 
   it("a selected country with no scored ruler terms at all is simply absent from series, never a fabricated one", async () => {
@@ -204,10 +221,11 @@ describe("RulerHistoryChart", () => {
 
     render(<RulerHistoryChart db={fakeDb} />);
 
-    await waitFor(() => expect(screen.getByTestId("leaderboard-chart")).toBeInTheDocument());
-    const series = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].series;
-    expect(series).toHaveLength(1);
-    expect(series.some((s) => s.nationIdx === 2)).toBe(false);
+    await waitFor(() => {
+      const series = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].series;
+      expect(series).toHaveLength(1);
+      expect(series.some((s) => s.nationIdx === 2)).toBe(false);
+    });
   });
 
   it("the tooltip formatter looks up the ruler actually reigning at the hovered x (step value), resolves their real name, and falls back to a regnal label for an unresolvable key", async () => {
@@ -227,7 +245,15 @@ describe("RulerHistoryChart", () => {
     );
 
     render(<RulerHistoryChart db={fakeDb} />);
-    await waitFor(() => expect(screen.getByTestId("leaderboard-chart")).toBeInTheDocument());
+    // Wait for the render that has the loaded history, not just the
+    // save's current year: before the country selection resolves, the
+    // chart already renders with an empty history (and the right axis
+    // range), and that render's formatter knows no rulers.
+    await waitFor(() => {
+      const props = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0];
+      expect(props.series).toHaveLength(1);
+      expect(props.xAxisRange).toEqual([1337, 1450]);
+    });
     const formatter = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0].tooltipFormatter!;
 
     // Hovering in 1370 (between the two reigns) must show ruler #1
@@ -266,12 +292,14 @@ describe("RulerHistoryChart", () => {
     await waitFor(() => expect(screen.getByTestId("ranking-table")).toBeInTheDocument());
     expect(screen.queryByTestId("leaderboard-chart")).not.toBeInTheDocument();
 
-    const props = vi.mocked(LeaderboardRankingTable).mock.calls.at(-1)![0];
-    expect(props.title).toBe("Avg Ruler Skill");
-    expect(props.secondaryTitle).toBe("Current Ruler Skill");
-    expect(props.entries).toHaveLength(1);
-    expect(props.entries[0].value).toBeCloseTo(144.25, 1);
-    expect(props.entries[0].secondaryValue).toBe(200);
+    await waitFor(() => {
+      const props = vi.mocked(LeaderboardRankingTable).mock.calls.at(-1)![0];
+      expect(props.title).toBe("Avg Ruler Skill");
+      expect(props.secondaryTitle).toBe("Current Ruler Skill");
+      expect(props.entries).toHaveLength(1);
+      expect(props.entries[0].value).toBeCloseTo(144.25, 1);
+      expect(props.entries[0].secondaryValue).toBe(200);
+    });
 
     // Switching back to Graph restores the chart.
     fireEvent.click(screen.getByRole("button", { name: "Graph" }));

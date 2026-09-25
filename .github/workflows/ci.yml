@@ -1,0 +1,92 @@
+# Checks every push and pull request, then deploys to Cloudflare Pages
+# (016 — specs/016-public-hosting-pipeline/contracts/pipeline.md):
+# - push to main          → check, then deploy to production
+# - pull request (this repo) → check, then deploy a preview + comment its URL
+# - pull request (fork)   → check only; fork code never sees the secrets
+# Setup, rollback and token rotation: docs/hosting.md.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # The Cloudflare Pages project name (docs/hosting.md step 2). Not a secret.
+  PAGES_PROJECT: nauticalbeg
+
+# Production deploys run one at a time and are never cut off halfway; a
+# newer push to the same pull request cancels its older run.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'deploy-production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc -b
+      - name: Tests
+        run: npx vitest run --maxWorkers=2
+      - name: Build
+        run: npx vite build
+      - name: Check build output (size limit, no game art, headers)
+        run: npm run check:dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: dist
+          include-hidden-files: true
+          retention-days: 7
+
+  deploy:
+    needs: check
+    # Pushes to main, and pull requests opened from this repository.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: write
+    steps:
+      # The exact build the checks passed on — never rebuilt here.
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: dist
+      - name: Deploy to Cloudflare Pages
+        id: wrangler
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ env.PAGES_PROJECT }} --branch=${{ github.event_name == 'push' && 'main' || github.head_ref }}
+      - name: Comment the preview URL on the pull request
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.wrangler.outputs.deployment-url }}
+        with:
+          script: |
+            const marker = "<!-- nauticalbeg-preview -->";
+            const sha = context.payload.pull_request.head.sha.slice(0, 7);
+            const body = `${marker}\n**Preview:** ${process.env.PREVIEW_URL}\n\nBuilt from \`${sha}\`. Production is unchanged until this is merged.`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((c) => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

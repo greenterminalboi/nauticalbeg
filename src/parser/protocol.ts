@@ -50,7 +50,9 @@ export type ErrorKind =
   | "parse-failed"
   | "unrecognized-format"
   | "damaged-save"
-  | "binary-unavailable";
+  | "binary-unavailable"
+  // 016: the DuckDB engine (served from jsDelivr in production) couldn't load.
+  | "engine-unavailable";
 
 export interface ErrorMessage {
   type: "error";

@@ -113,6 +113,24 @@ describe("loadSave across save formats", () => {
     }
   });
 
+  // 016 — production loads the engine .wasm from jsDelivr; if that
+  // download fails, the loader must say so rather than blame the save.
+  it("reports engine-unavailable when the database engine can't load", async () => {
+    const openSpy = vi
+      .spyOn(db, "openSaveDatabase")
+      .mockRejectedValue(new db.EngineUnavailableError(new Error("Failed to fetch")));
+    try {
+      const callbacks = await load("rus-1628-minimal.eu5");
+      expect(callbacks.onReady).not.toHaveBeenCalled();
+      expect(callbacks.onError).toHaveBeenCalledWith(
+        "engine-unavailable",
+        expect.stringContaining("Check your connection"),
+      );
+    } finally {
+      openSpy.mockRestore();
+    }
+  });
+
   it("completes with a warning when the save has fields the token table doesn't know", async () => {
     const callbacks = await load("unknown-tokens.bin.eu5");
     expect(callbacks.onError).not.toHaveBeenCalled();

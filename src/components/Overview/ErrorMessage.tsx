@@ -19,6 +19,8 @@ const TITLES: Record<ErrorKind, string> = {
   "unrecognized-format": "Unrecognized Save Format",
   "damaged-save": "Save File Damaged or Incomplete",
   "binary-unavailable": "Ironman & Binary Saves Unavailable",
+  // 016 — public hosting
+  "engine-unavailable": "Couldn't Load the Database Engine",
 };
 
 /**

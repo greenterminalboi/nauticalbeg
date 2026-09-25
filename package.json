@@ -15,6 +15,7 @@
     "generate:encyclopedia": "tsx tools/encyclopedia-scraping/generate.ts",
     "generate:ruler-names": "tsx tools/ruler-names-scraping/generate.ts",
     "postinstall": "patch-package",
+    "check:dist": "tsx tools/check-dist/check-dist.ts dist",
     "build:melter": "bash tools/eu5-melter/build.sh",
     "generate:save-fixtures": "cargo run --manifest-path tools/eu5-melter/Cargo.toml --features encoder --bin make-fixtures"
   },

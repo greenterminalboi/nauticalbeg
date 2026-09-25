@@ -48,3 +48,9 @@ one ID was renamed since then (`0x28de`: `unused_strength` here,
 `src/parser/melter/token-overrides.ts`. When adding support for a new game
 version, re-run `tools/eu5-melter/cross-check.mjs` against a real save of
 that version to find any new overrides.
+
+## Public hosting (recorded 2026-09-25, feature 016)
+
+The project owner confirmed on 2026-09-25 that the pdx.tools permission
+covers serving this file from the public NauticalBeg site
+(`https://nauticalbeg.pages.dev`), not just using it locally.

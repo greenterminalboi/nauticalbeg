@@ -1,6 +1,7 @@
 # Development image: runs the Vite dev server with live reload.
-# (No production/multi-stage build yet — this feature doesn't need a server
-# deployment; add a build/serve stage here when static hosting is set up.)
+# Production hosting doesn't use Docker: the public site is static files on
+# Cloudflare Pages, built and deployed by .github/workflows/ci.yml (see
+# docs/hosting.md). This image stays dev-only.
 FROM node:22-slim
 
 WORKDIR /app

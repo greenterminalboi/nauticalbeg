@@ -8,6 +8,15 @@ Everything runs client-side in your browser — your save file never leaves
 your machine unless you explicitly choose to keep it in local browser
 storage.
 
+## Use it online
+
+NauticalBeg is hosted at **https://nauticalbeg.pages.dev** (the address is
+confirmed once the Cloudflare Pages project exists — see `docs/hosting.md`).
+Nothing to install; your save is still read entirely in your browser.
+
+NauticalBeg is an unofficial fan tool, not affiliated with Paradox
+Interactive.
+
 ## Requirements
 
 - Node.js LTS
@@ -38,9 +47,19 @@ Then open `http://localhost:5173`.
 npm test
 ```
 
+## How it's deployed
+
+Every push to `main` runs the type check, tests and a production build in
+GitHub Actions. If they all pass, that exact build goes live on Cloudflare
+Pages. Pull requests get the same checks plus a preview address posted on
+the PR. Setup from scratch, rolling back a bad deploy, and rotating the
+deploy token are in `docs/hosting.md`. Local development is unchanged
+(`npm run dev`).
+
 ## Project docs
 
 - `ARCHITECTURE.md` — module boundaries, data flow, key technical decisions
+- `docs/hosting.md` — hosting setup, deploys, rollback, token rotation
 - `specs/001-save-import-overview/spec.md` — feature specification
 - `specs/001-save-import-overview/plan.md` — implementation plan
 - `specs/001-save-import-overview/quickstart.md` — manual validation scenarios

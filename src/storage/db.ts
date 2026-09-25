@@ -9,10 +9,9 @@
 // safe, unlike wa-sqlite's Asyncify build; OPFS persistence round-trips
 // correctly; a file may only be held by one handle at a time).
 import * as duckdb from "@duckdb/duckdb-wasm";
-import duckdb_wasm_mvp from "@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url";
 import mvp_worker from "@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url";
-import duckdb_wasm_eh from "@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url";
 import eh_worker from "@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url";
+import { duckdbBundleUrls } from "./engineUrls";
 import {
   tableFromArrays as productionTableFromArrays,
   tableToIPC as productionTableToIPC,
@@ -138,18 +137,56 @@ export function configureDuckDBForTesting(factory: ConnectionFactory): void {
   testConnectionFactory = factory;
 }
 
+/**
+ * The DuckDB engine couldn't be downloaded or started (016
+ * contracts/engine-loading.md) — distinct from a failure inside a save,
+ * so the loader can say "check your connection" instead of blaming the
+ * file.
+ */
+export class EngineUnavailableError extends Error {
+  constructor(cause: unknown) {
+    super("The database engine couldn't be downloaded or started.", { cause });
+    this.name = "EngineUnavailableError";
+  }
+}
+
+/**
+ * The engine .wasm files as local URLs, for dev only. They're imported
+ * dynamically inside a `!PROD` branch so the production build drops them
+ * entirely — both are over Cloudflare Pages' 25 MiB per-file limit, and
+ * production loads them from jsDelivr instead (016 research R2).
+ */
+async function localEngineWasmUrls(): Promise<{ mvpWasm: string; ehWasm: string }> {
+  if (!import.meta.env.PROD) {
+    const [mvp, eh] = await Promise.all([
+      import("@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url"),
+      import("@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url"),
+    ]);
+    return { mvpWasm: mvp.default, ehWasm: eh.default };
+  }
+  return { mvpWasm: "", ehWasm: "" };
+}
+
 async function createProductionConnection(
   path: string,
 ): Promise<{ conn: DuckDBConnectionLike; cleanup: () => Promise<void> }> {
-  const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
-    mvp: { mainModule: duckdb_wasm_mvp, mainWorker: mvp_worker },
-    eh: { mainModule: duckdb_wasm_eh, mainWorker: eh_worker },
-  };
+  const MANUAL_BUNDLES = duckdbBundleUrls({
+    production: import.meta.env.PROD,
+    version: __DUCKDB_VERSION__,
+    local: { ...(await localEngineWasmUrls()), mvpWorker: mvp_worker, ehWorker: eh_worker },
+  });
   const bundle = await duckdb.selectBundle(MANUAL_BUNDLES);
   const worker = new Worker(bundle.mainWorker!);
   const logger = new duckdb.VoidLogger();
   const asyncDb = new duckdb.AsyncDuckDB(logger, worker);
-  await asyncDb.instantiate(bundle.mainModule, bundle.pthreadWorker);
+  try {
+    await asyncDb.instantiate(bundle.mainModule, bundle.pthreadWorker);
+  } catch (err) {
+    // In production this is where the engine .wasm is downloaded from
+    // jsDelivr (016), so a network failure lands here.
+    worker.terminate();
+    throw new EngineUnavailableError(err);
+  }
   // Every connection in this app is READ_WRITE — DuckDB has no
   // SQLite-style "write must come from a dedicated Worker" restriction
   // (confirmed via a real Chrome session), so write-safety here is a

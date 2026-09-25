@@ -6,6 +6,7 @@ import {
   applySchema,
   closeSaveDatabase,
   deleteSaveDatabase,
+  EngineUnavailableError,
   openSaveDatabase,
   type SaveDatabase,
 } from "../storage/db";
@@ -51,6 +52,8 @@ const HEADER_ERROR_MESSAGES: Record<HeaderErrorKind, string> = {
   "unrecognized-format":
     "This save uses a format NauticalBeg doesn't recognize. It may come from a newer game version.",
 };
+const ENGINE_UNAVAILABLE_MESSAGE =
+  "Couldn't download the database engine. Check your connection and try again.";
 const BINARY_UNAVAILABLE_MESSAGE =
   "Ironman and binary saves can't be read right now. You can still load a text save (a debug-mode save, or one converted with rakaly melt).";
 
@@ -220,6 +223,10 @@ export async function loadSave(
     reachedReady = true;
   } catch (err) {
     if (signal.aborted) return; // cancelled — not a reportable failure
+    if (err instanceof EngineUnavailableError) {
+      callbacks.onError("engine-unavailable", ENGINE_UNAVAILABLE_MESSAGE);
+      return;
+    }
     callbacks.onError(
       "parse-failed",
       err instanceof Error ? err.message : "Failed to parse the save file.",
@@ -292,6 +299,10 @@ export async function resumeSave(
 
     callbacks.onReady({ saveId, inGameDate: meta.inGameDate, playerNationTag });
   } catch (err) {
+    if (err instanceof EngineUnavailableError) {
+      callbacks.onError("engine-unavailable", ENGINE_UNAVAILABLE_MESSAGE);
+      return;
+    }
     callbacks.onError(
       "parse-failed",
       err instanceof Error ? err.message : "Failed to resume this kept save.",

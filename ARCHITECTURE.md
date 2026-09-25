@@ -2,8 +2,10 @@
 
 NauticalBeg is a client-only web app: everything — reading the save file,
 parsing it, storing the parsed result, and rendering it — runs in the
-browser. There is no backend for this feature (see
-`specs/001-save-import-overview/plan.md`).
+browser. There is no backend (see
+`specs/001-save-import-overview/plan.md`): the public site is static
+files on Cloudflare Pages, deployed by GitHub Actions (see "Public
+hosting (016)" below).
 
 This document is a living summary; update it whenever the as-built design
 diverges from what's described here.
@@ -179,8 +181,12 @@ bundle (the one actually selected in testing, per `selectBundle`'s
 feature detection) does not appear to need cross-origin isolation, but
 this hasn't been specifically confirmed by removing the headers and
 retesting — left in place as a known-working configuration rather than
-an unverified simplification. Revisit if choosing a static host that
-makes setting these headers awkward.
+an unverified simplification.
+
+Production sends the same two headers from `public/_headers` (Cloudflare
+Pages applies it; see "Public hosting (016)"). Keep the two copies in
+sync. `npm run check:dist` fails the build if `_headers` is missing
+either one.
 
 ## DuckDB-Wasm allows only one open handle per OPFS file
 
@@ -1896,3 +1902,78 @@ created a `nauticalbeg-duckdb-test-*` temp folder per test file and never
 deleted it. About 3,200 had built up to **166GB** and filled the disk
 mid-feature. It now removes its folder in `afterAll`, with a process-exit
 backstop.
+
+## Public hosting (016): static files on Cloudflare Pages, deployed by GitHub Actions (2026-09-25)
+
+The app is served as plain static files from Cloudflare Pages on its free
+`*.pages.dev` address. There is still no backend: saves are parsed and
+stored in each visitor's own browser exactly as in local development.
+
+**Pipeline** (`.github/workflows/ci.yml`, contract in
+`specs/016-public-hosting-pipeline/contracts/pipeline.md`):
+- `check` job, on every push to `main` and every pull request: `tsc -b`,
+  the vitest suite, `vite build`, then `npm run check:dist`. No secrets.
+- `deploy` job, only after `check` passes: uploads the exact `dist/` that
+  was tested (it is never rebuilt) with `wrangler pages deploy`. Pushes to
+  `main` go to production. Pull requests from this repo go to a preview
+  address that gets posted on the PR. Fork PRs never deploy.
+- Rollback is Cloudflare's "Rollback to this deployment" button, which is
+  instant and doesn't rebuild. Setup, rollback and token rotation are in
+  `docs/hosting.md`.
+
+**The DuckDB engine `.wasm` comes from jsDelivr in production.** Pages
+rejects any file over 25 MiB, and both engine files are larger (eh 34MB,
+mvp 39MB). `src/storage/engineUrls.ts` gives production builds
+`https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@<version>/dist/duckdb-{mvp,eh}.wasm`,
+with `<version>` read from the installed package at build time
+(`__DUCKDB_VERSION__` in `vite.config.ts`), so the binary always matches
+the bundled JS glue. Details:
+- The worker scripts stay self-hosted, because a cross-origin URL can't be
+  passed to `new Worker()`.
+- `db.ts` imports the local `.wasm` files only inside a `!import.meta.env.PROD`
+  branch, so they drop out of the production build entirely. The build went
+  from 126MB to 58MB.
+- jsDelivr sends `cross-origin-resource-policy: cross-origin`, so it loads
+  under our `require-corp` header. It also serves the file Brotli-compressed
+  (~7MB for eh) with a one-year immutable cache.
+- If the download fails, `db.ts` throws `EngineUnavailableError`. The loader
+  reports it as the `engine-unavailable` error kind ("check your
+  connection") instead of blaming the save.
+- It's recorded in the security constitution §6, alongside the one other
+  third-party request: Google Fonts, `@import`ed by `src/styles/tokens.css`
+  since 001. That one was only noticed during 016's browser check, and
+  whether to self-host the fonts is an open decision.
+
+**Caching** (`public/_headers`): `/assets/*` files have content-hashed
+names and are cached immutably for a year. `index.html` and the fixed-name
+data under `map/`, `encyclopedia/` and `tokens/` use Pages' default ETag
+revalidation, so a return visit costs "not modified" replies rather than
+re-downloads, and a new deploy is picked up on the next load.
+
+**`check:dist`** (`tools/check-dist/check-dist.ts`) fails the pipeline on
+any file over 25 MiB, any image/texture file (so game art can't ship by
+accident), or a `_headers` missing an isolation header.
+
+**Small app additions**:
+- `src/browserSupport.ts` checks for WebAssembly, Web Workers and a
+  *working* OPFS (Firefox private windows expose `getDirectory` but reject
+  it). If anything is missing, the app shows a plain message instead of
+  the loader.
+- The footer shows the fan-tool notice and `v<short SHA>`
+  (`__APP_VERSION__`).
+
+**Tests in CI**: test and hook timeouts are 60s (`vitest.config.ts`),
+because DuckDB-heavy tests exceed the 5s default on busy machines and
+small runners. The long-flaky `RulerHistoryChart.test.tsx` had two real
+races:
+- spy call history leaked between tests (no `restoreAllMocks`), so a
+  `toHaveBeenCalledWith` wait could pass on an earlier test's call;
+- assertions read the chart's latest props right after the data *call*,
+  not after the re-render with the data. Before the selection resolves,
+  the chart already renders once with an empty history.
+
+Both are fixed. The file now passes 30/30 sequentially and 30/30 under
+10-way concurrent stress. A first fix that only waited for the axis range
+still failed 15 of 30 under that stress, which is how the empty-history
+render was found.
+
