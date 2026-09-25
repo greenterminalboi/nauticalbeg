@@ -15,7 +15,10 @@ hosting (016)" section of `ARCHITECTURE.md`.
 1. **Cloudflare account**: sign up free at <https://dash.cloudflare.com>.
    No card is needed for Pages.
 2. **Create the Pages project** (Direct Upload):
-   - Workers & Pages → Create → Pages → **Upload assets**.
+   - Workers & Pages → Create → switch to the **Pages** tab → **Upload assets**.
+     Careful: the Create flow defaults to **Workers**. A Worker named
+     `nauticalbeg` makes the deploy fail with "The Pages project does not
+     exist". Check that the dashboard URL contains `/pages/view/`, not `/workers/`.
    - Name it `nauticalbeg`. If that name is taken, note the name Cloudflare
      gives you and put it in `PAGES_PROJECT` at the top of
      `.github/workflows/ci.yml`, and in the address in `README.md`.

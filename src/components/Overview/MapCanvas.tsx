@@ -9,6 +9,7 @@ import type { MapLocationDataset } from "./mapLocationData";
 import type { MapLayer } from "./mapLayers";
 import { NEUTRAL_COLOR } from "./mapLayers";
 import { buildHitTestIndex, type HitTestPolygon } from "./mapHitTest";
+import { clampView, coverScale } from "./mapView";
 import "./MapCanvas.css";
 
 export type MapFeature = Feature<Geometry, { name: string }>;
@@ -37,7 +38,8 @@ interface MapCanvasProps {
 // (research.md §8's scale rationale).
 const WORLD_WIDTH = 360;
 const WORLD_HEIGHT = 180;
-const MIN_SCALE = 0.5;
+// No MIN_SCALE: the floor is the "cover" scale, which depends on the
+// canvas size, so mapView.ts's clampView enforces it on every draw.
 const MAX_SCALE = 400;
 
 // Horizontal wraparound (drawing every polygon once per visible "copy" of
@@ -151,11 +153,18 @@ export function MapCanvas({
     }
 
     const view = viewRef.current;
-    if (!view.initialized && cssWidth > 0 && cssHeight > 0) {
-      view.scale = Math.min(cssWidth / WORLD_WIDTH, cssHeight / WORLD_HEIGHT);
-      view.tx = (cssWidth - WORLD_WIDTH * view.scale) / 2;
-      view.ty = (cssHeight - WORLD_HEIGHT * view.scale) / 2;
-      view.initialized = true;
+    if (cssWidth > 0 && cssHeight > 0) {
+      if (!view.initialized) {
+        // Start fully zoomed out: the map exactly covers the canvas, centered.
+        view.scale = coverScale(cssWidth, cssHeight, WORLD_WIDTH, WORLD_HEIGHT);
+        view.tx = (cssWidth - WORLD_WIDTH * view.scale) / 2;
+        view.ty = (cssHeight - WORLD_HEIGHT * view.scale) / 2;
+        view.initialized = true;
+      }
+      // Lock the view to the map: no zooming out past it, no panning off its
+      // edges. Done here, not only in the handlers, so a canvas resize
+      // (sidebar collapse, window resize) is re-clamped too.
+      clampView(view, cssWidth, cssHeight, WORLD_WIDTH, WORLD_HEIGHT);
     }
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -271,7 +280,8 @@ export function MapCanvas({
     const view = viewRef.current;
     const [wx, wy] = screenToWorld(e.clientX, e.clientY);
     const zoomFactor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-    const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, view.scale * zoomFactor));
+    // The lower bound (the map covering the canvas) is applied by clampView in draw().
+    const nextScale = Math.min(MAX_SCALE, view.scale * zoomFactor);
     view.tx -= wx * (nextScale - view.scale);
     view.ty -= wy * (nextScale - view.scale);
     view.scale = nextScale;

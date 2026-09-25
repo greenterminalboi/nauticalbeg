@@ -20,8 +20,6 @@ export function App() {
   return (
     <>
       <main>
-        <h1>NauticalBeg</h1>
-        <p>EU5 save analysis — load a save to get started.</p>
         {missing !== null && missing.length > 0 ? (
           <div className="app-unsupported" role="alert">
             <h2 className="app-unsupported__title">This browser window can't run NauticalBeg</h2>
