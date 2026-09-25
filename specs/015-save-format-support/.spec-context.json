@@ -3,7 +3,7 @@
   "specName": "Save Format Support (Compressed & Ironman Saves)",
   "branch": "main",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -304,7 +304,15 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-09-25T10:53:42.470Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-25T12:48:55.327Z"
     }
   ],
-  "currentTask": "T025"
+  "currentTask": "T025",
+  "deferred": "T025 (plain-text load-time A/B) deferred by user at close-out 2026-09-25"
 }
