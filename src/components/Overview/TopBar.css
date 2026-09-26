@@ -92,3 +92,26 @@
   color: var(--color-on-primary);
   font-size: 0.85rem;
 }
+
+/* 017: Share — same clasp shape as Keep, in the outlined "secondary"
+   treatment so Keep stays the primary action. Text on the navy bar uses
+   on-primary (white on #0a2540, well over 4.5:1). */
+.top-bar__share {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: 0;
+  cursor: pointer;
+  background: transparent;
+  color: var(--color-on-primary);
+  border: 2px solid var(--color-tertiary);
+  margin: 0 0 var(--space-md);
+}
+
+.top-bar__share:hover,
+.top-bar__share:focus-visible {
+  background: var(--color-primary-deep);
+}

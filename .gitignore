@@ -53,3 +53,6 @@ Thumbs.db
 # committed under src/parser/melter/generated/ instead.
 /tools/eu5-melter/target/
 *.rs.bk
+
+# Local Cloudflare simulation state (wrangler pages dev, 017)
+.wrangler/

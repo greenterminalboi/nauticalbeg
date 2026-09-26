@@ -35,7 +35,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Type check
-        run: npx tsc -b
+        run: npx tsc -b && npx tsc -p functions
       - name: Tests
         run: npx vitest run --maxWorkers=2
       - name: Build
@@ -59,6 +59,14 @@ jobs:
       deployments: write
       pull-requests: write
     steps:
+      # functions/ (the /api/shares Pages Functions) and wrangler.toml (their
+      # R2/KV bindings) come from the same commit; wrangler bundles them.
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            functions
+            wrangler.toml
+          sparse-checkout-cone-mode: false
       # The exact build the checks passed on — never rebuilt here.
       - uses: actions/download-artifact@v8
         with:

@@ -46,6 +46,9 @@ import type { AppSection, EncyclopediaTab, TabId } from "./tabs";
 import { TopBar } from "./TopBar";
 import { WarsTab } from "./WarsTab";
 import "./Shell.css";
+import { ShareDialog } from "./ShareDialog";
+import { isShareErrorKind, SharedLinkMessage } from "./SharedLinkMessage";
+import { parseShareIdFromPath } from "../../share/shareLinks";
 
 type ReadyStatus = {
   kind: "ready";
@@ -57,6 +60,8 @@ type ReadyStatus = {
   kept: boolean;
   keepPending: boolean;
   keepError: string | null;
+  /** 017: set when this session is a shared game opened from a link. */
+  shared: { id: string; expiresAt: string } | null;
   /** 015 FR-009: non-blocking load warnings (e.g. unrecognized fields in a
    * binary save); emptied when the player dismisses the notice. */
   warnings: LoadWarning[];
@@ -135,6 +140,7 @@ export function FileLoader() {
   // open across nation-selector changes and closed only when superseded
   // by a new load or on unmount (see the two effects below).
   const readDbRef = useRef<SaveDatabase | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     const worker = new Worker(new URL("../../parser/worker.ts", import.meta.url), {
@@ -170,6 +176,15 @@ export function FileLoader() {
     // before anything else has happened — a `cancelled` guard covers
     // React StrictMode's double-invoked effects in dev.
     let cancelled = false;
+    // 017: a `/s/<id>` link opens that shared game instead. The kept save
+    // (if any) is left untouched and is offered again once the viewer
+    // leaves the shared game (spec FR-010).
+    const shareId = parseShareIdFromPath(window.location.pathname);
+    if (shareId) {
+      setStatus({ kind: "downloading", percent: null });
+      workerRef.current?.postMessage({ type: "import-share", id: shareId });
+      return;
+    }
     void listKeptSave().then((summary) => {
       if (!cancelled && summary) {
         setStatus({ kind: "kept-save-offer", summary });
@@ -247,6 +262,7 @@ export function FileLoader() {
         keepPending: false,
         keepError: null,
         warnings: message.warnings ?? [],
+        shared: message.shared ?? null,
         activeTab: "overview",
       });
     } catch (err) {
@@ -342,8 +358,15 @@ export function FileLoader() {
     setStatus({ kind: "error", errorKind: message.kind, message: message.message });
   }
 
+  /** Leaving a shared game: the address goes back to the plain app. */
+  function clearShareUrl(): void {
+    if (parseShareIdFromPath(window.location.pathname)) window.history.replaceState(null, "", "/");
+  }
+
   function handleFileSelected(file: File): void {
     if (!workerRef.current) return;
+    clearShareUrl();
+    setShareOpen(false);
     setStatus({ kind: "validating", percent: null });
     workerRef.current.postMessage({
       type: "load",
@@ -354,6 +377,7 @@ export function FileLoader() {
 
   function handleResumeKeptSave(saveId: string): void {
     if (!workerRef.current) return;
+    clearShareUrl();
     setStatus({ kind: "resuming" });
     workerRef.current.postMessage({
       type: "load",
@@ -456,8 +480,16 @@ export function FileLoader() {
         onFileSelected={handleFileSelected}
         keepState={isReady ? { kept: status.kept, pending: status.keepPending, error: status.keepError } : null}
         onKeepToggle={handleKeepToggle}
-        loadedFilename={isReady ? status.filename : null}
+        loadedFilename={
+          isReady
+            ? status.shared
+              ? `Shared game · expires ${new Date(status.shared.expiresAt).toLocaleDateString(undefined, { dateStyle: "medium" })}`
+              : status.filename
+            : null
+        }
+        onShare={isReady && !status.shared && readDbRef.current ? () => setShareOpen(true) : undefined}
       />
+      {shareOpen && readDbRef.current && <ShareDialog db={readDbRef.current} onClose={() => setShareOpen(false)} />}
       {isFactbook && <EncyclopediaNav activeTab={encyclopediaTab} onSelectTab={setEncyclopediaTab} />}
       {showCountriesNav && (
         <CountryViewerNav
@@ -611,6 +643,8 @@ function StatusView({
     case "decompressing":
     case "detecting-version":
     case "parsing":
+    case "downloading":
+    case "importing":
     case "loading-overview":
       // Unreachable in practice: FileLoader's top-level render checks
       // isLoadingStatus() and renders the global LoadingCircle instead of
@@ -621,7 +655,11 @@ function StatusView({
     case "ready":
       return db ? <ActiveTabContent status={status} db={db} /> : null;
     case "error":
-      return <ErrorMessage kind={status.errorKind} message={status.message} />;
+      return isShareErrorKind(status.errorKind) ? (
+        <SharedLinkMessage kind={status.errorKind} />
+      ) : (
+        <ErrorMessage kind={status.errorKind} message={status.message} />
+      );
   }
 }
 
@@ -652,6 +690,8 @@ function ActiveTabContent({ status, db }: { status: ReadyStatus; db: SaveDatabas
 // idle text while a load was clearly already in progress).
 const LOADING_STATUS_KINDS = [
   "resuming",
+  "downloading",
+  "importing",
   "validating",
   "decompressing",
   "detecting-version",
@@ -693,6 +733,10 @@ function loadingLabel(status: Status): string {
       return "Detecting game version…";
     case "parsing":
       return "Parsing save…";
+    case "downloading":
+      return "Downloading shared game…";
+    case "importing":
+      return "Loading shared game…";
     case "loading-overview":
       return "Loading overview…";
     default:
@@ -704,7 +748,16 @@ function loadingLabel(status: Status): string {
  * stage — "validating" (bytes read) and "parsing" (the adapter's own
  * extraction milestones, 1.3.11.ts's PARSE_MILESTONES). Every other
  * stage has no finer signal than "reached." */
-const STAGES_WITH_SUB_PROGRESS = new Set<Status["kind"]>(["validating", "decompressing", "parsing"]);
+const STAGES_WITH_SUB_PROGRESS = new Set<Status["kind"]>([
+  "validating",
+  "decompressing",
+  "parsing",
+  "downloading",
+  "importing",
+]);
+
+// 017: opening a shared game has its own, shorter set of real milestones.
+const SHARED_STAGE_ORDER = ["downloading", "importing", "loading-overview"] as const;
 
 function hasKnownSubProgress(status: Status): boolean {
   return STAGES_WITH_SUB_PROGRESS.has(status.kind) && "percent" in status && status.percent !== null;
@@ -715,6 +768,11 @@ function hasKnownSubProgress(status: Status): boolean {
  * milestone-based number, per LOADING_STAGE_ORDER's doc comment. */
 function computeLoadingPercent(status: Status): number | null {
   if (status.kind === "resuming") return null;
+  const sharedIdx = SHARED_STAGE_ORDER.indexOf(status.kind as (typeof SHARED_STAGE_ORDER)[number]);
+  if (status.kind !== "loading-overview" && sharedIdx !== -1) {
+    const within = hasKnownSubProgress(status) && "percent" in status ? status.percent! / 100 : 0;
+    return ((sharedIdx + within) / SHARED_STAGE_ORDER.length) * 100;
+  }
   const idx = LOADING_STAGE_ORDER.indexOf(status.kind as (typeof LOADING_STAGE_ORDER)[number]);
   if (idx === -1) return null;
   const withinStage = hasKnownSubProgress(status) && "percent" in status ? status.percent! / 100 : 0;

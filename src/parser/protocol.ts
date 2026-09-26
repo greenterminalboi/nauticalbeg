@@ -26,7 +26,13 @@ export interface CancelMessage {
   type: "cancel";
 }
 
-export type MainToWorkerMessage = LoadMessage | CancelMessage;
+/** 017: open a shared game (`/s/<id>`) instead of a file. */
+export interface ImportShareMessage {
+  type: "import-share";
+  id: string;
+}
+
+export type MainToWorkerMessage = LoadMessage | CancelMessage | ImportShareMessage;
 
 /** `decompressing` (added in 015) is sent only for non-plain-text saves,
  * while the melter converts them to plaintext. */
@@ -34,7 +40,10 @@ export type ParsePhase =
   | "validating"
   | "decompressing"
   | "detecting-version"
-  | "parsing";
+  | "parsing"
+  // 017: opening a shared game.
+  | "downloading"
+  | "importing";
 
 export interface ProgressMessage {
   type: "progress";
@@ -52,7 +61,14 @@ export type ErrorKind =
   | "damaged-save"
   | "binary-unavailable"
   // 016: the DuckDB engine (served from jsDelivr in production) couldn't load.
-  | "engine-unavailable";
+  | "engine-unavailable"
+  // 017: opening a shared game (contracts/share-ui.md's SharedLinkMessage).
+  | "share-expired"
+  | "share-deleted"
+  | "share-not-found"
+  | "share-unavailable"
+  | "share-incompatible"
+  | "share-corrupt";
 
 export interface ErrorMessage {
   type: "error";
@@ -75,6 +91,8 @@ export interface ReadyMessage {
   playerNationTag: string;
   /** Omitted when empty. */
   warnings?: LoadWarning[];
+  /** 017: set when this is a shared game opened from a link. */
+  shared?: { id: string; expiresAt: string };
 }
 
 export type WorkerToMainMessage = ProgressMessage | ErrorMessage | ReadyMessage;

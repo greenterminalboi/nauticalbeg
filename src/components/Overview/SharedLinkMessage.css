@@ -1,0 +1,18 @@
+/* 017: a link that can't be opened isn't the viewer's fault, so this uses
+   the neutral vellum panel rather than ErrorMessage's cinnabar wash. */
+.shared-link-message {
+  max-width: 34rem;
+  margin: var(--space-lg) 0;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface-container-low);
+  border: 2px solid var(--color-outline-variant);
+  border-left: 6px solid var(--color-primary);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+}
+
+.shared-link-message__title {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}

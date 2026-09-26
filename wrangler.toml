@@ -1,0 +1,37 @@
+# Cloudflare Pages project config (017: game state sharing).
+# Deployed by .github/workflows/ci.yml together with dist/ and functions/.
+# When this file exists, it is the source of truth for the Pages project's
+# bindings; the dashboard's binding settings are read-only.
+#
+# RATE_LIMIT_SALT is a secret set in the dashboard (Pages project →
+# Settings → Variables and Secrets), for Production and Preview. It is
+# deliberately not in this file. See docs/sharing.md.
+name = "nauticalbeg"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-09-01"
+
+# Production (branch main).
+[[r2_buckets]]
+binding = "SHARES"
+bucket_name = "nauticalbeg-shares"
+
+[[kv_namespaces]]
+binding = "SHARE_LIMITS"
+id = "3857be37c08c425081f601b086916f5f"
+
+[vars]
+# 7 days. Only ever lowered in the preview environment, for expiry tests.
+SHARE_TTL_SECONDS = "604800"
+
+# Preview deployments (pull requests) never touch real shares.
+[env.preview]
+[[env.preview.r2_buckets]]
+binding = "SHARES"
+bucket_name = "nauticalbeg-shares-preview"
+
+[[env.preview.kv_namespaces]]
+binding = "SHARE_LIMITS"
+id = "61aa9cc66a2343fab4fae78315725871"
+
+[env.preview.vars]
+SHARE_TTL_SECONDS = "604800"

@@ -31,6 +31,9 @@ interface TopBarProps {
    * alone, that native reset makes the picker always read "No file
    * chosen" even while a save is actively loaded. */
   loadedFilename?: string | null;
+  /** 017: opens the Share dialog. Omitted when there's nothing to share
+   * (no save loaded) or the session is itself a shared game. */
+  onShare?: () => void;
 }
 
 /**
@@ -51,6 +54,7 @@ export function TopBar({
   keepState,
   onKeepToggle,
   loadedFilename,
+  onShare,
 }: TopBarProps) {
   return (
     <header className="top-bar">
@@ -90,6 +94,11 @@ export function TopBar({
               actually reflects whether a save is loaded. */}
           <span className="top-bar__file-status">{loadedFilename ?? "No file chosen"}</span>
         </label>
+        {onShare && (
+          <button type="button" className="top-bar__share" onClick={onShare}>
+            Share
+          </button>
+        )}
         {keepState && (
           <KeepSaveToggle
             kept={keepState.kept}

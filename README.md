@@ -17,6 +17,12 @@ Nothing to install; your save is still read entirely in your browser.
 NauticalBeg is an unofficial fan tool, not affiliated with Paradox
 Interactive.
 
+## Sharing a game
+
+Once a save is loaded, **Share** uploads the analysed game data (never the
+save file) and gives you a link anyone can open for 7 days. What's stored,
+for how long and why: `docs/sharing.md`.
+
 ## Requirements
 
 - Node.js LTS
@@ -60,6 +66,7 @@ deploy token are in `docs/hosting.md`. Local development is unchanged
 
 - `ARCHITECTURE.md` — module boundaries, data flow, key technical decisions
 - `docs/hosting.md` — hosting setup, deploys, rollback, token rotation
+- `docs/sharing.md` — what sharing stores, for how long, and its setup
 - `specs/001-save-import-overview/spec.md` — feature specification
 - `specs/001-save-import-overview/plan.md` — implementation plan
 - `specs/001-save-import-overview/quickstart.md` — manual validation scenarios
