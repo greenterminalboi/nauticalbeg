@@ -13,7 +13,9 @@ import mvp_worker from "@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?ur
 import eh_worker from "@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url";
 import { duckdbBundleUrls } from "./engineUrls";
 import {
+  Table as ProductionArrowTable,
   tableFromArrays as productionTableFromArrays,
+  tableFromIPC as productionTableFromIPC,
   tableToIPC as productionTableToIPC,
 } from "apache-arrow";
 import schemaSql from "./schema.sql?raw";
@@ -34,12 +36,18 @@ import schemaSql from "./schema.sql?raw";
 // the Node bindings' own internal Arrow code expects.
 let tableFromArrays = productionTableFromArrays;
 let tableToIPC = productionTableToIPC;
+let tableFromIPC = productionTableFromIPC;
+let ArrowTable = ProductionArrowTable;
 export function configureArrowForTesting(fns: {
   tableFromArrays: typeof tableFromArrays;
   tableToIPC: typeof tableToIPC;
+  tableFromIPC: typeof tableFromIPC;
+  Table: typeof ArrowTable;
 }): void {
   tableFromArrays = fns.tableFromArrays;
   tableToIPC = fns.tableToIPC;
+  tableFromIPC = fns.tableFromIPC;
+  ArrowTable = fns.Table;
 }
 
 /** Test-only seam for `insertRows`' chunk size (see that function) — the
@@ -431,6 +439,70 @@ export async function queryArrowIPC(
     }
     const bytes = tableToIPC(result as unknown as import("apache-arrow").Table, "stream");
     return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  });
+}
+
+/**
+ * Inserts one Arrow IPC stream into an existing table (017,
+ * contracts/snapshot-format.md). Two paths:
+ * - The stream's columns are exactly the table's columns, in order (every
+ *   snapshot made by this app version): record batches are grouped into
+ *   ~100k-row chunks and inserted directly.
+ * - Otherwise (a snapshot from an older version, after an additive schema
+ *   change): each chunk goes into a scratch table, then
+ *   `INSERT INTO <table> BY NAME` copies it across, so missing columns take
+ *   their default or NULL.
+ * DuckDB exports Arrow in small record batches (~2k rows). Inserting those
+ * one at a time made a 4.6M-row table take minutes (found in 017's browser
+ * check), hence the grouping. Chunking also bounds peak memory, the same
+ * reason `insertRows` chunks. Returns the number of rows inserted.
+ *
+ * `table` must be a trusted name (it comes from the schema check in
+ * import-snapshot.ts, never straight from shared data).
+ */
+export async function insertArrowIPC(
+  db: SaveDatabase,
+  table: string,
+  ipc: Uint8Array,
+  targetColumns: readonly string[],
+  onChunk?: (rowsSoFar: number) => void,
+): Promise<number> {
+  const IMPORT_CHUNK_ROWS = 100_000;
+  const scratch = `import_scratch_${table}`;
+  return withConnectionQueue(db, async () => {
+    const parsed = tableFromIPC(ipc);
+    const streamColumns = parsed.schema.fields.map((f) => f.name);
+    const direct =
+      streamColumns.length === targetColumns.length && streamColumns.every((c, i) => c === targetColumns[i]);
+    let rows = 0;
+    let pending: (typeof parsed.batches)[number][] = [];
+    let pendingRows = 0;
+    const flush = async () => {
+      if (pending.length === 0) return;
+      const chunk = new ArrowTable(pending);
+      if (direct) {
+        await db.conn.insertArrowTable(chunk, { name: table, create: false });
+      } else {
+        await db.conn.query(`DROP TABLE IF EXISTS ${scratch}`);
+        await db.conn.insertArrowTable(chunk, { name: scratch, create: true });
+        await db.conn.query(`INSERT INTO ${table} BY NAME SELECT * FROM ${scratch}`);
+      }
+      rows += pendingRows;
+      pending = [];
+      pendingRows = 0;
+      onChunk?.(rows);
+    };
+    try {
+      for (const batch of parsed.batches) {
+        pending.push(batch);
+        pendingRows += batch.numRows;
+        if (pendingRows >= IMPORT_CHUNK_ROWS) await flush();
+      }
+      await flush();
+    } finally {
+      if (!direct) await db.conn.query(`DROP TABLE IF EXISTS ${scratch}`);
+    }
+    return rows;
   });
 }
 

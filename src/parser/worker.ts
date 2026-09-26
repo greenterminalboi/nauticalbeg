@@ -10,6 +10,8 @@
 // restriction requiring writes to originate from a dedicated Worker.
 import type { LoadWarning, MainToWorkerMessage, WorkerToMainMessage } from "./protocol";
 import { loadSave, resumeSave } from "./load-save";
+import { importSnapshot } from "./import-snapshot";
+import { downloadShare, ShareDownloadError } from "./download-share";
 import { cleanupSaveIfNotKept } from "../storage/queries";
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
@@ -37,6 +39,7 @@ async function reportReadyAndSupersede(
     inGameDate: string;
     playerNationTag: string;
     warnings?: LoadWarning[];
+    shared?: { id: string; expiresAt: string };
   },
   supersededSaveId: string | null,
 ): Promise<void> {
@@ -88,6 +91,43 @@ async function handleResume(saveId: string): Promise<void> {
   });
 }
 
+/** 017: open a shared game from `/s/<id>`. Superseding and cancel work like `load`. */
+async function handleImportShare(id: string): Promise<void> {
+  const supersededSaveId = lastReadySaveId;
+  lastReadySaveId = null;
+
+  const abortController = new AbortController();
+  currentAbortController = abortController;
+  const { signal } = abortController;
+  try {
+    const { container, expiresAt } = await downloadShare(
+      id,
+      (percent) => {
+        if (!signal.aborted) post({ type: "progress", phase: "downloading", percent });
+      },
+      signal,
+    );
+    if (signal.aborted) return;
+    await importSnapshot(
+      container,
+      {
+        onProgress: (phase, percent) => {
+          if (!signal.aborted) post({ type: "progress", phase, percent });
+        },
+        onReady: (result) => void reportReadyAndSupersede({ ...result, shared: { id, expiresAt } }, supersededSaveId),
+        onError: (kind, message) => post({ type: "error", kind, message }),
+      },
+      signal,
+    );
+  } catch (err) {
+    if (signal.aborted) return;
+    const kind = err instanceof ShareDownloadError ? err.kind : "share-unavailable";
+    post({ type: "error", kind, message: "This shared game couldn't be opened." });
+  } finally {
+    if (currentAbortController === abortController) currentAbortController = null;
+  }
+}
+
 ctx.onmessage = (event: MessageEvent<MainToWorkerMessage>) => {
   const message = event.data;
   switch (message.type) {
@@ -100,6 +140,10 @@ ctx.onmessage = (event: MessageEvent<MainToWorkerMessage>) => {
       } else if (message.file) {
         void handleLoad(message.file);
       }
+      break;
+    case "import-share":
+      currentAbortController?.abort();
+      void handleImportShare(message.id);
       break;
     case "cancel":
       currentAbortController?.abort();

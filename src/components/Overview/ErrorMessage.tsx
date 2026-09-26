@@ -21,6 +21,13 @@ const TITLES: Record<ErrorKind, string> = {
   "binary-unavailable": "Ironman & Binary Saves Unavailable",
   // 016 — public hosting
   "engine-unavailable": "Couldn't Load the Database Engine",
+  // 017 — shared games (SharedLinkMessage.tsx renders these with more help)
+  "share-expired": "This Shared Game Has Expired",
+  "share-deleted": "This Shared Game Was Taken Down",
+  "share-not-found": "This Shared Game Wasn't Found",
+  "share-unavailable": "Sharing Is Temporarily Unavailable",
+  "share-incompatible": "Made With a Different Version of NauticalBeg",
+  "share-corrupt": "This Shared Game Couldn't Be Read",
 };
 
 /**

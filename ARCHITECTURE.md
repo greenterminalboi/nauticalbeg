@@ -1984,3 +1984,86 @@ the map shrink below the canvas or be panned past its edges. The old fixed
 clamping, and `draw()` applies it every time, so canvas resizes are
 re-clamped too. The view starts fully zoomed out at the cover scale.
 
+## Game state sharing (017): one-week links, Arrow + Brotli, Pages Functions + R2 (2026-09-25)
+
+This is the project's first server component. It's opt-in per share, and it
+only stores data. Details: `specs/017-share-game-state/`; the user-facing
+retention statement is in `docs/sharing.md`.
+
+**What's shared is the parsed database, not the save.** Every tab reads only
+the per-save DuckDB. So a share is that database exported as one Arrow IPC
+stream per table:
+- `raw_sections` is excluded, and `save_meta.filename` becomes "Shared game"
+  (`src/share/exportSnapshot.ts`)
+- the streams are packed into an `NBSNAP` container with a JSON manifest
+  (`src/share/snapshotFormat.ts`)
+- the container is Brotli-compressed at quality 5 in a Worker
+  (`src/share/compress.worker.ts`, `brotli-wasm`)
+
+Measured on the real 85MB multiplayer `MP_RUS_1657` save:
+
+| Stage | Size |
+|---|---|
+| Tables as Arrow IPC | 181MB |
+| gzip (the only compression browsers have built in) | 51MB |
+| **Brotli q5** | **13MB, in about 2s** |
+
+Most of the size is `nation_relation_trust`: 4.6M rows of genuinely dense
+nation-pair trust and opinion values.
+
+**Dead end: Parquet.** This DuckDB-Wasm build (1.32.0) doesn't include the
+`parquet` extension. `COPY … (FORMAT PARQUET)` crashed Node's bindings, and in
+a browser it would try to download the extension from `extensions.duckdb.org`:
+a new third-party request that might not load under our `require-corp`
+header. Arrow is what `insertArrowTable` already uses.
+
+**Import** (`src/parser/import-snapshot.ts`, in the parser Worker) mirrors
+`loadSave`:
+1. download (`src/parser/download-share.ts`)
+2. decode the container strictly
+3. check every table and column against the current schema; anything unknown
+   is refused as "made with a different version" (constitution III)
+4. insert each stream with `insertArrowIPC` (db.ts), one record batch at a
+   time: scratch table, then `INSERT INTO t BY NAME`. So an older snapshot
+   still imports after an additive schema change, with missing columns taking
+   their default or NULL.
+5. finish with the usual `ready` message
+
+Everything downstream (tabs, map, keep) is unchanged. `db.ts`'s Arrow test
+seam now also carries `tableFromIPC` and `Table`.
+
+**Backend: same-origin Pages Functions** (`functions/api/shares/`), deployed
+with the site. The deploy job checks out `functions/` and `wrangler.toml`
+next to the tested `dist/`.
+- `POST` streams the upload straight into R2 without reading it (the free
+  plan allows 10ms of CPU per request).
+- `GET` returns the stored bytes with `Content-Encoding: br` and
+  `encodeBody: "manual"`, so the viewer's browser decompresses natively and
+  viewers need no WASM.
+- `DELETE` needs the delete key. Only its SHA-256 is stored.
+
+Limits:
+- 40MiB per upload
+- 5 shares per hour per visitor, tracked in KV with a salted, truncated IP
+  hash that expires after an hour
+- a 1.3GB daily byte budget, which with 7-day retention stays under R2's free
+  10GB
+
+Links:
+- A link expires exactly at 7 days: the Function checks the object's
+  `createdAt`. An R2 lifecycle rule deletes the data within 24 hours after.
+- The 6-byte timestamp in each ID keeps "expired" distinguishable from "not
+  found" after deletion. Early deletes leave a tombstone object, so the link
+  reads "taken down".
+- Preview deployments use separate buckets and KV (`[env.preview]` in
+  `wrangler.toml`).
+
+**UI**:
+- a Share button (hidden for a shared game) opens `ShareDialog`:
+  confirm → preparing → compressing → uploading → link
+- `/s/<id>` makes `FileLoader` import the share instead of offering the kept
+  save, and labels the session "Shared game · expires …"
+- links that can't be opened get `SharedLinkMessage`, with one distinct
+  message per failure
+- the sharer's delete keys live in `localStorage` (`src/share/shareLinks.ts`)
+
