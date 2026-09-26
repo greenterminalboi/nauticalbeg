@@ -209,6 +209,7 @@ export async function loadSave(
       progress("parsing", percent);
     });
     signal.throwIfAborted();
+    if (summary.warnings) warnings.push(...summary.warnings);
 
     // Close before signaling ready — see this function's doc comment.
     await closeSaveDatabase(db);

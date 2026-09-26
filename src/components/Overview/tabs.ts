@@ -12,7 +12,7 @@
  * sub-navigation, and only its "Countries" sub-tab has a nation
  * selector and category tabs.
  */
-export type AppSection = "nauticalbot" | "map" | "factbook" | "encyclopedia" | "settings";
+export type AppSection = "nauticalbot" | "map" | "factbook" | "encyclopedia" | "battle-simulator" | "settings";
 
 /**
  * Which sub-tab is active *within* Factbook (decision 2026-09-19,

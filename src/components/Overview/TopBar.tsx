@@ -13,6 +13,7 @@ const SECTIONS: { id: AppSection; label: string }[] = [
   { id: "map", label: "Atlas" },
   { id: "factbook", label: "Factbook" },
   { id: "encyclopedia", label: "Encyclopedia" },
+  { id: "battle-simulator", label: "Battle Simulator" },
   { id: "settings", label: "Settings" },
 ];
 

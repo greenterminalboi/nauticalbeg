@@ -27,6 +27,7 @@ import { CountryViewerNav } from "./CountryViewerNav";
 import { DiplomacyTab } from "./DiplomacyTab";
 import { EncyclopediaNav } from "./EncyclopediaNav";
 import { EncyclopediaSection } from "./EncyclopediaSection";
+import { BattleSimulatorSection } from "../BattleSimulator/BattleSimulatorSection";
 import { ErrorMessage } from "./ErrorMessage";
 import { FirepowerTab } from "./FirepowerTab";
 import { FirepowerSideNav, type FirepowerView } from "./FirepowerSideNav";
@@ -435,6 +436,9 @@ export function FileLoader() {
   // not the bounded/centered default), even though it isn't
   // Perspective-backed either.
   const isEncyclopediaSection = activeSection === "encyclopedia";
+  // specs/019-battle-simulator: full width — two side panels plus a
+  // timeline chart; works with or without a save (FR-014).
+  const isBattleSimulatorSection = activeSection === "battle-simulator";
   // Leaderboard (006) opted out of full-width originally (its own CSS
   // bounded it instead), but 2026-09-20 decision: give it the same
   // treatment as everything else — its charts are viewBox-scaled SVG
@@ -465,6 +469,7 @@ export function FileLoader() {
     ? "shell__main-inner shell__main-inner--full-width shell__main-inner--flush"
     : isTableTab ||
         isEncyclopediaSection ||
+        isBattleSimulatorSection ||
         isLeaderboardTab ||
         isSocietalCompassTab ||
         isFirepowerTab ||
@@ -538,6 +543,9 @@ export function FileLoader() {
                 ))}
               {activeSection === "settings" && <ComingSoonPlaceholder feature="Settings" />}
               {activeSection === "encyclopedia" && <EncyclopediaSection />}
+              {activeSection === "battle-simulator" && (
+                <BattleSimulatorSection db={isReady ? readDbRef.current : null} />
+              )}
               {isFactbook && encyclopediaTab === "countries" && (
                 <StatusView
                   status={status}

@@ -1,0 +1,1910 @@
+[
+  {
+    "war": "1694498823",
+    "date": "1628.8.3",
+    "location": 3925,
+    "locationName": "opava",
+    "topography": "flatland",
+    "vegetation": "forest",
+    "attackerWon": true,
+    "attacker": {
+      "country": 2147,
+      "generalTrait": "ruthless",
+      "total": [
+        1.83877,
+        77.29477,
+        0,
+        23.45794,
+        7.86448,
+        1.96596
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00887
+    },
+    "defender": {
+      "country": 1979,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        2.354,
+        0,
+        0,
+        0.039,
+        0,
+        0
+      ],
+      "losses": [
+        2.354,
+        0,
+        0,
+        0.039,
+        0,
+        0
+      ],
+      "experience": 21.1581,
+      "prestige": null
+    }
+  },
+  {
+    "war": "1694498823",
+    "date": "1628.8.14",
+    "location": 3411,
+    "locationName": "karcag",
+    "topography": "wetlands",
+    "vegetation": "grasslands",
+    "attackerWon": true,
+    "attacker": {
+      "country": 33556882,
+      "generalTrait": "ruthless",
+      "total": [
+        17.304,
+        1.5,
+        0.8,
+        0.308,
+        0,
+        1.15
+      ],
+      "losses": [
+        0.31374,
+        0,
+        0,
+        0.22156,
+        0,
+        0
+      ],
+      "experience": 0.7278,
+      "prestige": 0.35573
+    },
+    "defender": {
+      "country": 83888429,
+      "generalTrait": "defensive_planner",
+      "total": [
+        4.676,
+        0,
+        0,
+        0.122,
+        0,
+        0
+      ],
+      "losses": [
+        4.676,
+        0,
+        0,
+        0.122,
+        0,
+        0
+      ],
+      "experience": 24.8256,
+      "prestige": -0.02366
+    }
+  },
+  {
+    "war": "2030043139",
+    "date": "1628.1.27",
+    "location": 4087,
+    "locationName": "tysmenytsia",
+    "topography": "flatland",
+    "vegetation": "woods",
+    "attackerWon": false,
+    "attacker": {
+      "country": 1961,
+      "generalTrait": "glory_seeker",
+      "total": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.2
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.2
+      ],
+      "experience": 4.9998,
+      "prestige": null
+    },
+    "defender": {
+      "country": 184551690,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        2.955,
+        0.188,
+        0,
+        0.105,
+        0,
+        0
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.0061
+    }
+  },
+  {
+    "war": "2030043139",
+    "date": "1628.2.9",
+    "location": 4087,
+    "locationName": "tysmenytsia",
+    "topography": "flatland",
+    "vegetation": "woods",
+    "attackerWon": true,
+    "attacker": {
+      "country": 1960,
+      "generalTrait": "offensive_planner",
+      "total": [
+        8.5,
+        0,
+        0,
+        0.13727,
+        0,
+        0.247
+      ],
+      "losses": [
+        0.43554,
+        0,
+        0,
+        0.07158,
+        0,
+        0
+      ],
+      "experience": 1.539,
+      "prestige": 0.58085
+    },
+    "defender": {
+      "country": 184551690,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        2.928,
+        0.18631,
+        0,
+        0.10375,
+        0,
+        0
+      ],
+      "losses": [
+        2.928,
+        0.18631,
+        0,
+        0.10375,
+        0,
+        0
+      ],
+      "experience": 22.8876,
+      "prestige": -0.01547
+    }
+  },
+  {
+    "war": "2030043139",
+    "date": "1628.4.6",
+    "location": 3770,
+    "locationName": "ashmyany",
+    "topography": "flatland",
+    "vegetation": "forest",
+    "attackerWon": true,
+    "attacker": {
+      "country": 33556892,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        32.445,
+        0,
+        0,
+        0.538,
+        0,
+        0
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00406
+    },
+    "defender": {
+      "country": 1969,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        0.495,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "losses": [
+        0.198,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 3.9732,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2030043139",
+    "date": "1628.4.15",
+    "location": 3336,
+    "locationName": "viadineti",
+    "topography": "flatland",
+    "vegetation": "woods",
+    "attackerWon": true,
+    "attacker": {
+      "country": null,
+      "generalTrait": "goal_oriented",
+      "total": [
+        58.494,
+        1.255,
+        0,
+        1.512,
+        0,
+        0.15
+      ],
+      "losses": [
+        1.52303,
+        0,
+        0,
+        0.2,
+        0,
+        0
+      ],
+      "experience": null,
+      "prestige": null
+    },
+    "defender": {
+      "country": 1960,
+      "generalTrait": "offensive_planner",
+      "total": [
+        8.06308,
+        0,
+        0,
+        0.06569,
+        0,
+        0.247
+      ],
+      "losses": [
+        8.06308,
+        0,
+        0,
+        0.06569,
+        0,
+        0.0988
+      ],
+      "experience": 26.3259,
+      "prestige": -0.31195
+    }
+  },
+  {
+    "war": "2030043139",
+    "date": "1628.5.23",
+    "location": 4082,
+    "locationName": "buchach",
+    "topography": "flatland",
+    "vegetation": "woods",
+    "attackerWon": true,
+    "attacker": {
+      "country": 2025,
+      "generalTrait": "hardy_warrior",
+      "total": [
+        0,
+        36,
+        12.8,
+        0,
+        0,
+        0.8
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00342
+    },
+    "defender": {
+      "country": 1961,
+      "generalTrait": "glory_seeker",
+      "total": [
+        1.31768,
+        0,
+        0,
+        0.01825,
+        0,
+        0
+      ],
+      "losses": [
+        1.31768,
+        0,
+        0,
+        0.01825,
+        0,
+        0
+      ],
+      "experience": 17.157,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2030043139",
+    "date": "1628.6.8",
+    "location": 4084,
+    "locationName": "kolomyia",
+    "topography": "hills",
+    "vegetation": "forest",
+    "attackerWon": false,
+    "attacker": {
+      "country": 1960,
+      "generalTrait": "goal_oriented",
+      "total": [
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "losses": [
+        0.8,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 7.9998,
+      "prestige": null
+    },
+    "defender": {
+      "country": 184551690,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        26.909,
+        1.255,
+        0,
+        0.917,
+        0,
+        0
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.02435
+    }
+  },
+  {
+    "war": "2030043139",
+    "date": "1628.6.18",
+    "location": 3808,
+    "locationName": "rokiskis",
+    "topography": "flatland",
+    "vegetation": "woods",
+    "attackerWon": true,
+    "attacker": {
+      "country": 2025,
+      "generalTrait": "hardy_warrior",
+      "total": [
+        0,
+        38,
+        12.8,
+        0,
+        0,
+        0.8
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00522
+    },
+    "defender": {
+      "country": 16779560,
+      "generalTrait": "hardy_warrior",
+      "total": [
+        2,
+        1.5,
+        0.8,
+        0.6,
+        0,
+        0.2
+      ],
+      "losses": [
+        0.8,
+        0.6,
+        0.32,
+        0.24,
+        0,
+        0.08
+      ],
+      "experience": 10.0326,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2030043139",
+    "date": "1628.7.31",
+    "location": 4080,
+    "locationName": "halych",
+    "topography": "flatland",
+    "vegetation": "farmland",
+    "attackerWon": true,
+    "attacker": {
+      "country": 184551690,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        26.909,
+        1.255,
+        0,
+        0.917,
+        0,
+        0
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00608
+    },
+    "defender": {
+      "country": 1960,
+      "generalTrait": "goal_oriented",
+      "total": [
+        0.5,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "losses": [
+        0.2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 3.9999,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2030043139",
+    "date": "1628.8.6",
+    "location": 4088,
+    "locationName": "lviv",
+    "topography": "flatland",
+    "vegetation": "farmland",
+    "attackerWon": true,
+    "attacker": {
+      "country": 184551690,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        26.909,
+        1.255,
+        0,
+        0.917,
+        0,
+        0
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00668
+    },
+    "defender": {
+      "country": 16779560,
+      "generalTrait": "glory_seeker",
+      "total": [
+        0,
+        0,
+        0,
+        0,
+        0.44,
+        0.11
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0.176,
+        0.044
+      ],
+      "experience": 4.2579,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1625.11.15",
+    "location": 6352,
+    "locationName": "andijan",
+    "topography": "flatland",
+    "vegetation": "grasslands",
+    "attackerWon": true,
+    "attacker": {
+      "country": 898,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        23.103,
+        0,
+        0,
+        1.463,
+        0,
+        0
+      ],
+      "losses": [
+        0.69082,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.8106,
+      "prestige": 0.04008
+    },
+    "defender": {
+      "country": 16777680,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        6.535,
+        0,
+        0,
+        0.14,
+        0,
+        0
+      ],
+      "losses": [
+        6.535,
+        0,
+        0,
+        0.14,
+        0,
+        0
+      ],
+      "experience": 26.091,
+      "prestige": -0.00231
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1625.11.18",
+    "location": 6352,
+    "locationName": "andijan",
+    "topography": "flatland",
+    "vegetation": "grasslands",
+    "attackerWon": false,
+    "attacker": {
+      "country": 1028,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        3.598,
+        0.066,
+        0,
+        0.114,
+        0,
+        0
+      ],
+      "losses": [
+        3.598,
+        0.066,
+        0,
+        0.114,
+        0,
+        0
+      ],
+      "experience": 23.721,
+      "prestige": -0.06358
+    },
+    "defender": {
+      "country": 898,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        22.41,
+        0,
+        0,
+        1.463,
+        0,
+        0
+      ],
+      "losses": [
+        0.28755,
+        0,
+        0,
+        0.05522,
+        0,
+        0
+      ],
+      "experience": 0.4134,
+      "prestige": 0.02268
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.2.23",
+    "location": 6095,
+    "locationName": "fayzabad",
+    "topography": "mountains",
+    "vegetation": "sparse",
+    "attackerWon": false,
+    "attacker": {
+      "country": 1028,
+      "generalTrait": "goal_oriented",
+      "total": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.15
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.15
+      ],
+      "experience": 3.9129,
+      "prestige": null
+    },
+    "defender": {
+      "country": 33556893,
+      "generalTrait": "offensive_planner",
+      "total": [
+        9.105,
+        1.5,
+        0.6,
+        0.401,
+        0,
+        0.15
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.01982
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.4.29",
+    "location": 6345,
+    "locationName": "kerben",
+    "topography": "hills",
+    "vegetation": "woods",
+    "attackerWon": false,
+    "attacker": {
+      "country": 898,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        21.537,
+        0,
+        0,
+        1.352,
+        0,
+        0
+      ],
+      "losses": [
+        15.29634,
+        0,
+        0,
+        1.352,
+        0,
+        0
+      ],
+      "experience": 20.907,
+      "prestige": -0.06016
+    },
+    "defender": {
+      "country": 16777680,
+      "generalTrait": "ruthless",
+      "total": [
+        44.038,
+        0,
+        0,
+        1.797,
+        0,
+        0
+      ],
+      "losses": [
+        9.76511,
+        0,
+        0,
+        0.27881,
+        0,
+        0
+      ],
+      "experience": 6.4335,
+      "prestige": 0.05662
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.5.27",
+    "location": 6134,
+    "locationName": "oksu",
+    "topography": "hills",
+    "vegetation": "desert",
+    "attackerWon": true,
+    "attacker": {
+      "country": 898,
+      "generalTrait": "ruthless",
+      "total": [
+        15.651,
+        0,
+        0.136,
+        1.072,
+        0,
+        0
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00238
+    },
+    "defender": {
+      "country": 16777680,
+      "generalTrait": null,
+      "total": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "losses": [
+        0.4,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 6,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.8.9",
+    "location": 13464,
+    "locationName": "chitral",
+    "topography": "mountains",
+    "vegetation": "grasslands",
+    "attackerWon": false,
+    "attacker": {
+      "country": 16777680,
+      "generalTrait": "defensive_planner",
+      "total": [
+        46.5,
+        0,
+        0,
+        1.8,
+        0,
+        0
+      ],
+      "losses": [
+        20.36265,
+        0,
+        0,
+        1.73595,
+        0,
+        0
+      ],
+      "experience": 13.4472,
+      "prestige": -0.04184
+    },
+    "defender": {
+      "country": 898,
+      "generalTrait": "ruthless",
+      "total": [
+        26.095,
+        0,
+        0,
+        1.638,
+        0,
+        0
+      ],
+      "losses": [
+        12.16255,
+        0,
+        0,
+        0.32742,
+        0,
+        0
+      ],
+      "experience": 13.0407,
+      "prestige": 0.13222
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.9.2",
+    "location": 13464,
+    "locationName": "chitral",
+    "topography": "mountains",
+    "vegetation": "grasslands",
+    "attackerWon": true,
+    "attacker": {
+      "country": 16777680,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        48,
+        0,
+        0,
+        1.8,
+        0,
+        0
+      ],
+      "losses": [
+        8.0319,
+        0,
+        0,
+        0.44457,
+        0,
+        0
+      ],
+      "experience": 5.0055,
+      "prestige": 0.03927
+    },
+    "defender": {
+      "country": 898,
+      "generalTrait": null,
+      "total": [
+        13.926,
+        0,
+        0,
+        1.31,
+        0,
+        0
+      ],
+      "losses": [
+        10.51951,
+        0,
+        0,
+        1.21028,
+        0,
+        0
+      ],
+      "experience": 21.6735,
+      "prestige": -0.05072
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.9.13",
+    "location": 6132,
+    "locationName": "gunt",
+    "topography": "mountains",
+    "vegetation": "sparse",
+    "attackerWon": false,
+    "attacker": {
+      "country": null,
+      "generalTrait": "ruthless",
+      "total": [
+        24.756,
+        1.5,
+        1.336,
+        2.273,
+        0.8,
+        0.3
+      ],
+      "losses": [
+        17.16454,
+        1.06455,
+        1.336,
+        2.273,
+        0.8,
+        0.15
+      ],
+      "experience": null,
+      "prestige": null
+    },
+    "defender": {
+      "country": null,
+      "generalTrait": "ruthless",
+      "total": [
+        34.699,
+        0.27575,
+        0,
+        1.517,
+        0,
+        0
+      ],
+      "losses": [
+        12.80589,
+        0.24688,
+        0,
+        1.33556,
+        0,
+        0
+      ],
+      "experience": null,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.9.15",
+    "location": 6132,
+    "locationName": "gunt",
+    "topography": "mountains",
+    "vegetation": "sparse",
+    "attackerWon": false,
+    "attacker": {
+      "country": 33556893,
+      "generalTrait": "offensive_planner",
+      "total": [
+        1.5,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "losses": [
+        0.6,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 7.2,
+      "prestige": null
+    },
+    "defender": {
+      "country": 16777680,
+      "generalTrait": "ruthless",
+      "total": [
+        21.88202,
+        0,
+        0,
+        0.18067,
+        0,
+        0
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00203
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.9.22",
+    "location": 13485,
+    "locationName": "gilgit",
+    "topography": "mountains",
+    "vegetation": "grasslands",
+    "attackerWon": false,
+    "attacker": {
+      "country": 16777680,
+      "generalTrait": "ruthless",
+      "total": [
+        47.1,
+        0,
+        0,
+        1.757,
+        0,
+        0
+      ],
+      "losses": [
+        18.37181,
+        0,
+        0,
+        1.63002,
+        0,
+        0
+      ],
+      "experience": 12.0354,
+      "prestige": -0.03431
+    },
+    "defender": {
+      "country": 898,
+      "generalTrait": "ruthless",
+      "total": [
+        25.183,
+        0,
+        0.208,
+        1.273,
+        0,
+        0
+      ],
+      "losses": [
+        9.76879,
+        0,
+        0.14502,
+        0.33158,
+        0,
+        0
+      ],
+      "experience": 11.1105,
+      "prestige": 0.1197
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.10.10",
+    "location": 13485,
+    "locationName": "gilgit",
+    "topography": "mountains",
+    "vegetation": "grasslands",
+    "attackerWon": true,
+    "attacker": {
+      "country": 260,
+      "generalTrait": "defensive_planner",
+      "total": [
+        48,
+        0,
+        0,
+        0.672,
+        0,
+        0
+      ],
+      "losses": [
+        7.77486,
+        0,
+        0,
+        0.15614,
+        0,
+        0
+      ],
+      "experience": 4.7898,
+      "prestige": 0.15964
+    },
+    "defender": {
+      "country": 898,
+      "generalTrait": "ruthless",
+      "total": [
+        15.406,
+        0,
+        0.062,
+        0.941,
+        0,
+        0
+      ],
+      "losses": [
+        15.01995,
+        0,
+        0.062,
+        0.941,
+        0,
+        0
+      ],
+      "experience": 27.6114,
+      "prestige": -0.0474
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1626.12.31",
+    "location": 6140,
+    "locationName": "ishkashim",
+    "topography": "mountains",
+    "vegetation": "sparse",
+    "attackerWon": false,
+    "attacker": {
+      "country": 898,
+      "generalTrait": "defensive_planner",
+      "total": [
+        69.255,
+        0,
+        0.012,
+        6.456,
+        0,
+        0
+      ],
+      "losses": [
+        45.91267,
+        0,
+        0.012,
+        6.2564,
+        0,
+        0
+      ],
+      "experience": 20.4036,
+      "prestige": -0.1143
+    },
+    "defender": {
+      "country": null,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        250.66035,
+        7.5,
+        0,
+        5.50445,
+        0.6,
+        0.3
+      ],
+      "losses": [
+        17.57783,
+        0,
+        0,
+        1.55118,
+        0,
+        0
+      ],
+      "experience": null,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1627.10.4",
+    "location": 6345,
+    "locationName": "kerben",
+    "topography": "hills",
+    "vegetation": "woods",
+    "attackerWon": false,
+    "attacker": {
+      "country": null,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        22.30224,
+        0,
+        0.12666,
+        1.933,
+        0,
+        0
+      ],
+      "losses": [
+        20.04906,
+        0,
+        0.12666,
+        1.933,
+        0,
+        0
+      ],
+      "experience": null,
+      "prestige": null
+    },
+    "defender": {
+      "country": 16777680,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        139.78954,
+        5.51,
+        0,
+        2.96694,
+        0.57,
+        0.252
+      ],
+      "losses": [
+        10.17416,
+        0,
+        0,
+        0,
+        0.26875,
+        0
+      ],
+      "experience": 2.0871,
+      "prestige": 0.07483
+    }
+  },
+  {
+    "war": "2046820356",
+    "date": "1628.6.27",
+    "location": 6352,
+    "locationName": "andijan",
+    "topography": "flatland",
+    "vegetation": "grasslands",
+    "attackerWon": false,
+    "attacker": {
+      "country": null,
+      "generalTrait": "ruthless",
+      "total": [
+        36.49,
+        9.5,
+        2.79,
+        0.308,
+        0.8,
+        0.15
+      ],
+      "losses": [
+        27.4681,
+        6.48853,
+        2.79,
+        0.308,
+        0.8,
+        0
+      ],
+      "experience": null,
+      "prestige": null
+    },
+    "defender": {
+      "country": 16777680,
+      "generalTrait": "battlefield_medic",
+      "total": [
+        111.393,
+        0,
+        0,
+        2.51194,
+        0.6,
+        0.15
+      ],
+      "losses": [
+        34.56382,
+        0,
+        0,
+        0.58529,
+        0.03538,
+        0
+      ],
+      "experience": 9.1263,
+      "prestige": 0.12709
+    }
+  },
+  {
+    "war": "2130706437",
+    "date": "1628.3.24",
+    "location": 15008,
+    "locationName": "malacca",
+    "topography": "flatland",
+    "vegetation": "jungle",
+    "attackerWon": true,
+    "attacker": {
+      "country": 1259,
+      "generalTrait": "glory_seeker",
+      "total": [
+        0,
+        5.5836,
+        0.54807,
+        2.19225,
+        2.15124,
+        0
+      ],
+      "losses": [
+        0,
+        0.05654,
+        0.06221,
+        0.08139,
+        0.00216,
+        0
+      ],
+      "experience": 0.5286,
+      "prestige": 0.08577
+    },
+    "defender": {
+      "country": 2347,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        3.091,
+        0.144,
+        0,
+        0.13,
+        0,
+        0
+      ],
+      "losses": [
+        3.091,
+        0.144,
+        0,
+        0.13,
+        0,
+        0
+      ],
+      "experience": 23.127,
+      "prestige": -0.00903
+    }
+  },
+  {
+    "war": "2164260865",
+    "date": "1626.10.4",
+    "location": 17272,
+    "locationName": "mubemde",
+    "topography": "plateau",
+    "vegetation": "grasslands",
+    "attackerWon": true,
+    "attacker": {
+      "country": 595,
+      "generalTrait": "goal_oriented",
+      "total": [
+        16,
+        1.5,
+        0.8,
+        0.877,
+        0.6,
+        0.15
+      ],
+      "losses": [
+        4.72029,
+        0.05101,
+        0.05849,
+        0.18491,
+        0.28187,
+        0
+      ],
+      "experience": 7.5927,
+      "prestige": 0.13841
+    },
+    "defender": {
+      "country": 542,
+      "generalTrait": "ruthless",
+      "total": [
+        6.641,
+        0,
+        3.099,
+        0.24259,
+        0,
+        0
+      ],
+      "losses": [
+        0.47149,
+        0,
+        2.40367,
+        0.10371,
+        0,
+        0
+      ],
+      "experience": 8.1369,
+      "prestige": -0.17259
+    }
+  },
+  {
+    "war": "2164260865",
+    "date": "1627.1.17",
+    "location": 17278,
+    "locationName": "rubaga",
+    "topography": "plateau",
+    "vegetation": "grasslands",
+    "attackerWon": false,
+    "attacker": {
+      "country": 542,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        16.2,
+        0,
+        0.224,
+        0.877,
+        0,
+        0
+      ],
+      "losses": [
+        5.13697,
+        0,
+        0.224,
+        0.83045,
+        0,
+        0
+      ],
+      "experience": 10.1493,
+      "prestige": -0.19506
+    },
+    "defender": {
+      "country": 595,
+      "generalTrait": "goal_oriented",
+      "total": [
+        24.10585,
+        1.5058,
+        0.74151,
+        1.29209,
+        0.31813,
+        0.15
+      ],
+      "losses": [
+        5.93961,
+        0.057,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 6.1791,
+      "prestige": 0.2888
+    }
+  },
+  {
+    "war": "2197815302",
+    "date": "1627.6.3",
+    "location": 17047,
+    "locationName": "meshra_er_req",
+    "topography": "wetlands",
+    "vegetation": "sparse",
+    "attackerWon": true,
+    "attacker": {
+      "country": 83888502,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        3.221,
+        0,
+        0,
+        0.0295,
+        0,
+        0
+      ],
+      "losses": [
+        0.19931,
+        0,
+        0,
+        0.012,
+        0,
+        0
+      ],
+      "experience": 1.4913,
+      "prestige": 0.16251
+    },
+    "defender": {
+      "country": 50334116,
+      "generalTrait": "goal_oriented",
+      "total": [
+        0.93977,
+        0,
+        0,
+        0.02488,
+        0,
+        0
+      ],
+      "losses": [
+        0.93977,
+        0,
+        0,
+        0.02488,
+        0,
+        0
+      ],
+      "experience": 14.73,
+      "prestige": -0.08736
+    }
+  },
+  {
+    "war": "2298478592",
+    "date": "1623.9.20",
+    "location": 15698,
+    "locationName": "pulilan",
+    "topography": "wetlands",
+    "vegetation": "woods",
+    "attackerWon": true,
+    "attacker": {
+      "country": 1252,
+      "generalTrait": "goal_oriented",
+      "total": [
+        0,
+        9.28542,
+        0,
+        3.47628,
+        3.25068,
+        0
+      ],
+      "losses": [
+        0,
+        2.73262,
+        0,
+        1.10337,
+        0.02223,
+        0
+      ],
+      "experience": 6.8034,
+      "prestige": 0.0897
+    },
+    "defender": {
+      "country": 1429,
+      "generalTrait": "inspirational_leader_general",
+      "total": [
+        20.899,
+        1.49925,
+        2.538,
+        1.956,
+        0.6,
+        0.4
+      ],
+      "losses": [
+        17.23084,
+        1.24938,
+        2.538,
+        1.956,
+        0.6,
+        0
+      ],
+      "experience": 24.4779,
+      "prestige": -0.20418
+    }
+  },
+  {
+    "war": "2298478592",
+    "date": "1623.12.13",
+    "location": 15662,
+    "locationName": "tondo",
+    "topography": "wetlands",
+    "vegetation": "farmland",
+    "attackerWon": true,
+    "attacker": {
+      "country": 1252,
+      "generalTrait": "goal_oriented",
+      "total": [
+        0,
+        6.5528,
+        0,
+        2.37291,
+        3.22845,
+        0
+      ],
+      "losses": [
+        0,
+        0.16685,
+        0,
+        0.08215,
+        0.12304,
+        0
+      ],
+      "experience": 0.8484,
+      "prestige": 0.01682
+    },
+    "defender": {
+      "country": 1429,
+      "generalTrait": "ruthless",
+      "total": [
+        3.694,
+        0,
+        0.358,
+        0.066,
+        0.6,
+        0
+      ],
+      "losses": [
+        3.40301,
+        0,
+        0.358,
+        0.066,
+        0.6,
+        0
+      ],
+      "experience": 23.2266,
+      "prestige": -0.01984
+    }
+  },
+  {
+    "war": "2298478592",
+    "date": "1624.8.9",
+    "location": 15662,
+    "locationName": "tondo",
+    "topography": "wetlands",
+    "vegetation": "farmland",
+    "attackerWon": true,
+    "attacker": {
+      "country": 1252,
+      "generalTrait": "goal_oriented",
+      "total": [
+        0,
+        3.34981,
+        0,
+        1.65599,
+        1.5023,
+        0
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00031
+    },
+    "defender": {
+      "country": 1429,
+      "generalTrait": "ruthless",
+      "total": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.209
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.0836
+      ],
+      "experience": 2.0742,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2298478592",
+    "date": "1625.7.29",
+    "location": 15716,
+    "locationName": "initao",
+    "topography": "hills",
+    "vegetation": "jungle",
+    "attackerWon": true,
+    "attacker": {
+      "country": 1252,
+      "generalTrait": "hardy_warrior",
+      "total": [
+        0,
+        5.44555,
+        0,
+        1.70912,
+        2.4,
+        0
+      ],
+      "losses": [
+        0,
+        0.00062,
+        0,
+        0.08723,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00907
+    },
+    "defender": {
+      "country": 1436,
+      "generalTrait": "offensive_planner",
+      "total": [
+        2.326,
+        0.026,
+        0.022,
+        0.038,
+        0,
+        0
+      ],
+      "losses": [
+        2.326,
+        0.026,
+        0.022,
+        0.038,
+        0,
+        0
+      ],
+      "experience": 21.2073,
+      "prestige": -0.03586
+    }
+  },
+  {
+    "war": "2298478592",
+    "date": "1626.11.23",
+    "location": 15656,
+    "locationName": "ibalong",
+    "topography": "flatland",
+    "vegetation": "jungle",
+    "attackerWon": false,
+    "attacker": {
+      "country": 1252,
+      "generalTrait": "goal_oriented",
+      "total": [
+        0,
+        5.64894,
+        0,
+        2.22564,
+        2.19204,
+        0
+      ],
+      "losses": [
+        0,
+        2.46139,
+        0,
+        0.76019,
+        1.05602,
+        0
+      ],
+      "experience": 11.5959,
+      "prestige": -0.02274
+    },
+    "defender": {
+      "country": 1437,
+      "generalTrait": "offensive_planner",
+      "total": [
+        13.505,
+        0,
+        2.385,
+        0.333,
+        0,
+        0.45
+      ],
+      "losses": [
+        3.88989,
+        0,
+        1.87257,
+        0.333,
+        0,
+        0
+      ],
+      "experience": 10.347,
+      "prestige": 0.5395
+    }
+  },
+  {
+    "war": "2298478592",
+    "date": "1628.7.7",
+    "location": 15656,
+    "locationName": "ibalong",
+    "topography": "flatland",
+    "vegetation": "jungle",
+    "attackerWon": true,
+    "attacker": {
+      "country": 1252,
+      "generalTrait": "hardy_warrior",
+      "total": [
+        0,
+        5.62668,
+        0,
+        2.21478,
+        2.17923,
+        0
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "experience": 0.3,
+      "prestige": 0.00018
+    },
+    "defender": {
+      "country": 1437,
+      "generalTrait": "ruthless",
+      "total": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.05
+      ],
+      "losses": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.05
+      ],
+      "experience": 1.4283,
+      "prestige": null
+    }
+  },
+  {
+    "war": "2298478592",
+    "date": "1628.7.9",
+    "location": 15657,
+    "locationName": "binawangan",
+    "topography": "hills",
+    "vegetation": "jungle",
+    "attackerWon": true,
+    "attacker": {
+      "country": 1252,
+      "generalTrait": "goal_oriented",
+      "total": [
+        0,
+        2.99632,
+        0,
+        1.35557,
+        1.0338,
+        0
+      ],
+      "losses": [
+        0,
+        0.62276,
+        0,
+        0.66074,
+        0.99846,
+        0
+      ],
+      "experience": 10.7205,
+      "prestige": 0.02762
+    },
+    "defender": {
+      "country": 1437,
+      "generalTrait": "glory_seeker",
+      "total": [
+        9.602,
+        0,
+        0.511,
+        0.213,
+        0,
+        0.55
+      ],
+      "losses": [
+        6.35747,
+        0,
+        0.511,
+        0.213,
+        0,
+        0.35
+      ],
+      "experience": 18.7725,
+      "prestige": -0.28814
+    }
+  }
+]
