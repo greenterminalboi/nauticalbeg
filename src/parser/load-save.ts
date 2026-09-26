@@ -209,6 +209,7 @@ export async function loadSave(
       progress("parsing", percent);
     });
     signal.throwIfAborted();
+    if (summary.warnings) warnings.push(...summary.warnings);
     const skippedTotal = summary.skipped.reduce((n, s) => n + s.count, 0);
     if (skippedTotal > 0) {
       const detail = summary.skipped.map((s) => `${s.count} ${s.section}`).join(", ");

@@ -33,6 +33,7 @@
 // later" decision).
 import { Jomini, toArray } from "jomini";
 import { insertRows, type SaveDatabase } from "../../storage/db";
+import type { LoadWarning } from "../protocol";
 
 export interface ParsedSaveSummary {
   inGameDate: string;
@@ -41,6 +42,8 @@ export interface ParsedSaveSummary {
    * warning rather than dropped silently (constitution II). Empty when
    * nothing was skipped. */
   skipped: Array<{ section: string; count: number }>;
+  /** Non-blocking notices about values the adapter didn't recognize. */
+  warnings?: LoadWarning[];
 }
 
 // Sections with a real, structured table (see the extraction below).
@@ -764,11 +767,33 @@ export async function parseAndStore(
   // already exceed INT32 in a real save. strength is army-only; the
   // field is genuinely absent for navy subunits (never fabricated).
   const subunitDatabase = asRecord(asRecord(root.subunit_manager).database);
+  // specs/019-battle-simulator research.md §5: + unit (parent army),
+  // box (raw section, NULL when omitted — combat-unknowns.md U-25) and
+  // experience (NULL when absent, never 0-filled). Unknown box values are
+  // stored as-is and surfaced as a load warning (constitution II).
+  const KNOWN_BOXES = new Set(["Left", "Right", "Center", "Reserves", "Captured"]);
+  const unknownBoxes = new Set<string>();
+  let unknownBoxCount = 0;
   const regimentRows: Array<
-    [number, number | null, string | null, number | null, number | null, number | null]
+    [
+      number,
+      number | null,
+      string | null,
+      number | null,
+      number | null,
+      number | null,
+      number | null,
+      string | null,
+      number | null,
+    ]
   > = [];
   for (const [subunitIdxStr, subunitEntry] of Object.entries(subunitDatabase)) {
     const subunit = asRecord(subunitEntry);
+    const box = asStringOrNull(subunit.box);
+    if (box !== null && !KNOWN_BOXES.has(box)) {
+      unknownBoxes.add(box);
+      unknownBoxCount += 1;
+    }
     regimentRows.push([
       Number(subunitIdxStr),
       asNumberOrNull(subunit.owner),
@@ -776,14 +801,63 @@ export async function parseAndStore(
       asNumberOrNull(subunit.morale),
       asNumberOrNull(subunit.number),
       asNumberOrNull(subunit.strength),
+      asNumberOrNull(subunit.unit),
+      box,
+      asNumberOrNull(subunit.experience),
     ]);
   }
   if (regimentRows.length > 0) {
     await insertRows(
       db,
-      "INSERT INTO regiments (idx, owner_idx, unit_type, morale, number, strength) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+      "INSERT INTO regiments (idx, owner_idx, unit_type, morale, number, strength, unit_idx, box, experience) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
       regimentRows,
     );
+  }
+  const warnings: LoadWarning[] = [];
+  if (unknownBoxCount > 0) {
+    warnings.push({
+      kind: "unrecognized-values",
+      count: unknownBoxCount,
+      message: `${unknownBoxCount} ${unknownBoxCount === 1 ? "regiment has" : "regiments have"} an unrecognized battle section (${[...unknownBoxes].join(", ")}); the Battle Simulator treats ${unknownBoxCount === 1 ? "it" : "them"} as center.`,
+    });
+  }
+
+  // specs/019-battle-simulator: unit_manager land stacks → armies, and the
+  // characters leading them → generals.
+  const unitDatabase = asRecord(asRecord(root.unit_manager).database);
+  const armyRows: Array<[number, number | null, number | null, string | null, number | null, string | null]> = [];
+  const leaderIdxs = new Set<number>();
+  for (const [unitIdxStr, unitEntry] of Object.entries(unitDatabase)) {
+    const unit = asRecord(unitEntry);
+    if (unit.is_army !== true && unit.is_army !== "yes") continue;
+    const leader = asNumberOrNull(unit.leader);
+    if (leader !== null) leaderIdxs.add(leader);
+    armyRows.push([
+      Number(unitIdxStr),
+      asNumberOrNull(unit.country),
+      leader,
+      asStringOrNull(unit.unit_formation_preference),
+      asNumberOrNull(unit.location),
+      asStringOrNull(asRecord(unit.unit_name_2).key),
+    ]);
+  }
+  if (armyRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO armies (idx, country_idx, leader_idx, formation, location_idx, name_key) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+      armyRows,
+    );
+  }
+  const generalCharacters = asRecord(asRecord(root.character_db).database);
+  const generalRows: Array<[number, number | null, string | null]> = [];
+  for (const leaderIdx of leaderIdxs) {
+    const character = generalCharacters[String(leaderIdx)];
+    if (character === undefined) continue;
+    const rec = asRecord(character);
+    generalRows.push([leaderIdx, asNumberOrNull(rec.mil), asStringOrNull(rec.general_trait)]);
+  }
+  if (generalRows.length > 0) {
+    await insertRows(db, "INSERT INTO generals (idx, mil, general_trait) VALUES (?1, ?2, ?3)", generalRows);
   }
 
   // population.database: one row per population group. Fixed-shape
@@ -1379,5 +1453,5 @@ export async function parseAndStore(
   }
   reportMilestone(); // "done"
 
-  return { inGameDate, playerNationTag: playerTag, skipped };
+  return { inGameDate, playerNationTag: playerTag, skipped, ...(warnings.length > 0 ? { warnings } : {}) };
 }

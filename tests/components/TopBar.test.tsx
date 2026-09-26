@@ -18,6 +18,7 @@ describe("TopBar", () => {
     expect(screen.getByRole("button", { name: /^atlas$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^factbook$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^encyclopedia$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^battle simulator$/i })).toBeInTheDocument(); // 019
     expect(screen.getByRole("button", { name: /settings/i })).toBeInTheDocument();
     expect(screen.queryByRole("combobox", { name: /viewing nation/i })).not.toBeInTheDocument();
     // Independent from the section nav and file picker — no keep/forget button yet.

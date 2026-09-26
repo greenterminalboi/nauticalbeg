@@ -42,7 +42,9 @@ describe("firepowerData shared military profiles", () => {
     const [army, ...rest] = await loadArmyProfiles(db, [2025], [RUS], toSocietalValueRows(readings));
     expect(rest).toEqual([]);
     expect(army).toMatchObject({ nationIdx: 2025, tag: "RUS", name: "Russia", colorRgb: [183, 136, 27] });
-    expect(army.regimentCount).toBe(2);
+    // RUS's army regiments in the fixture: pikemen, peasant levy (012),
+    // crossbowmen and a baggage train (added by 019).
+    expect(army.regimentCount).toBe(4);
   });
 
   it("builds a navy profile from the nation's ships only", async () => {

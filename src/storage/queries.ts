@@ -1506,3 +1506,116 @@ export async function listSubjectRelations(
     })),
   };
 }
+
+// specs/019-battle-simulator: army pickers and army pre-fill. Bounded to
+// one nation / one army per call (never the full regiments table).
+
+export interface ArmyListItem {
+  armyIdx: number;
+  nameKey: string | null;
+  regimentCount: number;
+  /** Sum of regiment `strength` (thousands of men, combat-unknowns.md U-40). */
+  totalStrength: number;
+  leaderIdx: number | null;
+}
+
+/** A nation's land armies, largest first. Captured regiments and navies are
+ * excluded. Empty for a kept save parsed before the `armies` table existed. */
+export async function listArmiesForNation(db: SaveDatabase, nationIdx: number): Promise<ArmyListItem[]> {
+  const rows = await queryRows(
+    db,
+    `SELECT
+       armies.idx AS army_idx,
+       armies.name_key AS name_key,
+       armies.leader_idx AS leader_idx,
+       CAST(COUNT(regiments.idx) AS INTEGER) AS regiment_count,
+       COALESCE(SUM(regiments.strength), 0) AS total_strength
+     FROM armies
+     LEFT JOIN regiments
+       ON regiments.unit_idx = armies.idx
+      AND regiments.unit_type LIKE 'a\\_%' ESCAPE '\\'
+      AND (regiments.box IS NULL OR regiments.box <> 'Captured')
+     WHERE armies.country_idx = ?1
+     GROUP BY armies.idx, armies.name_key, armies.leader_idx
+     HAVING COUNT(regiments.idx) > 0
+     ORDER BY total_strength DESC, armies.idx`,
+    [nationIdx],
+  );
+  return rows.map((r) => ({
+    armyIdx: Number(r.army_idx),
+    nameKey: (r.name_key as string | null) ?? null,
+    regimentCount: Number(r.regiment_count),
+    totalStrength: Number(r.total_strength),
+    leaderIdx: r.leader_idx === null || r.leader_idx === undefined ? null : Number(r.leader_idx),
+  }));
+}
+
+export interface SimRegimentRow {
+  unitType: string;
+  /** NULL when the save omits it (combat-unknowns.md U-46). */
+  strength: number | null;
+  morale: number | null;
+  experience: number | null;
+  /** Raw save box; NULL = omitted (read as center, U-25). */
+  box: string | null;
+}
+
+export interface SimArmy {
+  regiments: SimRegimentRow[];
+  general: { idx: number; mil: number | null; generalTrait: string | null } | null;
+  formation: string | null;
+}
+
+/** One army's land regiments (or, with `wholeNation`, every land regiment
+ * the nation owns) plus its general, for pre-filling a simulator side.
+ * Captured regiments are excluded (U-25). */
+export async function loadArmyForSim(
+  db: SaveDatabase,
+  choice: { armyIdx: number } | { wholeNation: number },
+): Promise<SimArmy> {
+  const byArmy = "armyIdx" in choice;
+  const regiments = await queryRows(
+    db,
+    `SELECT unit_type, strength, morale, experience, box
+     FROM regiments
+     WHERE ${byArmy ? "unit_idx = ?1" : "owner_idx = ?1"}
+       AND unit_type LIKE 'a\\_%' ESCAPE '\\'
+       AND (box IS NULL OR box <> 'Captured')
+     ORDER BY idx`,
+    [byArmy ? choice.armyIdx : choice.wholeNation],
+  );
+  let general: SimArmy["general"] = null;
+  let formation: string | null = null;
+  if (byArmy) {
+    const armyRows = await queryRows(
+      db,
+      `SELECT armies.formation AS formation, generals.idx AS general_idx, generals.mil AS mil, generals.general_trait AS general_trait
+       FROM armies LEFT JOIN generals ON generals.idx = armies.leader_idx
+       WHERE armies.idx = ?1`,
+      [choice.armyIdx],
+    );
+    const a = armyRows[0];
+    if (a) {
+      formation = (a.formation as string | null) ?? null;
+      if (a.general_idx !== null && a.general_idx !== undefined) {
+        general = {
+          idx: Number(a.general_idx),
+          mil: a.mil === null ? null : Number(a.mil),
+          generalTrait: (a.general_trait as string | null) ?? null,
+        };
+      }
+    }
+  }
+  const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
+  return {
+    regiments: regiments.map((r) => ({
+      unitType: String(r.unit_type),
+      strength: num(r.strength),
+      morale: num(r.morale),
+      experience: num(r.experience),
+      box: (r.box as string | null) ?? null,
+    })),
+    general,
+    formation,
+  };
+}

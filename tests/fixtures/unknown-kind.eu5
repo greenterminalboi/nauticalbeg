@@ -533,6 +533,7 @@ character_db={
 			adm=80
 			dip=60
 			mil=50
+			general_trait=strategist
 		}
 		101={
 			country=2025
@@ -547,6 +548,7 @@ character_db={
 			adm=100
 			dip=100
 			mil=100
+			general_trait=inspirational_leader_general
 		}
 		999={
 			country=1
@@ -964,9 +966,14 @@ population={
 unit_manager={
 	database={
 		1000001={
+			unit_name_2={
+				key="ARMY_NAME"
+			}
+			is_army=yes
 			unit_formation_preference=balanced_army
 			country=2025
 			location=16777289
+			frontage=5
 			leader=100
 		}
 		1000002={
@@ -975,6 +982,16 @@ unit_manager={
 			food=none
 			location=16777289
 			last_port=16777289
+		}
+		1000003={
+			unit_name_2={
+				key="ARMY_NAME"
+			}
+			is_army=yes
+			unit_formation_preference=cav_inf_cav
+			country=3
+			location=16777289
+			leader=102
 		}
 	}
 }
@@ -987,6 +1004,7 @@ subunit_manager={
 			home=16777289
 			culture=884
 			religion=18
+			box=Left
 			type=a_pikemen
 			morale=2.5
 			experience=0.1
@@ -1016,6 +1034,64 @@ subunit_manager={
 			type=n_carrack
 			morale=3.1
 			experience=0.05
+			number=2
+		}
+		2000004={
+			owner=2025
+			controller=2025
+			unit=1000001
+			box=Reserves
+			home=16777289
+			culture=884
+			religion=18
+			type=a_crossbowmen
+			morale=2
+			experience=0
+			missing={
+				demand=infantry_maintenance
+				weaponry=0
+			}
+			number=41
+		}
+		2000005={
+			owner=2025
+			controller=2025
+			unit=1000001
+			box=Captured
+			home=16777289
+			culture=884
+			religion=18
+			type=a_baggage_train
+			morale=1
+			experience=0
+			strength=0.066
+			number=2
+		}
+		2000006={
+			owner=3
+			controller=3
+			unit=1000003
+			box=Right
+			home=16777289
+			culture=884
+			religion=18
+			type=a_armored_horsemen
+			morale=2.8
+			experience=12.5
+			strength=0.2
+			number=1
+		}
+		2000007={
+			owner=3
+			controller=3
+			unit=1000003
+			home=16777289
+			culture=884
+			religion=18
+			type=a_archers
+			morale=2.6
+			experience=3
+			strength=0.45
 			number=2
 		}
 	}

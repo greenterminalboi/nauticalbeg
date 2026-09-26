@@ -12,6 +12,7 @@ import { AddCountryInput } from "./AddCountryInput";
 import { CountrySelect } from "./CountrySelect";
 import { ArmyCompositionView, type ArmyCompositionRow } from "./ArmyCompositionView";
 import type { FirepowerView } from "./FirepowerSideNav";
+import { SimulateMatchupBar, type BattleMatchup } from "./SimulateMatchupBar";
 import "./FirepowerTab.css";
 
 interface FirepowerTabProps {
@@ -20,6 +21,9 @@ interface FirepowerTabProps {
    * FirepowerSideNav in the shell's sidenav grid area, same split as
    * MarketsTab/MarketsSideNav. */
   activeView: FirepowerView;
+  /** specs/019-battle-simulator US4: send two selected countries to the
+   * Battle Simulator. Omitted → no "Simulate a battle" bar. */
+  onSimulateBattle?: (matchup: BattleMatchup) => void;
 }
 
 /**
@@ -30,7 +34,7 @@ interface FirepowerTabProps {
  * all three sub-views, owned here rather than per-view, since switching
  * sub-views shouldn't reset which countries are being compared.
  */
-export function FirepowerTab({ db, activeView }: FirepowerTabProps) {
+export function FirepowerTab({ db, activeView, onSimulateBattle }: FirepowerTabProps) {
   const [countries, setCountries] = useState<LeaderboardCountry[] | null>(null);
   const [axisReadings, setAxisReadings] = useState<Map<number, { axis: string; value: number }[]> | null>(null);
   const [selectedIdxs, setSelectedIdxs] = useState<number[]>([]);
@@ -197,6 +201,14 @@ export function FirepowerTab({ db, activeView }: FirepowerTabProps) {
           </label>
         )}
       </div>
+      {onSimulateBattle && activeView === "army" && selectedIdxs.length >= 2 && (
+        <SimulateMatchupBar
+          countries={selectedIdxs
+            .map((idx) => countries.find((c) => c.idx === idx))
+            .filter((c): c is LeaderboardCountry => c !== undefined)}
+          onSimulate={onSimulateBattle}
+        />
+      )}
       {activeView === "doctrine" &&
         (doctrinePoints.length === 0 ? (
           <p>None of the selected countries have an applicable military-doctrine axis yet.</p>
