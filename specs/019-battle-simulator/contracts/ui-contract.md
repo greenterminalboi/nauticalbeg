@@ -41,3 +41,12 @@
   (spec edge case).
 - **Nation without armies**: army picker shows "No land regiments", and
   the composition starts empty with that note.
+- **Firepower handoff (US4, FR-016)**: Factbook → Firepower → Army Stats
+  shows a "Simulate a battle" bar once ≥2 countries are selected. It has
+  attacker and defender picks, a swap, and "Open in Battle Simulator →".
+  Sending switches to this section, pre-fills both sides from the
+  nations' largest armies, and shows a dismissible "Imported from
+  Firepower" note.
+- **State survives navigation**: after its first visit the section stays
+  mounted (hidden when inactive), so sides, conditions, and the last
+  result persist across section switches until a different save loads.

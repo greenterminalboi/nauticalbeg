@@ -21,3 +21,67 @@
   color: var(--color-on-surface-variant);
   margin-bottom: var(--space-sm);
 }
+
+/* specs/019-battle-simulator US4: send two selected countries to the
+   Battle Simulator. */
+.simulate-matchup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 6px;
+  background: var(--color-surface-container-low);
+}
+
+.simulate-matchup__title {
+  align-self: center;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.simulate-matchup__pick {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.simulate-matchup__role {
+  font-size: 0.72rem;
+  color: var(--color-on-surface-variant);
+}
+
+.simulate-matchup__swap,
+.simulate-matchup__go {
+  font: inherit;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: 4px;
+  border: 1px solid var(--color-outline-variant);
+  background: var(--color-surface-container);
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+.simulate-matchup__go {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 600;
+}
+
+.simulate-matchup__go:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.simulate-matchup__hint {
+  align-self: center;
+  font-size: 0.8rem;
+  color: var(--color-error);
+}

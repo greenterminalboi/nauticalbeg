@@ -2137,3 +2137,21 @@ status.
 
 Those findings updated the ledger (U-32 marked `wrong`, new U-48 and U-49).
 Nothing was tuned to fit the data.
+
+### Same day: Firepower → Battle Simulator handoff (019 User Story 4)
+
+Firepower's Army Stats view has a **Simulate a battle** bar
+(`SimulateMatchupBar.tsx`) once two or more countries are selected: choose
+attacker and defender among them, swap if needed, then **Open in Battle
+Simulator →**.
+
+`FileLoader` passes the choice as a one-shot request
+`{ id, attackerIdx, defenderIdx }`. The simulator applies each `id` once,
+pre-filling both sides from each nation's largest army with the same code
+its own nation picker uses.
+
+The Battle Simulator now stays mounted (hidden) after its first visit
+rather than unmounting on every section switch. That keeps its sides,
+conditions, last result, and worker, so moving between Firepower and the
+simulator keeps the setup. It's lazily mounted, so a session that never
+opens it pays nothing.

@@ -12,9 +12,18 @@ import { BattleSidePanel } from "./BattleSidePanel";
 import { buildSideFromSave, defaultSide, listArmies, toBattleSide, type SideDraft } from "./battleSimData";
 import "./BattleSimulator.css";
 
+/** A matchup sent from another view (US4: Firepower). `id` changes per request. */
+export interface BattleMatchupRequest {
+  id: number;
+  attackerIdx: number;
+  defenderIdx: number;
+}
+
 export interface BattleSimulatorSectionProps {
   /** The loaded save's read connection, or null with no save (FR-014). */
   db: SaveDatabase | null;
+  /** US4: pre-fill both sides from these nations (their largest armies). */
+  matchup?: BattleMatchupRequest | null;
 }
 
 type Role = "attacker" | "defender";
@@ -34,7 +43,7 @@ interface RunState {
  * hour-by-hour timeline (US3). The engine runs in a Web Worker
  * (contracts/worker-protocol.md); stale runs are ignored by runId.
  */
-export function BattleSimulatorSection({ db }: BattleSimulatorSectionProps) {
+export function BattleSimulatorSection({ db, matchup = null }: BattleSimulatorSectionProps) {
   const [countries, setCountries] = useState<LeaderboardCountry[] | null>(null);
   const [sides, setSides] = useState<Record<Role, SideDraft>>({
     attacker: defaultSide("Attacker"),
@@ -58,6 +67,7 @@ export function BattleSimulatorSection({ db }: BattleSimulatorSectionProps) {
     if (previousDb.current !== null && previousDb.current !== db) {
       setSides({ attacker: defaultSide("Attacker"), defender: defaultSide("Defender") });
       setResult(null);
+      setImportedFrom(null);
     }
     previousDb.current = db;
     setArmies({ attacker: null, defender: null });
@@ -108,6 +118,22 @@ export function BattleSimulatorSection({ db }: BattleSimulatorSectionProps) {
     },
     [db, nationName],
   );
+
+  // US4: apply a matchup sent from Firepower once — after the country list
+  // has loaded, so both sides get their nation names.
+  const appliedMatchup = useRef<number | null>(null);
+  const [importedFrom, setImportedFrom] = useState<string | null>(null);
+  useEffect(() => {
+    if (!db || !countries || !matchup || appliedMatchup.current === matchup.id) return;
+    appliedMatchup.current = matchup.id;
+    setResult(null);
+    setImportedFrom(
+      `Imported from Firepower: ${nationName(matchup.attackerIdx, "Attacker")} attacking ${nationName(matchup.defenderIdx, "Defender")}. ` +
+        "Both sides start from each nation's largest army; pick another army or edit anything below.",
+    );
+    void prefill("attacker", matchup.attackerIdx, null);
+    void prefill("defender", matchup.defenderIdx, null);
+  }, [db, countries, matchup, nationName, prefill]);
 
   const input: BattleInput = useMemo(
     () => ({
@@ -184,6 +210,15 @@ export function BattleSimulatorSection({ db }: BattleSimulatorSectionProps) {
           side every 5-hour phase. {db ? "Pick a nation for each side to start from its real army." : "Load a save to start from real armies, or fill both sides in by hand."}
         </p>
       </header>
+
+      {importedFrom && (
+        <p className="battle-sim__imported" role="status">
+          {importedFrom}
+          <button type="button" className="battle-sim__dismiss" aria-label="Dismiss" onClick={() => setImportedFrom(null)}>
+            ✕
+          </button>
+        </p>
+      )}
 
       <BattleConditionsBar conditions={conditions} onChange={setConditions} />
 

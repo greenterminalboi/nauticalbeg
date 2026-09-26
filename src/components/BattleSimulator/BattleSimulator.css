@@ -404,3 +404,24 @@
 .battle-result__approx-status {
   color: var(--color-on-surface-variant);
 }
+
+/* US4: where the current matchup came from. */
+.battle-sim__imported {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: var(--space-xs) var(--space-md);
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-surface-container-low);
+  font-size: 0.85rem;
+}
+
+.battle-sim__dismiss {
+  border: none;
+  background: none;
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+  font: inherit;
+}

@@ -127,6 +127,46 @@ if artillery was present.
 
 ---
 
+### User Story 4 - Send a matchup from Firepower (Priority: P2)
+
+*Added 2026-09-26 at the owner's request.*
+
+A player comparing armies in Factbook → Firepower → Army Stats wants to
+go straight from "these two look close" to "who would actually win?"
+With a save loaded and at least two countries selected, they choose
+which selected country attacks and which defends, then send the matchup
+to the Battle Simulator. Both sides arrive pre-filled from those
+nations' largest armies and stay tied to those nations, so they can
+still switch army or edit anything.
+
+**Why this priority**: it links the existing comparison view to the
+simulator, removing the manual re-selection step. It depends on User
+Story 1's save pre-fill.
+
+**Independent Test**: Load a save, open Firepower → Army Stats, select
+two countries, click "Open in Battle Simulator", and confirm the
+simulator opens with both sides pre-filled (source badges `save`) and a
+note saying where the matchup came from.
+
+**Acceptance Scenarios**:
+
+1. **Given** at least two countries are selected in Army Stats, **When**
+   the user opens the "Simulate a battle" bar, **Then** attacker and
+   defender default to the first two selected countries, can be set to
+   any two different selected countries, and can be swapped.
+2. **Given** the same country is chosen for both sides, **When** the user
+   tries to send the matchup, **Then** sending is blocked with an
+   explanation.
+3. **Given** a matchup is sent, **When** the Battle Simulator opens,
+   **Then** each side is pre-filled from its nation's largest army
+   exactly as if picked in the simulator, and a dismissible note names
+   the matchup's origin.
+4. **Given** the simulator has been set up, **When** the user switches to
+   another section and back, **Then** both sides, the conditions, and
+   the last result are still there.
+
+---
+
 ### Edge Cases
 
 - A nation with no land regiments is still selectable. Its army
@@ -221,6 +261,11 @@ if artillery was present.
   and are filled in manually.
 - **FR-015**: Hover details MUST use the app's standard hover tooltip,
   not native browser title tooltips.
+- **FR-016**: With a save loaded, Firepower's Army Stats view MUST let
+  the user send any two different selected countries to the Battle
+  Simulator as attacker and defender. The simulator MUST pre-fill both
+  sides from those nations (User Story 4) and MUST keep its state when
+  the user moves between sections.
 
 ### Key Entities
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   ErrorKind,
   ErrorMessage as WorkerErrorMessage,
@@ -27,7 +27,8 @@ import { CountryViewerNav } from "./CountryViewerNav";
 import { DiplomacyTab } from "./DiplomacyTab";
 import { EncyclopediaNav } from "./EncyclopediaNav";
 import { EncyclopediaSection } from "./EncyclopediaSection";
-import { BattleSimulatorSection } from "../BattleSimulator/BattleSimulatorSection";
+import { BattleSimulatorSection, type BattleMatchupRequest } from "../BattleSimulator/BattleSimulatorSection";
+import type { BattleMatchup } from "./SimulateMatchupBar";
 import { ErrorMessage } from "./ErrorMessage";
 import { FirepowerTab } from "./FirepowerTab";
 import { FirepowerSideNav, type FirepowerView } from "./FirepowerSideNav";
@@ -132,6 +133,19 @@ export function FileLoader() {
   const [leaderboardPage, setLeaderboardPage] = useState<LeaderboardPage>("population");
   const [marketsView, setMarketsView] = useState<MarketsView>("worldGoods");
   const [firepowerView, setFirepowerView] = useState<FirepowerView>("doctrine");
+  // specs/019-battle-simulator: the simulator mounts on first visit and then
+  // stays mounted (hidden) so its sides survive switching sections, and a
+  // matchup sent from Firepower (US4) is handed over as a one-shot request.
+  const [battleSimVisited, setBattleSimVisited] = useState(false);
+  const [battleMatchup, setBattleMatchup] = useState<BattleMatchupRequest | null>(null);
+  const openBattleSimulator = useCallback((matchup: BattleMatchup) => {
+    setBattleMatchup((prev) => ({ id: (prev?.id ?? 0) + 1, ...matchup }));
+    setBattleSimVisited(true);
+    setActiveSection("battle-simulator");
+  }, []);
+  useEffect(() => {
+    if (activeSection === "battle-simulator") setBattleSimVisited(true);
+  }, [activeSection]);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const workerRef = useRef<Worker | null>(null);
   // Tracks the most recently ready save's id so the beforeunload handler
@@ -543,8 +557,10 @@ export function FileLoader() {
                 ))}
               {activeSection === "settings" && <ComingSoonPlaceholder feature="Settings" />}
               {activeSection === "encyclopedia" && <EncyclopediaSection />}
-              {activeSection === "battle-simulator" && (
-                <BattleSimulatorSection db={isReady ? readDbRef.current : null} />
+              {battleSimVisited && (
+                <div hidden={activeSection !== "battle-simulator"}>
+                  <BattleSimulatorSection db={isReady ? readDbRef.current : null} matchup={battleMatchup} />
+                </div>
               )}
               {isFactbook && encyclopediaTab === "countries" && (
                 <StatusView
@@ -600,7 +616,7 @@ export function FileLoader() {
                 // same isReady + readDbRef.current gate and idle wording
                 // as Wars/Leaderboard/Markets/Societal Compass above.
                 isReady && readDbRef.current ? (
-                  <FirepowerTab db={readDbRef.current} activeView={firepowerView} />
+                  <FirepowerTab db={readDbRef.current} activeView={firepowerView} onSimulateBattle={openBattleSimulator} />
                 ) : (
                   <p>Select a save file above to get started.</p>
                 )

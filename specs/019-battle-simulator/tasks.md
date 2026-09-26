@@ -242,6 +242,26 @@ entry first**, then the code.
 
 ---
 
+## Phase 7: User Story 4 — Send a matchup from Firepower (P2)
+
+*Added 2026-09-26 at the owner's request.*
+
+**Goal**: pick attacker and defender among Firepower's selected countries and open them, pre-filled, in the Battle Simulator.
+
+**Independent test**:
+1. With a save loaded, open Firepower → Army Stats and select two countries.
+2. Click "Open in Battle Simulator".
+3. Both sides are pre-filled, and an "Imported from Firepower" note shows.
+
+- [X] T039 [P] [US4] Build `src/components/Overview/SimulateMatchupBar.tsx` (+ styles in `FirepowerTab.css`). It has attacker and defender selects limited to Firepower's selected countries (defaulting to the first two), a swap button, and "Open in Battle Simulator →", disabled with a hint when both sides are the same country.
+- [X] T040 [US4] Render the bar in `src/components/Overview/FirepowerTab.tsx` on the Army Stats view when ≥2 countries are selected and an `onSimulateBattle` callback is supplied.
+- [X] T041 [US4] Accept a one-shot `matchup` request (`{ id, attackerIdx, defenderIdx }`) in `src/components/BattleSimulator/BattleSimulatorSection.tsx`. It pre-fills both sides via the existing `prefill` (largest army) once the country list has loaded, applies each request `id` only once, and shows a dismissible "Imported from Firepower" note.
+- [X] T042 [US4] In `src/components/Overview/FileLoader.tsx`, have `openBattleSimulator` store the request and switch to the Battle Simulator section. Mount the simulator on its first visit and keep it mounted but hidden afterwards, so its state survives section switches (acceptance scenario 4).
+- [X] T043 [P] [US4] Tests: `tests/components/SimulateMatchupBar.test.tsx` covers defaults, swap, and the same-country block. `tests/components/BattleSimulatorMatchup.test.tsx` checks that a matchup pre-fills both sides from the real parsed fixture.
+- [ ] T044 [US4] Validate in the real app with the real save loaded: Firepower → Army Stats → two countries → Open in Battle Simulator → Simulate, then switch sections and back (state kept). Blocked on the same manual save load as T037.
+
+---
+
 ## Dependencies and execution order
 
 - **Setup (T001)** → **Foundational (T002–T012)** → user stories.
