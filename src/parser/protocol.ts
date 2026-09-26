@@ -79,7 +79,10 @@ export interface ErrorMessage {
 
 /** A non-blocking notice attached to a successful load (015 FR-009). */
 export interface LoadWarning {
-  kind: "unknown-tokens";
+  /** "unknown-tokens": binary tokens the melter couldn't name (015).
+   * "unrecognized-values": a parsed field held a value the adapter doesn't
+   * know (constitution II — surfaced, never silently dropped; 019). */
+  kind: "unknown-tokens" | "unrecognized-values";
   count: number;
   message: string;
 }

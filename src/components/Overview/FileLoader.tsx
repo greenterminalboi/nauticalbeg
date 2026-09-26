@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   ErrorKind,
   ErrorMessage as WorkerErrorMessage,
@@ -27,6 +27,8 @@ import { CountryViewerNav } from "./CountryViewerNav";
 import { DiplomacyTab } from "./DiplomacyTab";
 import { EncyclopediaNav } from "./EncyclopediaNav";
 import { EncyclopediaSection } from "./EncyclopediaSection";
+import { BattleSimulatorSection, type BattleMatchupRequest } from "../BattleSimulator/BattleSimulatorSection";
+import type { BattleMatchup } from "./SimulateMatchupBar";
 import { ErrorMessage } from "./ErrorMessage";
 import { FirepowerTab } from "./FirepowerTab";
 import { FirepowerSideNav, type FirepowerView } from "./FirepowerSideNav";
@@ -131,6 +133,19 @@ export function FileLoader() {
   const [leaderboardPage, setLeaderboardPage] = useState<LeaderboardPage>("population");
   const [marketsView, setMarketsView] = useState<MarketsView>("worldGoods");
   const [firepowerView, setFirepowerView] = useState<FirepowerView>("doctrine");
+  // specs/019-battle-simulator: the simulator mounts on first visit and then
+  // stays mounted (hidden) so its sides survive switching sections, and a
+  // matchup sent from Firepower (US4) is handed over as a one-shot request.
+  const [battleSimVisited, setBattleSimVisited] = useState(false);
+  const [battleMatchup, setBattleMatchup] = useState<BattleMatchupRequest | null>(null);
+  const openBattleSimulator = useCallback((matchup: BattleMatchup) => {
+    setBattleMatchup((prev) => ({ id: (prev?.id ?? 0) + 1, ...matchup }));
+    setBattleSimVisited(true);
+    setActiveSection("battle-simulator");
+  }, []);
+  useEffect(() => {
+    if (activeSection === "battle-simulator") setBattleSimVisited(true);
+  }, [activeSection]);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const workerRef = useRef<Worker | null>(null);
   // Tracks the most recently ready save's id so the beforeunload handler
@@ -435,6 +450,9 @@ export function FileLoader() {
   // not the bounded/centered default), even though it isn't
   // Perspective-backed either.
   const isEncyclopediaSection = activeSection === "encyclopedia";
+  // specs/019-battle-simulator: full width — two side panels plus a
+  // timeline chart; works with or without a save (FR-014).
+  const isBattleSimulatorSection = activeSection === "battle-simulator";
   // Leaderboard (006) opted out of full-width originally (its own CSS
   // bounded it instead), but 2026-09-20 decision: give it the same
   // treatment as everything else — its charts are viewBox-scaled SVG
@@ -465,6 +483,7 @@ export function FileLoader() {
     ? "shell__main-inner shell__main-inner--full-width shell__main-inner--flush"
     : isTableTab ||
         isEncyclopediaSection ||
+        isBattleSimulatorSection ||
         isLeaderboardTab ||
         isSocietalCompassTab ||
         isFirepowerTab ||
@@ -538,6 +557,11 @@ export function FileLoader() {
                 ))}
               {activeSection === "settings" && <ComingSoonPlaceholder feature="Settings" />}
               {activeSection === "encyclopedia" && <EncyclopediaSection />}
+              {battleSimVisited && (
+                <div hidden={activeSection !== "battle-simulator"}>
+                  <BattleSimulatorSection db={isReady ? readDbRef.current : null} matchup={battleMatchup} />
+                </div>
+              )}
               {isFactbook && encyclopediaTab === "countries" && (
                 <StatusView
                   status={status}
@@ -592,7 +616,7 @@ export function FileLoader() {
                 // same isReady + readDbRef.current gate and idle wording
                 // as Wars/Leaderboard/Markets/Societal Compass above.
                 isReady && readDbRef.current ? (
-                  <FirepowerTab db={readDbRef.current} activeView={firepowerView} />
+                  <FirepowerTab db={readDbRef.current} activeView={firepowerView} onSimulateBattle={openBattleSimulator} />
                 ) : (
                   <p>Select a save file above to get started.</p>
                 )

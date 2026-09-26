@@ -615,3 +615,41 @@ CREATE TABLE IF NOT EXISTS works_of_art (
   destroyed_date TEXT -- non-NULL = destroyed, excluded from every count
 );
 CREATE INDEX IF NOT EXISTS idx_works_of_art_owner ON works_of_art (owner_idx);
+
+-- specs/019-battle-simulator research.md §5: which army each regiment
+-- belongs to, its starting section and its experience, so the battle
+-- simulator can pre-fill one real army. `box` is stored raw
+-- ('Left'/'Right'/'Reserves'/'Captured', NULL when the save omits it —
+-- read as Center by the simulator, combat-unknowns.md U-25); experience
+-- is NULL when absent, never 0-filled. unit_idx is BIGINT, same index
+-- space as regiments.idx. Every insert into regiments must supply these
+-- columns (the insertRows full-column rule, see ARCHITECTURE.md's
+-- Firepower (012) entry).
+ALTER TABLE regiments ADD COLUMN IF NOT EXISTS unit_idx BIGINT;
+ALTER TABLE regiments ADD COLUMN IF NOT EXISTS box TEXT;
+ALTER TABLE regiments ADD COLUMN IF NOT EXISTS experience DOUBLE;
+CREATE INDEX IF NOT EXISTS idx_regiments_unit ON regiments (unit_idx);
+
+-- specs/019-battle-simulator: one row per unit_manager.database land stack
+-- (`is_army=yes`; navies are out of scope). name_key is the raw
+-- unit_name_2.key (e.g. 'ARMY_NAME'). A kept save resumed from before this
+-- table existed gets it back empty, and the simulator falls back to
+-- whole-nation pre-fill.
+CREATE TABLE IF NOT EXISTS armies (
+  idx BIGINT PRIMARY KEY,
+  country_idx INTEGER, -- logically REFERENCES nations(idx)
+  leader_idx BIGINT, -- logically REFERENCES generals(idx)
+  formation TEXT, -- unit_formation_preference, e.g. 'balanced_army'
+  location_idx INTEGER, -- logically REFERENCES locations(idx)
+  name_key TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_armies_country ON armies (country_idx);
+
+-- specs/019-battle-simulator: only the character_db entries some army's
+-- `leader` points at. `mil` is display-only in the simulator (its combat
+-- effect isn't documented, combat-unknowns.md U-38).
+CREATE TABLE IF NOT EXISTS generals (
+  idx BIGINT PRIMARY KEY,
+  mil DOUBLE,
+  general_trait TEXT
+);

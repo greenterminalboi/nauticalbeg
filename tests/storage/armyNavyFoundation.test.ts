@@ -49,16 +49,22 @@ describe("storage/queries Army/Navy foundation (specs/012-firepower-tab)", () =>
 
     const rows = decodeRows(await listRegimentSummaryArrow(db, [2025]));
     expect(rows.sort((a, b) => String(a.unit_type).localeCompare(String(b.unit_type)))).toEqual([
+      // 019 added a reserve crossbow regiment and a captured baggage train.
+      { nation_idx: 2025, unit_type: "a_baggage_train", regiment_count: 1, total_number: 2, avg_morale: 1 },
+      { nation_idx: 2025, unit_type: "a_crossbowmen", regiment_count: 1, total_number: 41, avg_morale: 2 },
       { nation_idx: 2025, unit_type: "a_peasant_levy", regiment_count: 1, total_number: 20, avg_morale: 1.2 },
       { nation_idx: 2025, unit_type: "a_pikemen", regiment_count: 1, total_number: 40, avg_morale: 2.5 },
       { nation_idx: 2025, unit_type: "n_carrack", regiment_count: 1, total_number: 2, avg_morale: 3.1 },
     ]);
 
-    // A real, alive country (SCA, idx 3) with zero regiments/ships in
-    // the fixture returns no rows at all — never a zero-filled one
-    // (spec FR-012).
+    // SCA (idx 3) gained an army in 019's fixture extension.
     const scaRows = decodeRows(await listRegimentSummaryArrow(db, [3]));
-    expect(scaRows).toEqual([]);
+    expect(scaRows.map((r) => r.unit_type).sort()).toEqual(["a_archers", "a_armored_horsemen"]);
+
+    // A country with zero regiments/ships (DUMMY, idx 0) returns no rows
+    // at all — never a zero-filled one (spec FR-012).
+    const noRows = decodeRows(await listRegimentSummaryArrow(db, [0]));
+    expect(noRows).toEqual([]);
 
     // Empty selection returns an empty result, not every country.
     const emptyRows = decodeRows(await listRegimentSummaryArrow(db, []));

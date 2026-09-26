@@ -784,7 +784,8 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
 
     const rows = await queryAll(
       database,
-      "SELECT idx, owner_idx, unit_type, morale, number, strength FROM regiments ORDER BY idx",
+      // 019 added more regiments to the fixture; this test keeps 012's original three.
+      "SELECT idx, owner_idx, unit_type, morale, number, strength FROM regiments WHERE idx <= 2000003 ORDER BY idx",
     );
     expect(rows).toEqual([
       {
@@ -812,6 +813,87 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
         strength: null, // navy rows never have a fabricated strength
       },
     ]);
+  });
+
+  // specs/019-battle-simulator: regiments gain unit_idx/box/experience
+  // (research.md §5; combat-unknowns.md U-25, U-40, U-46).
+  it("stores each regiment's parent army, raw box and experience — NULL when absent, never 0-filled", async () => {
+    const database = await freshDb("adapter-regiments-019.db");
+    await parseAndStore(database, "save-regiments-019", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(
+      database,
+      "SELECT idx, unit_idx, box, experience, strength FROM regiments ORDER BY idx",
+    );
+    expect(rows).toEqual([
+      { idx: 2000001, unit_idx: 1000001, box: "Left", experience: 0.1, strength: 0.9 },
+      { idx: 2000002, unit_idx: 1000001, box: null, experience: 0, strength: 0.6 },
+      { idx: 2000003, unit_idx: 1000002, box: null, experience: 0.05, strength: null },
+      { idx: 2000004, unit_idx: 1000001, box: "Reserves", experience: 0, strength: null },
+      { idx: 2000005, unit_idx: 1000001, box: "Captured", experience: 0, strength: 0.066 },
+      { idx: 2000006, unit_idx: 1000003, box: "Right", experience: 12.5, strength: 0.2 },
+      { idx: 2000007, unit_idx: 1000003, box: null, experience: 3, strength: 0.45 },
+    ]);
+  });
+
+  it("populates armies from unit_manager land stacks only (is_army=yes)", async () => {
+    const database = await freshDb("adapter-armies.db");
+    await parseAndStore(database, "save-armies", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(
+      database,
+      "SELECT idx, country_idx, leader_idx, formation, location_idx, name_key FROM armies ORDER BY idx",
+    );
+    expect(rows).toEqual([
+      {
+        idx: 1000001,
+        country_idx: 2025,
+        leader_idx: 100,
+        formation: "balanced_army",
+        location_idx: 16777289,
+        name_key: "ARMY_NAME",
+      },
+      {
+        idx: 1000003,
+        country_idx: 3,
+        leader_idx: 102,
+        formation: "cav_inf_cav",
+        location_idx: 16777289,
+        name_key: "ARMY_NAME",
+      },
+    ]);
+  });
+
+  it("populates generals with only the characters who lead an army", async () => {
+    const database = await freshDb("adapter-generals.db");
+    await parseAndStore(database, "save-generals", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(database, "SELECT idx, mil, general_trait FROM generals ORDER BY idx");
+    expect(rows).toEqual([
+      { idx: 100, mil: 50, general_trait: "strategist" },
+      { idx: 102, mil: 100, general_trait: "inspirational_leader_general" },
+    ]);
+  });
+
+  it("surfaces an unrecognized regiment box as a load warning instead of dropping it silently", async () => {
+    const database = await freshDb("adapter-unknown-box.db");
+    const summary = await parseAndStore(
+      database,
+      "save-unknown-box",
+      "rus-1628-minimal.eu5",
+      toBytes(fixtureText.replace("box=Left", "box=Flank")),
+    );
+    expect(summary.warnings).toEqual([
+      expect.objectContaining({ kind: "unrecognized-values", count: 1 }),
+    ]);
+    const rows = await queryAll(database, "SELECT box FROM regiments WHERE idx = 2000001");
+    expect(rows).toEqual([{ box: "Flank" }]);
+  });
+
+  it("reports no load warnings for the unmodified fixture", async () => {
+    const database = await freshDb("adapter-no-warnings.db");
+    const summary = await parseAndStore(database, "save-no-warnings", "rus-1628-minimal.eu5", toBytes(fixtureText));
+    expect(summary.warnings ?? []).toEqual([]);
   });
 
   // specs/012-firepower-tab: researched_advances (=yes flags only) →
