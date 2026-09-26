@@ -2155,3 +2155,20 @@ rather than unmounting on every section switch. That keeps its sides,
 conditions, last result, and worker, so moving between Firepower and the
 simulator keeps the setup. It's lazily mounted, so a session that never
 opens it pays nothing.
+
+### Same day: a running scoreboard across runs (019 FR-017)
+
+`BattleScoreboard.tsx` tallies every finished run of the current matchup,
+with a victories donut, a casualties donut, and a numbers table.
+
+- **Tally identity** is `hashBattleInput` (every input except the seed).
+  Changing anything restarts the tally with a visible note, so runs of
+  different setups are never mixed (Constitution IV).
+- A replayed seed produces the identical battle, so it isn't counted
+  again.
+- The chart colors (Okabe-Ito blue/orange/reddish purple) were run
+  through the dataviz skill's palette validator against this app's
+  light-only surface. Gray failed the chroma floor for "no winner", so
+  reddish purple replaced it.
+- The orange/purple contrast warning is covered by direct slice labels
+  and the table.

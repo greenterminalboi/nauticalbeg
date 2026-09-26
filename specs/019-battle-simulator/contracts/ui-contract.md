@@ -50,3 +50,8 @@
 - **State survives navigation**: after its first visit the section stays
   mounted (hidden when inactive), so sides, conditions, and the last
   result persist across section switches until a different save loads.
+- **Scoreboard (FR-017)**: above the latest result, a "Scoreboard"
+  (labelled simulated) with a victories donut, a casualties donut, and a
+  numbers table. It accumulates across Simulate/Re-roll runs of the same
+  inputs. Changing any input restarts it with a note, replaying a seed
+  isn't counted twice, and **Reset scores** clears it.

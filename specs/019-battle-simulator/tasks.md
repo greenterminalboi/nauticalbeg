@@ -262,6 +262,19 @@ entry first**, then the code.
 
 ---
 
+## Phase 8: Scoreboard across runs (FR-017)
+
+*Added 2026-09-26 at the owner's request.*
+
+- [X] T045 Build `src/components/BattleSimulator/BattleScoreboard.tsx`:
+  - `addToScoreboard` keeps runs keyed by `inputHash` (restarting with a note when the inputs change) and doesn't count a replayed seed twice;
+  - a victories donut and a casualties donut (ECharts pie) in Okabe-Ito blue/orange/reddish purple, passing the dataviz skill's validator for the app's light surface. The contrast warning is covered by direct labels and a numbers table;
+  - a 2px surface gap between slices, text in `--color-on-surface`, and a reset button.
+- [X] T046 Wire it into `BattleSimulatorSection.tsx`. Every finished run (worker or inline) is recorded; the tally clears on a save change or a Firepower matchup import; the scoreboard shows above the latest result.
+- [X] T047 Tests in `tests/components/BattleScoreboard.test.tsx`: counting, replay dedupe, restart on input change, and accumulation/reset in the section. Checked in the real app: 13 runs, replay not recounted, whole-number percentage labels.
+
+---
+
 ## Dependencies and execution order
 
 - **Setup (T001)** → **Foundational (T002–T012)** → user stories.

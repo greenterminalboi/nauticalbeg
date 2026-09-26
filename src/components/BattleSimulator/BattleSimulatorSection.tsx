@@ -8,6 +8,7 @@ import type { ArmyListItem } from "../../storage/queries";
 import { loadLeaderboardCountries, type LeaderboardCountry } from "../Overview/leaderboardData";
 import { BattleConditionsBar, defaultConditions, toConditions, type ConditionsDraft } from "./BattleConditionsBar";
 import { BattleResultPanel } from "./BattleResultPanel";
+import { addToScoreboard, BattleScoreboard, type Scoreboard } from "./BattleScoreboard";
 import { BattleSidePanel } from "./BattleSidePanel";
 import { buildSideFromSave, defaultSide, listArmies, toBattleSide, type SideDraft } from "./battleSimData";
 import "./BattleSimulator.css";
@@ -54,6 +55,11 @@ export function BattleSimulatorSection({ db, matchup = null }: BattleSimulatorSe
   const [conditions, setConditions] = useState<ConditionsDraft>(defaultConditions);
   const [result, setResult] = useState<{ result: BattleResult; names: [string, string] } | null>(null);
   const [run, setRun] = useState<RunState>({ running: false, showProgress: false, hour: 0, error: null });
+  const [scoreboard, setScoreboard] = useState<{ board: Scoreboard; note: string | null } | null>(null);
+  const recordResult = (res: BattleResult, runNames: [string, string]) => {
+    setResult({ result: res, names: runNames });
+    setScoreboard((prev) => addToScoreboard(prev?.board ?? null, res));
+  };
 
   const workerRef = useRef<Worker | null>(null);
   const runIdRef = useRef(0);
@@ -67,6 +73,7 @@ export function BattleSimulatorSection({ db, matchup = null }: BattleSimulatorSe
     if (previousDb.current !== null && previousDb.current !== db) {
       setSides({ attacker: defaultSide("Attacker"), defender: defaultSide("Defender") });
       setResult(null);
+      setScoreboard(null);
       setImportedFrom(null);
     }
     previousDb.current = db;
@@ -127,6 +134,7 @@ export function BattleSimulatorSection({ db, matchup = null }: BattleSimulatorSe
     if (!db || !countries || !matchup || appliedMatchup.current === matchup.id) return;
     appliedMatchup.current = matchup.id;
     setResult(null);
+    setScoreboard(null);
     setImportedFrom(
       `Imported from Firepower: ${nationName(matchup.attackerIdx, "Attacker")} attacking ${nationName(matchup.defenderIdx, "Defender")}. ` +
         "Both sides start from each nation's largest army; pick another army or edit anything below.",
@@ -173,7 +181,7 @@ export function BattleSimulatorSection({ db, matchup = null }: BattleSimulatorSe
       // jsdom tests have no Worker; run inline there.
       try {
         const res = simulateBattle(runInput);
-        setResult({ result: res, names: runNames });
+        recordResult(res, runNames);
         finish(runId, {});
       } catch (e) {
         finish(runId, { error: e instanceof Error ? e.message : String(e) });
@@ -189,7 +197,7 @@ export function BattleSimulatorSection({ db, matchup = null }: BattleSimulatorSe
       if (msg.runId !== runIdRef.current) return; // stale run
       if (msg.type === "progress") setRun((r) => ({ ...r, hour: msg.hour }));
       else if (msg.type === "done") {
-        setResult({ result: msg.result, names: runNames });
+        recordResult(msg.result, runNames);
         finish(msg.runId, {});
       } else finish(msg.runId, { error: msg.message });
     };
@@ -268,6 +276,15 @@ export function BattleSimulatorSection({ db, matchup = null }: BattleSimulatorSe
         )}
       </div>
 
+      {result && scoreboard && (
+        <BattleScoreboard
+          board={scoreboard.board}
+          attackerName={result.names[0]}
+          defenderName={result.names[1]}
+          note={scoreboard.note}
+          onReset={() => setScoreboard(null)}
+        />
+      )}
       {result && <BattleResultPanel result={result.result} attackerName={result.names[0]} defenderName={result.names[1]} />}
     </div>
   );

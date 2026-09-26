@@ -266,6 +266,14 @@ note saying where the matchup came from.
   Simulator as attacker and defender. The simulator MUST pre-fill both
   sides from those nations (User Story 4) and MUST keep its state when
   the user moves between sections.
+- **FR-017**: The simulator MUST keep a running scoreboard across runs of
+  the same matchup: a pie (donut) of victories (attacker, defender, no
+  winner) and a pie of total casualties per side, with direct labels, a
+  legend, and a numbers table (wins, win rate, total and average
+  casualties). Runs with different inputs MUST NOT be mixed: changing any
+  input restarts the tally, with a note. A replayed seed MUST NOT be
+  counted twice. The user MUST be able to reset the scores. *(Added
+  2026-09-26 at the owner's request.)*
 
 ### Key Entities
 

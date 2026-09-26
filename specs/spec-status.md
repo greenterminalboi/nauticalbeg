@@ -1,5 +1,5 @@
 # Spec-Driven Development Status
-<!-- spec-status: project=nauticalbeg commit=56f0c382424d4919d5d574072360a2a814cca516 updated=2026-09-26T11:57:29Z -->
+<!-- spec-status: project=nauticalbeg commit=56b5280830f18414f93c56e900f17811e6954eaa updated=2026-09-26T12:09:09Z -->
 
 | Feature                        | Specify | Plan | Tasks | Implement |
 |--------------------------------|---------|------|-------|-----------|
@@ -20,7 +20,7 @@
 | 015-save-format-support        | ✓       | ✓    | ✓     | ● 35/36 (97%) |
 | 016-public-hosting-pipeline    | ✓       | ✓    | ✓     | ✓ Complete |
 | 017-share-game-state           | ✓       | ✓    | ✓     | ✓ Complete |
-| 019-battle-simulator           | ✓       | ✓    | ✓     | ● 42/44 (95%) |
+| 019-battle-simulator           | ✓       | ✓    | ✓     | ● 45/47 (95%) |
 
 <!-- feature: 001-save-import-overview has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=46 tasks_completed=46 checklist_files=requirements.md -->
 <!-- feature: 002-db-technology-migration has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=86 tasks_completed=19 checklist_files=requirements.md -->
@@ -39,4 +39,4 @@
 <!-- feature: 015-save-format-support has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=36 tasks_completed=35 checklist_files=requirements.md -->
 <!-- feature: 016-public-hosting-pipeline has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=35 tasks_completed=35 checklist_files=requirements.md -->
 <!-- feature: 017-share-game-state has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=32 tasks_completed=32 checklist_files=requirements.md -->
-<!-- feature: 019-battle-simulator has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=44 tasks_completed=42 checklist_files=requirements.md -->
+<!-- feature: 019-battle-simulator has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=47 tasks_completed=45 checklist_files=requirements.md -->
