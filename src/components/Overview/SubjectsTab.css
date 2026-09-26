@@ -1,0 +1,101 @@
+.subjects-tab__heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0 0 var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+  padding-bottom: var(--space-xs);
+}
+
+.subjects-tab__heading h2 {
+  font: inherit;
+  margin: 0;
+}
+
+.subjects-tab__count {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-on-surface-variant);
+}
+
+/* Nested subjects hang off a guide line from their overlord. */
+.subjects-tab__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.subjects-tab__list .subjects-tab__list {
+  margin-left: 0.6rem;
+  padding-left: var(--space-md);
+  border-left: 1px solid var(--color-outline-variant);
+}
+
+.subjects-tab__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: 0.3rem 0;
+}
+
+.subjects-tab__open,
+.subjects-tab__static {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font: inherit;
+  font-family: var(--font-body);
+  color: var(--color-on-surface);
+  background: var(--color-vellum);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+}
+
+.subjects-tab__open {
+  cursor: pointer;
+}
+
+.subjects-tab__open:hover,
+.subjects-tab__open:focus-visible {
+  border-color: var(--color-primary-deep);
+  color: var(--color-primary-deep);
+}
+
+.subjects-tab__static {
+  color: var(--color-on-surface-variant);
+  border-style: dashed;
+}
+
+.subjects-tab__name {
+  font-weight: 600;
+}
+
+.subjects-tab__type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--color-on-surface-variant);
+}
+
+.subjects-tab__dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(30, 27, 25, 0.35);
+}
+
+.subjects-tab__since {
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+}
+
+.subjects-tab__hint {
+  font-style: italic;
+  color: var(--color-on-surface-variant);
+}

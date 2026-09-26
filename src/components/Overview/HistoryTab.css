@@ -1,0 +1,22 @@
+.history-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.history-tab__controls {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Three history charts side by side on a wide screen, stacking when
+   narrow; ruler history spans the full width below them. */
+.history-tab__charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: var(--space-md);
+}
+
+.history-tab__chart {
+  min-width: 0;
+}

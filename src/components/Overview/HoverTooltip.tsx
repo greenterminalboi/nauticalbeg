@@ -3,8 +3,9 @@ import "./HoverTooltip.css";
 
 interface HoverTooltipProps {
   /** Multi-line plain text (rendered with `white-space: pre-line`, same
-   * content shape the old native `title` attributes carried). */
-  content: string;
+   * content shape the old native `title` attributes carried), or markup
+   * when the content needs formatting (specs/018: colored effect lists). */
+  content: ReactNode;
   children: ReactNode;
   className?: string;
 }

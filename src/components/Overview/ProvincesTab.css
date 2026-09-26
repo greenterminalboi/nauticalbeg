@@ -1,5 +1,5 @@
 /* "Illuminated Cards & Folios" framing (design.md §Components 2, echoing
- * OverviewCard.css) applied to the Perspective datagrid's container — a
+ * OverviewTab.css) applied to the Perspective datagrid's container — a
  * portolan-style multi-ruled border around the table itself. Internal
  * cell/header colors are themed separately, in perspective/theme.css. */
 .provinces-tab {

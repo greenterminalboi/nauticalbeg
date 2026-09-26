@@ -18,6 +18,12 @@ import "./RulerHistoryChart.css";
 
 interface RulerHistoryChartProps {
   db: SaveDatabase;
+  /** specs/018 (Countries → History): when given, the chart shows exactly
+   * these nations and hides its own country search, because the page
+   * around it owns one selection shared by all its charts. Omitted (the
+   * Leaderboard), the chart picks its own default and has its own search.
+   * Must be a stable array (state), not rebuilt every render. */
+  selectedIdxs?: readonly number[];
 }
 
 interface ScoredPoint {
@@ -171,9 +177,10 @@ function averageScore(scored: readonly ScoredPoint[], currentYear: number): numb
  * toggle) shows each selected nation's time-weighted average ruler
  * skill from 1337 til now, alongside their current ruler's skill.
  */
-export function RulerHistoryChart({ db }: RulerHistoryChartProps) {
+export function RulerHistoryChart({ db, selectedIdxs: controlledIdxs }: RulerHistoryChartProps) {
   const [countries, setCountries] = useState<LeaderboardCountry[] | null>(null);
-  const [selectedIdxs, setSelectedIdxs] = useState<number[]>([]);
+  const [ownSelectedIdxs, setSelectedIdxs] = useState<number[]>([]);
+  const selectedIdxs = controlledIdxs ?? ownSelectedIdxs;
   const [history, setHistory] = useState<Map<number, RulerHistoryPoint[]> | null>(null);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -330,12 +337,14 @@ export function RulerHistoryChart({ db }: RulerHistoryChartProps) {
       <div className="ruler-history-chart__controls">
         <div className="ruler-history-chart__title-row">
           <p className="ruler-history-chart__title">Ruler History</p>
-          <AddCountryInput
-            countries={countries}
-            selectedIdxs={selectedIdxs}
-            onToggle={toggleCountry}
-            placeholder="Search countries…"
-          />
+          {!controlledIdxs && (
+            <AddCountryInput
+              countries={countries}
+              selectedIdxs={selectedIdxs}
+              onToggle={toggleCountry}
+              placeholder="Search countries…"
+            />
+          )}
         </div>
         <div className="ruler-history-chart__view-toggle" role="group" aria-label="View">
           {VIEWS.map((v) => (

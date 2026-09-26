@@ -38,6 +38,10 @@ import type { LoadWarning } from "../protocol";
 export interface ParsedSaveSummary {
   inGameDate: string;
   playerNationTag: string;
+  /** specs/018: malformed entries skipped per section, surfaced as a load
+   * warning rather than dropped silently (constitution II). Empty when
+   * nothing was skipped. */
+  skipped: Array<{ section: string; count: number }>;
   /** Non-blocking notices about values the adapter didn't recognize. */
   warnings?: LoadWarning[];
 }
@@ -59,7 +63,25 @@ const STRUCTURED_KEYS = new Set([
   "culture_manager",
   "religion_manager",
   "work_of_art_manager",
+  "loan_manager",
+  "estate_manager",
 ]);
+
+/** specs/018: estate_manager `last_month` keys, stored as same-named
+ * nation_estates columns (fixed in this game version, research.md R6). */
+const ESTATE_LAST_MONTH_FIELDS = [
+  "taxable_income",
+  "uncontrolled_income",
+  "city_income",
+  "trade_income",
+  "food_income",
+  "paid_taxes",
+  "pop_expense",
+  "building_expense",
+  "rebel_expense",
+  "invest_expense",
+  "infra_expense",
+] as const;
 
 /** jomini narrows an unquoted date-like token (e.g. `1628.8.14`) to a
  * UTC-midnight `Date`. Converts back to EU5's own "YYYY.M.D" display
@@ -293,8 +315,14 @@ export async function parseAndStore(
       number | null, // last_months_army_maintenance
       number | null, // last_months_navy_maintenance
       number | null, // primary_culture_idx
+      number | null, // government_power
+      number | null, // prestige
+      number | null, // monthly_income
     ]
   > = [];
+  // specs/018 research.md R6: each nation's economy.tax_rates, keyed by
+  // estate type, for nation_estates.tax_rate below.
+  const taxRatesByNation = new Map<number, Record<string, unknown>>();
   // specs/006-country-leaderboard research.md §1/§3: one row per
   // (nation, year, metric) — year = 1337 + array index, the campaign's
   // start year derived two independent ways (research.md §3).
@@ -358,7 +386,11 @@ export async function parseAndStore(
       asNumberOrNull(record.last_months_army_maintenance),
       asNumberOrNull(record.last_months_navy_maintenance),
       asNumberOrNull(record.primary_culture),
+      asNumberOrNull(currencyData.government_power),
+      asNumberOrNull(currencyData.prestige),
+      asNumberOrNull(asRecord(record.economy).income),
     ]);
+    taxRatesByNation.set(idx, asRecord(asRecord(record.economy).tax_rates));
     for (const [field, metric] of HISTORY_METRICS) {
       const values = asNumberArray(record[field]);
       values.forEach((value, i) => {
@@ -398,7 +430,7 @@ export async function parseAndStore(
   }
   await insertRows(
     db,
-    "INSERT INTO nations (idx, tag, name, country_type, is_player, treasury, stability, government_type, color_r, color_g, color_b, is_human_played, manpower, sailors, monthly_manpower, monthly_sailors, army_tradition, navy_tradition, last_months_army_maintenance, last_months_navy_maintenance, primary_culture_idx) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)",
+    "INSERT INTO nations (idx, tag, name, country_type, is_player, treasury, stability, government_type, color_r, color_g, color_b, is_human_played, manpower, sailors, monthly_manpower, monthly_sailors, army_tradition, navy_tradition, last_months_army_maintenance, last_months_navy_maintenance, primary_culture_idx, government_power, prestige, monthly_income) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24)",
     nationRows,
   );
   if (nationAdvancesRows.length > 0) {
@@ -1288,6 +1320,94 @@ export async function parseAndStore(
     );
   }
 
+  const skipped: ParsedSaveSummary["skipped"] = [];
+
+  // specs/018-country-factbook-tabs research.md R7: subject relations are
+  // diplomacy_manager `dependency` blocks, first = overlord, second =
+  // subject (direction confirmed against real tags: POR -> its colonial
+  // nations). The subject type is the named target flagged subject_type.
+  // Kept out of diplomatic_relations so the 013 chord chart is unchanged.
+  const subjectRows: Array<[number, number, string | null, string | null]> = [];
+  let skippedSubjects = 0;
+  for (const entry of asDiplomacyArray(diplomacyManager.dependency)) {
+    const e = asRecord(entry);
+    const overlord = asNumberOrNull(e.first);
+    const subject = asNumberOrNull(e.second);
+    if (overlord === null || subject === null || overlord === subject) {
+      skippedSubjects += 1;
+      continue;
+    }
+    let subjectType: string | null = null;
+    for (const target of asDiplomacyArray(e.named_targets)) {
+      const t = asRecord(target);
+      if (t.flag === "subject_type") subjectType = asStringOrNull(asRecord(t.target).object);
+    }
+    subjectRows.push([overlord, subject, subjectType, formatGameDate(e.start_date)]);
+  }
+  if (subjectRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO subject_relations (overlord_idx, subject_idx, subject_type, start_date) VALUES (?1, ?2, ?3, ?4)",
+      subjectRows,
+    );
+  }
+  if (skippedSubjects > 0) skipped.push({ section: "subject relations", count: skippedSubjects });
+
+  // specs/018 research.md R3: one row per loan. `borrower` is a country
+  // idx; government bonds (bond=yes) are debt too. A loan missing its
+  // borrower or amount can't be attributed, so it's skipped and counted.
+  const loanRows: Array<[number, number, number, number | null, number]> = [];
+  let skippedLoans = 0;
+  for (const [idxStr, value] of Object.entries(asRecord(asRecord(root.loan_manager).database))) {
+    const loan = asRecord(value);
+    const borrower = asNumberOrNull(loan.borrower);
+    const amount = asNumberOrNull(loan.amount);
+    if (borrower === null || amount === null) {
+      skippedLoans += 1;
+      continue;
+    }
+    loanRows.push([Number(idxStr), borrower, amount, asNumberOrNull(loan.interest), loan.bond === true || loan.bond === "yes" ? 1 : 0]);
+  }
+  if (loanRows.length > 0) {
+    await insertRows(
+      db,
+      "INSERT INTO loans (idx, borrower_idx, amount, interest, is_bond) VALUES (?1, ?2, ?3, ?4, ?5)",
+      loanRows,
+    );
+  }
+  if (skippedLoans > 0) skipped.push({ section: "loans", count: skippedLoans });
+
+  // specs/018 research.md R6: estate_manager holds a record for every
+  // estate type of every country; only existence=yes ones are the
+  // country's real estates. The crown record carries satisfaction only,
+  // so every economic value stays NULL when absent (never 0).
+  const estateRows: Array<Array<number | string | null>> = [];
+  for (const value of Object.values(asRecord(asRecord(root.estate_manager).database))) {
+    const estate = asRecord(value);
+    if (estate.existence !== true && estate.existence !== "yes") continue;
+    const nationIdx = asNumberOrNull(estate.country);
+    const estateType = asStringOrNull(estate.estate_type);
+    if (nationIdx === null || estateType === null) continue;
+    const lastMonth = asRecord(estate.last_month);
+    estateRows.push([
+      nationIdx,
+      estateType,
+      asNumberOrNull(estate.satisfaction),
+      asNumberOrNull(taxRatesByNation.get(nationIdx)?.[estateType]),
+      asNumberOrNull(estate.gold),
+      asNumberOrNull(estate.balance),
+      asNumberOrNull(estate.wealth_impact),
+      ...ESTATE_LAST_MONTH_FIELDS.map((field) => asNumberOrNull(lastMonth[field])),
+    ]);
+  }
+  if (estateRows.length > 0) {
+    await insertRows(
+      db,
+      `INSERT INTO nation_estates (nation_idx, estate_type, satisfaction, tax_rate, gold, balance, wealth_impact, ${ESTATE_LAST_MONTH_FIELDS.join(", ")}) VALUES (${Array.from({ length: 7 + ESTATE_LAST_MONTH_FIELDS.length }, (_, i) => `?${i + 1}`).join(", ")})`,
+      estateRows,
+    );
+  }
+
   // Every other top-level section: no real schema yet, so capture as
   // opaque JSON rather than guess at columns for structure nobody has
   // inspected (constitution Principle II).
@@ -1333,5 +1453,5 @@ export async function parseAndStore(
   }
   reportMilestone(); // "done"
 
-  return { inGameDate, playerNationTag: playerTag, ...(warnings.length > 0 ? { warnings } : {}) };
+  return { inGameDate, playerNationTag: playerTag, skipped, ...(warnings.length > 0 ? { warnings } : {}) };
 }

@@ -42,15 +42,20 @@ export type EncyclopediaTab =
  * sub-tab (plan.md's Technical Context). Plain component state, not
  * client-side routing — see research.md §4. Shared between
  * FileLoader.tsx (owns the state) and SideNav.tsx (renders the
- * selector) to avoid a circular import.
+ * selector) to avoid a circular import. specs/018-country-factbook-tabs:
+ * Trade was dropped and Diplomacy replaced by Subjects; Economy, Building
+ * Registry and Characters stay as Coming Soon pages.
  */
 export type TabId =
   | "overview"
+  | "history"
   | "provinces"
+  | "locations"
   | "military"
   | "government"
+  | "estates"
+  | "values"
+  | "subjects"
   | "economy"
-  | "diplomacy"
-  | "trade"
   | "buildings"
   | "characters";

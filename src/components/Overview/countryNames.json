@@ -1,0 +1,2119 @@
+{
+  "governmentPowers": {
+    "monarchy": "Legitimacy",
+    "republic": "Republican Tradition",
+    "steppe_horde": "Horde Unity",
+    "theocracy": "Devotion",
+    "tribe": "Tribal Cohesion"
+  },
+  "laws": {
+    "administration_of_italian_lands_law": "Administration of Italian Lands",
+    "administrative_system": "Administrative System",
+    "amazigh_familial_connections": "Amazigh Familial Connections",
+    "army_doctrine_law": "Army Doctrine",
+    "ashta_pradhan_council_law": "Ashta Pradhan Council",
+    "battle_leadership_law": "Battle Leadership Law",
+    "bureaucracy_law": "Bureaucratic Offices",
+    "burghers_rights_laws": "Rights of the Burghers",
+    "cabinet_laws": "Cabinet Laws",
+    "cc_indulgences": "The Purchase of Indulgence",
+    "cc_marriage_of_priest": "The Marriage of Priests",
+    "cc_papal_authority": "Papal Authority",
+    "cc_simony": "Simony",
+    "cc_society_of_jesus": "Society of Jesus",
+    "cc_veneration_of_saints_and_reliquaries": "Veneration of Saints and Reliquaries",
+    "cc_witchcraft": "Persecution of Witchcraft",
+    "cefeng_tizhi": "Cèfēng Tǐzhì",
+    "censorship": "Censorship",
+    "christological_debates_tenet": "Christological Debates",
+    "christology": "Christology",
+    "civil_registration": "Civil Registration",
+    "clan_diplomacy": "Clan Diplomacy Law",
+    "clan_residence": "Clan Residence",
+    "clergy_rights_laws": "Rights of the Clergy",
+    "coin_laws": "Coinage Law",
+    "colonial_federation_unification": "Unification of the Colonial Federation",
+    "colonial_policy": "Colonial Policy",
+    "colonial_representation_law": "Colonial Representation",
+    "court_etiquette": "Court Etiquette Law",
+    "crown_rights_laws": "Rights of the Crown",
+    "cultural_traditions_law": "Cultural Traditions",
+    "dahsala_system": "Dahsala Taxation",
+    "distribution_of_power_law": "Distribution of Power",
+    "divine_cause_law": "Divine Cause",
+    "double_sabbath_tenet": "Double Sabbath",
+    "economic_framework": "Economic Law",
+    "economical_policies_law": "Economic Policy",
+    "education_elites_law": "Education of the Elites",
+    "education_masses_law": "Education of the Masses",
+    "electorate_organization_law": "Electorate Organization",
+    "electorate_religion_law": "Electorate Religious Law",
+    "enclosure_movement": "Enclosure Movement",
+    "eng_order_of_the_garter_law": "Order of the Garter",
+    "eng_taxation_law": "Taxation",
+    "essence_tenet": "Essence",
+    "factory_working_conditions_law": "Factory Working Conditions",
+    "feudal_de_jure_law": "Feudal 'De Jure' Laws",
+    "foreign_cultural_law": "Foreign Cultural Law",
+    "formal_script": "Formal Script Law",
+    "fra_5_percent_tax": "Machault's Five Percent Tax",
+    "fra_fouage_tax": "Fouage Tax Levy",
+    "fra_jansenism_legality": "Status of Jansenism",
+    "fra_reformation_tolerance_edicts": "Reformation Edicts",
+    "fra_taille": "Taille",
+    "free_city_law": "Free Cities",
+    "free_city_rights_law": "Free City Rights",
+    "french_colonial_ambition_focus": "Colonial Aspirations",
+    "golden_bull": "Golden Bull",
+    "guilds_of_florence": "Primacy of Florentine Guilds",
+    "guru_amar_das_guruship": "Guru Amar Das Teachings",
+    "guru_angad_guruship": "Guru Angad Teachings",
+    "guru_arjan_guruship": "Guru Arjan Teachings",
+    "guru_gobind_singh_guruship": "Guru Gobind Singh Teachings",
+    "guru_granth_sahib_guruship": "Guru Granth Sahib Teachings",
+    "guru_har_krishan_guruship": "Guru Har Krishan Teachings",
+    "guru_har_rai_guruship": "Guru Har Rai Teachings",
+    "guru_hargobind_guruship": "Guru Hargobind Teachings",
+    "guru_nanak_guruship": "Guru Nanak Teachings",
+    "guru_ram_das_guruship": "Guru Ram Das Teachings",
+    "guru_tegh_bahadur_guruship": "Guru Tegh Bahadur Teachings",
+    "hab_military_frontier": "Military Frontier",
+    "harem_law": "Harem Laws",
+    "heir_religion_law": "Heir Religion",
+    "hindu_branch_spec": "Tradition",
+    "holy_mission_law": "Holy Mission",
+    "hun_frontier_fortresses": "The Frontier Fortresses",
+    "immigration_law": "Border Controls",
+    "imperial_circles_law": "Imperial Circles",
+    "imperial_diet_law": "Imperial Diet",
+    "imperial_examination_law": "Examination System",
+    "imperial_religion": "Imperial Religion",
+    "imperial_succession_law": "Imperial Succession",
+    "imperial_voting_law": "Imperial Voting",
+    "inquisition_law": "Inquisition Law",
+    "intellectual_movements": "Intellectual Movements",
+    "intelligence_agency": "Intelligence Agency",
+    "interpatriarchal_relations_tenet": "Interpatriarchal Relations",
+    "iqta_law": "Iqṭā'",
+    "ira_alcohol_ban": "Alcohol Restrictions",
+    "jakun_gusa": "Jakūn Gūsa",
+    "jap_buke_shohatto": "Buke Shohatto",
+    "jap_sakoku_law": "Overseas Interaction",
+    "keju_examination": "Kējǔ Examination",
+    "khalsa_law": "Khalsa",
+    "kor_currency": "Dominant Currency",
+    "landfriede_law": "Landfriede",
+    "language_of_pleading": "Language of Pleading",
+    "lat_orthodox_status_with_the_empire": "Orthodox Status within the LAT",
+    "legal_code_law": "Legal Code",
+    "legal_framework": "Bureaucratic Law",
+    "legitimization_of_power_law": "Legitimization of Power",
+    "liturgical_practices": "Liturgical Practices",
+    "local_administration": "Administration Law",
+    "lordship_of_ireland_rule_law": "Rule of Ireland",
+    "main_philosophy_law": "Main Philosophy",
+    "mamluk_army_law": "Mamlūk Army Law",
+    "mamluk_promotion_law": "Mamlūk Promotion Law",
+    "mamluk_rank_system_laws": "Mamlūk Rank System",
+    "maritime_law": "Maritime Law",
+    "marriage_law": "Marriage Law",
+    "mch_queue_hair": "Tìfāyìfú",
+    "medieval_levy_law": "Levy Law",
+    "mesta_council_law": "Mesta Council",
+    "middle_kingdom_decrees": "Middle Kingdom",
+    "military_contribution": "Imperial Register",
+    "mining_law": "Mining Law",
+    "monastic_reformation_movement": "Monastic Reformation Movement",
+    "monetary_contribution": "Imperial Tax Law",
+    "mutual_defense_law": "Mutual Defense",
+    "mutual_offense_law": "Mutual Offense",
+    "native_policy": "Native Policy",
+    "nature_of_our_faith_law": "Nature of our Faith",
+    "nature_tenet": "Nature",
+    "nav_adaptability": "Navarrese Adaptability",
+    "naval_doctrine_law": "Naval Doctrine",
+    "nobles_rights_laws": "Rights of the Nobility",
+    "outwards_view": "Outwards View",
+    "patriarchate_law": "Role of the Patriarchate",
+    "peasants_rights_laws": "Rights of the Commoners",
+    "perpetual_diet_law": "Perpetual Diet",
+    "person_tenet": "Hypostasis",
+    "piracy_law": "Piracy Law",
+    "por_estudo_geral_law": "Estudo Geral",
+    "power_of_the_emperor_law": "Power of the Hre",
+    "precious_metal_distribution_law": "Precious Metal Distribution",
+    "press_law": "Press Laws",
+    "principle_of_administration_law": "Administrative Principles",
+    "prosopon_tenet": "Prosopon",
+    "provincial_governorship": "Provincial Governorship",
+    "recruitment_law": "Recruitment Law",
+    "republican_election_law": "Election",
+    "republican_electorate_law": "Republican Electorate Law",
+    "republican_foundation_law": "Foundation of Republic",
+    "republican_power_law": "Republican Power",
+    "royal_court_customs_law": "Royal Court Customs",
+    "ruler_and_patriarch_tenet": "Ruler and Patriarch Relations",
+    "sc_election_frequency": "Election Frequency",
+    "sc_election_method": "Election Method",
+    "sc_internal_politics": "Internal Politics",
+    "sc_membership_regulation": "Membership Regulation",
+    "sc_policy_proposal_frequency": "Policy Proposal Frequency",
+    "sc_power_of_the_sovereign": "Swiss Confederation Power",
+    "sc_relations_with_hre": "Imperial Relations",
+    "sc_religious_affairs": "Religious Affairs",
+    "sc_representative": "Swiss Group Representative",
+    "sc_ruling_period": "Ruling Period",
+    "sc_unification": "Swiss Unification",
+    "sc_war_politics": "War Politics",
+    "sco_authority_over_the_clergy": "Authority over the Clergy",
+    "sco_clan_holdings": "Distribution of SCO Clan Holdings",
+    "sco_colonial_affairs_law": "SCO Colonial Affairs",
+    "sect_school_law": "Sect School",
+    "secularized_electors_law": "Secularization of the Electorate",
+    "sharia_law": "Sharī'ah Jurisprudence",
+    "six_ministries": "Six Ministries",
+    "six_ministries_overseer_law": "Six Ministries Supervision",
+    "slave_conversion": "Slave Conversion",
+    "slavery_laws": "Slavery Laws",
+    "society_of_jesus": "Society of Jesus",
+    "status_of_the_han_law": "Status of the Han",
+    "sumptuary_law": "Sumptuary Law",
+    "tax_base_system": "Tax Base System",
+    "tax_obligations": "Clan Taxation Law",
+    "teu_amber_monopoly_law": "Amber Monopoly",
+    "theocratic_leadership": "Theocratic Leadership",
+    "tianxia": "Tiānxià",
+    "trade_relations": "Trade Relations Law",
+    "trade_unions_law": "Trade Unions",
+    "tribal_cultural_identity_law": "Tribal Cultural Identity",
+    "tribal_legal_basis_law": "Legal Basis",
+    "tribal_migration_law": "Tribal Migration",
+    "tribal_modernization_law": "Tribal Modernization",
+    "tribal_organization_law": "Tribal Organization",
+    "tribal_religious_values_law": "Tribal Religious Values",
+    "unification_law": "Unification Law",
+    "union_codified_inheritance_law": "Codified Inheritance",
+    "union_diplomatic_law": "Diplomatic Liberties",
+    "union_economic_law": "Economy of the Union",
+    "union_foundation_law": "Union Foundation",
+    "union_legislature_law": "Legislature of the Union",
+    "union_mutual_offense_law": "Mutual Offense",
+    "union_unification_of_crowns_law": "Question of Unification",
+    "vajrayana_law": "Tantric Practices",
+    "venetian_papal_relation_law": "The Holy Office",
+    "vestiarium": "Vestiarium",
+    "witchcraft_act": "The Witchcraft Act"
+  },
+  "policies": {
+    "abolish_imperial_examination": "Abolish the Examination System",
+    "absolute_presidential_power_policy": "Absolute Power of the President",
+    "absolute_rule_policy": "Absolute Rule",
+    "absolute_rulership": "Absolute Rulership",
+    "accept_essence_tenet": "Accept the Tenet of Essence",
+    "accept_person_tenet": "Single Hypostasis",
+    "accept_prosopon_tenet": "Monoprosopic Concept",
+    "act_of_navigation": "Act of Navigation",
+    "adamite_marriage": "Communal Living",
+    "adelantamiento_system": "Adelantamiento System",
+    "adi_granth": "Adi Granth",
+    "administrative_clergy_policy": "Administrative Clergy",
+    "administrative_focus": "Administrative Focus",
+    "agrarian_constitution": "Agrarian Constitution",
+    "ajnad_al_halqa": "Ajnād al-Ḥalqa",
+    "akal_takht": "Akal Takht",
+    "al_mamalik_al_sultaniyya": "Al-Mamālik al-Sulṭāniyya",
+    "alarde": "Alarde",
+    "all_cultures": "Inclusive Levies",
+    "allotment_system_policy": "Allotment System",
+    "allow_christological_debates_tenet": "Allow Christological Debates",
+    "allow_double_sabbath_tenet": "Allow Double Sabbath",
+    "allow_foreign_exchanges_policy": "Allow Foreign Exchanges",
+    "allow_foreign_rituals": "Allow Foreign Rituals",
+    "allow_slave_religion": "Allow Slave Religion",
+    "allow_trade": "Allow Trade",
+    "allowed_fouage_tax": "Levying Fouage Tax",
+    "amphibious_specialization_policy": "Amphibious Specialization",
+    "amrit_sanskar": "Amrit Sanskar",
+    "ananda_karaja": "Ānada Kāraja",
+    "anti_piracy_policy": "Anti-Piracy",
+    "apc_dabir_focus_policy": "Dabir Focus",
+    "apc_mazumdar_focus_policy": "Mazumdar Focus",
+    "apc_nyayadhish_focus_policy": "Nyayadhish Focus",
+    "apc_panditrao_focus_policy": "Panditrao Focus",
+    "apc_peshwa_focus_policy": "Peshwa Focus",
+    "apc_sacheev_focus_policy": "Sacheev Focus",
+    "apc_senapati_focus_policy": "Senapati Focus",
+    "apc_waqia_navis_focus_policy": "Waqia-Navis Focus",
+    "appointed_posts_policy": "Appointed Posts",
+    "apprenticeships_education": "Individual Apprenticeships",
+    "ara_consulate_sea": "Consulate of the Sea",
+    "ara_royal_ordinances_policy": "ARA Royal Ordinances",
+    "aristocratic_court_policy": "Aristocratic Court",
+    "arti_maggiori": "Arti Maggiori",
+    "arti_mediane": "Arti Mediane",
+    "arti_minori": "Arti Minori",
+    "articles_of_agreement": "Articles of Agreement",
+    "assizes_of_romania_policy": "Assizes of Romania",
+    "assured_defense_policy": "Assured Defense",
+    "assured_offense_policy": "Assured Offense",
+    "authoritarianism_policy": "Authoritarianism",
+    "authority_of_the_captain": "Authority of the Captain",
+    "automatic_defense_policy": "Automatic Defense",
+    "automatic_offense_policy": "Automatic Offense",
+    "autonomous_councils": "Autonomous Councils",
+    "autonomous_offices": "Autonomous Offices",
+    "awlad_al_nas_policy": "Awlād al-Nās",
+    "azhaliism_policy": "Azhaliism",
+    "balanced_court_policy": "Balanced Court",
+    "balanced_mission_policy": "Balanced Mission",
+    "ban_on_alcohol": "Ban on Alcohol",
+    "banned_simony": "Romanum Decet Pontificem",
+    "barter_exchange": "Barter Exchange",
+    "basic_court_etiquette_policy": "Basic Court Etiquette",
+    "basic_legal_framework_policy": "Basic Legal Framework",
+    "basic_religious_education": "Religious Teachings",
+    "basque_mariners": "Basque Mariners",
+    "bav_codex_bavarica": "Upper Bavarian Land Rights",
+    "belief_and_unitiy_policy": "Belief and Unity",
+    "belligerent_stance": "Belligerent Stance",
+    "benefits_for_privateers": "Benefits for Privateers",
+    "bid_for_unification": "Bid for Unification",
+    "black_army_policy": "Black Army",
+    "black_market_consortium": "Black Market Consortium",
+    "blood_tax_of_foreigners": "Blood Tax of Foreigners",
+    "board_of_admirals_policy": "Board of Admiralty",
+    "brehon_law_policy": "Brehon Law",
+    "broad_executive_power_policy": "Broad Executive Power",
+    "bullion_coins": "Bullion Coins",
+    "burghers_controlled_amber_gathering": "Amber in Burghers Estate Hands",
+    "burghers_levies_policy": "Regulated Naval Service",
+    "burghers_mining_law": "Burghers-Controlled Mining Operations",
+    "burmese_buddhism_policy": "Burmese Buddhism",
+    "by_blood": "By Blood",
+    "by_tradition": "By Tradition",
+    "byz_megas_domestikos_policy": "Mégas Doméstikos Command",
+    "byz_porphyrogennetos_court_policy": "Porphyrogénitus Court",
+    "byz_tagmata_policy_upgraded": "Reformed Tágmata",
+    "byz_varangian_guard_policy": "Varangian Guard",
+    "byzantine_law": "Byzantine Law",
+    "byzantine_rites": "Byzantine Rites",
+    "cabinet_noir_policy": "Cabinet Noir",
+    "caesaropapism_tenet": "Caesaropapism",
+    "caliphate_reform": "Caliphate",
+    "calpixque_system_policy": "Calpixque System",
+    "calpulli_policy": "Calpulli",
+    "cameralism_policy": "Cameralism",
+    "canton_system_policy": "Canton System",
+    "carta_de_logu_policy": "Carta de Logu",
+    "catholic_influenced_rites": "Catholic-Influenced Rites",
+    "cavalry_warfare_policy": "Cavalry Warfare",
+    "celibacy": "Celibacy",
+    "censored_press": "Censored Press",
+    "central_councils": "Central Council",
+    "centralized_bureaucracy_policy": "Centralized Offices",
+    "centralized_civil_registration_policy": "Centralized Civil Registration",
+    "centralized_tribe_policy": "Centralized Tribe",
+    "chi_direct_report": "Direct Reports",
+    "chi_grand_chancellorship": "Grand Chancellorship",
+    "chi_grand_secretariat": "Grand Secretariat",
+    "chi_ming_dynasty_code_policy": "The Great Code",
+    "chinese_embassies_policy": "Allow Chinese Embassies",
+    "chinese_jakun_gusa": "Chinese Jakūn Gūsa",
+    "chinese_tribute_policy": "Chinese Tribute",
+    "christian_first": "Christian First!",
+    "church_and_state_policy": "Church and State",
+    "cities_of_the_emperor_policy": "Cities of the Hre",
+    "citizenry": "Citizenry",
+    "civil_law_policy": "Civil Law",
+    "civil_society": "Civil Society",
+    "clan_council_policy": "Clan Council",
+    "clan_embassies_policy": "Clan Embassies",
+    "clan_trade_only_policy": "Restricted Clan Trade",
+    "clerical_institutions": "Theological Institutions",
+    "clerical_state": "Clerical State",
+    "closed_borders_law": "Closed Borders",
+    "codified_cefeng_tizhi_policy": "Codified Cèfēng Tǐzhì",
+    "codified_power_policy": "Codified Power",
+    "colonial_burghers_authority_policy": "Grant Colonial Authority",
+    "colonial_federation_found_monarchy": "Found a new Monarchy",
+    "colonial_federation_found_republic": "Found a new Republic",
+    "colonial_federation_found_theocracy": "Found a new Theocracy",
+    "colonial_representation_law_no": "No Representation",
+    "colonial_representation_law_yes": "Representation in Parliament",
+    "combat_heresy_policy": "Combat Heresy",
+    "combined_patriarchate_policy": "Combined Patriarchy",
+    "commence_infrastructure_works_decree": "Commence Infrastructure Works",
+    "commercial_mission_policy": "Commercial Mission",
+    "commercialist_principle": "Commercialist Principle",
+    "common_law_policy": "Common Law",
+    "complete_imperial_contribution": "Imperial Taxation",
+    "complete_religious_autonomy_policy": "Complete Religious Autonomy",
+    "composite_nature": "Composite Nature",
+    "conciliarism": "Conciliarism",
+    "conciliatory_stance": "Conciliatory Stance",
+    "condottieri_contracts_policy": "Condottieri Contracts",
+    "conduct_population_census_decree": "Conduct Population Census",
+    "confederal_union": "Confederal Union",
+    "confucian_academies_education": "Confucian Academies",
+    "confucianism_policy": "Confucianism",
+    "consiglio_maggiore": "Consiglio Maggiore",
+    "consolidated_power": "Consolidated Power",
+    "continue_the_imperial_examination": "Continuous Operation",
+    "cooperation_between_patriarchs_tenet": "Cooperation Between Patriarchs",
+    "copper_coins": "Swedish Copper Coins",
+    "cordial_relations": "Cordial Relations",
+    "council_of_captains": "Council of Captains",
+    "council_of_three_lands_policy": "Council of Three Lands",
+    "court_of_appeals": "Court of Appeals",
+    "court_of_culture_policy": "Court of Culture",
+    "couteume_de_normaundie": "Coutume de Normandie",
+    "crown_religious_jurisdiction": "Government Jurisdiction",
+    "curtail_burghers_policy": "Curtail the Burghers",
+    "curtail_clergy_policy": "Curtail the Clergy",
+    "curtail_nobles_policy": "Curtail the Nobility",
+    "curtail_peasants_policy": "Curtail the Commoners",
+    "curtailed_governors_policy": "Curtailed Governors",
+    "custom_union_of_the_rhine_policy": "Rheinischer Münzverein",
+    "cyfraith_hywel_policy": "Cyfraith Hywel",
+    "dan_danske_lov": "Danske Lov",
+    "dan_regional_law": "Regional Laws of Denmark",
+    "danish_admirality": "DAN Admiralty",
+    "daoism_policy": "Daoism",
+    "dasam_granth": "Dasam Granth",
+    "dasvandh_tax": "Dasvandh Tax",
+    "de_heretico_comburendo": "De Heretico Comburendo",
+    "decent_conditions": "Decent Conditions",
+    "decentralized_bureaucracy_policy": "Decentralized Offices",
+    "decentralized_farming_villages": "Decentralized Farming Villages",
+    "decentralized_trade_federations": "Decentralized Trade Federation",
+    "defensive_stance": "Defensive Stance",
+    "defensive_stance_policy": "Defensive Stance",
+    "delegated_authority": "Delegated Authority",
+    "delegated_civil_registration_policy": "Delegated Civil Registration",
+    "deny_essence_tenet": "Reject the Tenet of Essence",
+    "deny_person_tenet": "Multiple Hypostases",
+    "deny_prosopon_tenet": "Dyoprosopic Concept",
+    "devolution_of_powers_policy": "Devolution Of Powers",
+    "devshirme_system_policy": "Devşirme System",
+    "dharamyudh": "Dharamyudh",
+    "dharma_school_policy": "Dharma School",
+    "diplomatic_focus": "Diplomatic Focus",
+    "direct_appointment": "Direct Appointment",
+    "direct_imperial_cities_policy": "Direct Imperial Cities",
+    "dishu_system": "Díshù System",
+    "dispersed_harem_policy": "Dispersed Harem",
+    "divine_justice": "Divine Justice",
+    "doktrinalnaya_ohrana": "Oprichniki Raids Permitted",
+    "dop_favor_the_burghers": "Favor the Wealthy",
+    "dop_favor_the_clergy": "Favor the Clergy",
+    "dop_favor_the_clergy_catholic": "Favor the Church",
+    "dop_favor_the_commoners": "Favor the Common People",
+    "dop_favor_the_kontors": "Favor the Kontors",
+    "dop_favor_the_nobles": "Favor the Elites",
+    "dop_favor_the_ruler": "Favor the Ruler",
+    "dop_law_assemblee_nationale": "Assemblée Nationale",
+    "dop_law_castilian_courts": "Cortes de Castilla",
+    "dop_law_castilian_courts_reinforced": "Reinforced Cortes de Castilla",
+    "dop_law_comuneros_parliament": "Empowered Cortes",
+    "dop_law_english_parliament": "ENG Parliament",
+    "dop_law_estates_general": "Estates General",
+    "dop_law_gbara": "Gbara",
+    "dop_law_governing_senate": "Governing Senate",
+    "dop_law_navarrese_courts": "Cortes de Navarra",
+    "dop_law_state_council": "State Council",
+    "dop_office_of_the_eristavi": "Office of the Eristavi",
+    "dop_rudolfine_house_rules": "Reformed House Rules",
+    "dop_traditional_distribution_of_power": "Traditional Distribution",
+    "dual_nature": "Dual Nature",
+    "dutch_trade_fleet": "Dutch Trade Fleet",
+    "dynastic_administration_policy": "Dynastic Administration",
+    "dynastic_basis": "Dynastic Basis",
+    "dynastic_holdings_conslidated": "Dynastic Holdings",
+    "dynastic_lineage_policy": "Dynastic Lineage",
+    "dynastic_rule_policy": "Dynastic Rule",
+    "early_standing_army_policy": "Early Standing Army",
+    "edict_of_chateaubriant": "Edict of Châteaubriant",
+    "edict_of_fontainebleau": "Edict of Fontainebleau",
+    "edict_of_nantes": "Edict of Nantes",
+    "education_of_the_court": "Education of the Court",
+    "education_of_the_missionaries": "Education of the Missionaries",
+    "education_of_the_people": "Education of the People",
+    "education_of_the_theocrat": "Education of the Theocrat",
+    "efficient_tax_farming": "Tax Farming",
+    "elector_council_policy": "Elector Council",
+    "electorate_policy": "Electorate",
+    "elite_training_policy": "Elite Training",
+    "embrace_the_economic_theory_policy": "Embrace the Economic Theory",
+    "emperor_dynastic_preference_policy": "Emperor Dynastic Preference",
+    "emperor_successor_preference_policy": "Emperor Successor Preference",
+    "empire_wide_free_cities_policy": "Indiscriminate Free City Rights",
+    "enclosure_act": "Enclosure Act",
+    "enclosure_allowed": "Enclosure Allowed",
+    "enclosure_disallowed": "Enclosure Disallowed",
+    "encomienda_system_policy": "Encomienda System",
+    "endorsed_simony": "Quae sunt Caesaris Deo",
+    "enforce_queue_hair": "Enforce Biànzi",
+    "eng_order_of_the_garter_arts_policy": "Patron of Arts",
+    "eng_order_of_the_garter_clergy_policy": "Holy Brotherhood",
+    "eng_order_of_the_garter_foreign_policy": "Stranger Knights",
+    "eng_order_of_the_garter_nobility_policy": "Knights Companion",
+    "eng_order_of_the_garter_peasants_policy": "Alms Knights",
+    "enlightened_principle": "Enlightened Principle",
+    "epic_tradition_education": "Epic Tradition",
+    "epic_tradition_education_sects": "Epic Tradition",
+    "equal_power_relation_policy": "Equal Power Relation",
+    "erbkaisertum_policy": "Erbkaisertum",
+    "established_domains_policy": "Established Domains",
+    "established_provincial_governors": "Established Provincial Governors",
+    "eternally_living_guru": "Eternally Living Gurū",
+    "exceptional_only": "Exceptional Only",
+    "expand_palace_bureaucracy_decree": "Expand Palace Bureaucracy",
+    "expand_the_tianxia_policy": "Expand the Tiānxià",
+    "expanded_edict_of_fontainebleau": "Expanded Edict of Fontainebleau",
+    "expanded_electors_policy": "Expanded Electors",
+    "expanded_levies_policy": "Expanded Levies",
+    "expulsion_of_heathens_policy": "Expulsion of Heathens",
+    "extensive_tax_obligations_policy": "Extensive Tax Obligations",
+    "external_mission_policy": "External Mission",
+    "eyalet_division": "Eyalet Division",
+    "fair_conditions": "Fair Conditions",
+    "fair_tax_obligations_policy": "Fair Tax Obligations",
+    "faith_and_power_policy": "Faith and Power",
+    "federal_state": "Federal State",
+    "federal_tribe_policy": "Federal Tribe",
+    "fetha_negest_policy": "Fetha Negest",
+    "feudal_administration": "Feudal Administration",
+    "figurehead_position_policy": "Figurehead Position",
+    "financed_rgo_policy": "Resource Extraction Bureaus",
+    "five_percent_tax": "For All Estates",
+    "fleet_in_being": "Fleet in Being",
+    "flower_garland_school_policy": "Flower Garland School",
+    "focus_on_classics": "Focus on Classics",
+    "forbid_christological_debates_tenet": "Forbid Christological Debates",
+    "forbid_double_sabbath_tenet": "Forbid Double Sabbath",
+    "force_slave_conversion": "Force Slave Conversion",
+    "foreign_court_customs_policy": "Foreign Customs",
+    "forestry_ordinance": "Forestry Ordinance",
+    "forums_of_thought": "Open Institutions",
+    "fragance_of_a_flower": "Fragrance of a Flower",
+    "free_cefeng_tizhi_policy": "Free Cèfēng Tǐzhì",
+    "free_cities_policy": "Free Cities",
+    "free_electorate_policy": "Free Electorate",
+    "free_oarsmen": "Free Oarsmen",
+    "free_press": "Free Press",
+    "free_trade_policy": "Free Trade",
+    "french_east_india_company": "FRA East India Company",
+    "french_far_east_ambitions": "Ambitions in the Far East",
+    "french_mercantile_colonies": "New World Settlements",
+    "frequent_elections": "Frequent Elections",
+    "frequent_migration_policy": "Frequent Migration",
+    "frontier_maintained": "Frontier Maintained",
+    "frontier_not_maintained": "Frontier Not Maintained",
+    "gallicanism": "Gallicanism",
+    "german_and_german_adjacent_free_cities_policy": "Brethren-Cultured Free Cities",
+    "german_free_cities_only_policy": "Only Germanic Free Cities",
+    "german_mining_law": "Bergordnung",
+    "ghalla_bakshi": "Ghalla Bakshi System",
+    "god_and_man_policy": "God and Man",
+    "gold_and_silver_coins": "Gold and Silver Coins",
+    "gold_coins": "Gold Coins Only",
+    "gold_export_ban": "Export Ban",
+    "golden_bull_policy": "Seal the Golden Bull",
+    "goryeon_code_policy": "Goryeon Code",
+    "grand_armada": "Grand Armada",
+    "great_imperial_army": "Great Imperial Army",
+    "gurmukhi_script": "Gurmukhī Script",
+    "guru_panth": "Guru Panth",
+    "guru_travels": "Gurū Travels",
+    "haijin_policy": "Hǎijìn",
+    "hanafi_policy": "Ḥanafī Jurisprudence",
+    "hanbali_policy": "Ḥanbalī Jurisprudence",
+    "hanseatic_coins_policy": "Wendischer Münzverein",
+    "harem_policy": "Royal Harem",
+    "heir_any_religion": "Any Religion",
+    "heir_same_religion": "Same Religion",
+    "heir_same_religion_group": "Same Religious Group",
+    "heir_special_succession": "Special Succession",
+    "high_christology": "High Christology",
+    "holy_abode": "Holy Abode",
+    "holy_roman_figurehead_policy": "Holy Roman Figurehead",
+    "home_security_policy": "Home Security",
+    "hre_agnatic_succession_policy": "Agnatic Succession",
+    "hre_bi_camerial_imperial_diet_policy": "Bicameral Imperial Diet",
+    "hre_early_imperial_diet_policy": "Early Imperial Diet",
+    "hre_pragmatic_sanction_policy": "Pragmatic Sanction",
+    "hre_religion_calvinist": "Imperial Religion - Calvinism",
+    "hre_religion_catholic": "Imperial Religion - Catholicism",
+    "hre_religion_christian": "Imperial Religion - Christianity",
+    "hre_religion_hussite": "Imperial Religion - Hussitism",
+    "hre_religion_lutheran": "Imperial Religion - Lutheranism",
+    "hre_tri_camerial_imperial_diet_policy": "Tricameral Imperial Diet",
+    "humanist_court_policy": "Humanist Court",
+    "ibadi_policy": "Ibāḍī Jurisprudence",
+    "impartial_manji_heads": "Impartial Manji Heads",
+    "imperial_armory_expanded": "Expansion of the Armories",
+    "imperial_armory_implementation": "Imperial Armory Implementation",
+    "imperial_circles_established": "Imperial Circles Established",
+    "imperial_standing_army": "Imperial Standing Army",
+    "improved_imperial_authority_policy": "Improved Imperial Authority",
+    "income_tax": "Income Taxation",
+    "increase_tariff_control_decree": "Increase Tariff Control",
+    "increased_trade_regulations": "Increased Trade Regulations",
+    "independent_acting_patriarchs_tenet": "Independent Acting Patriarchs",
+    "independent_authorities_tenet": "Independent Authorities",
+    "inherited_clan_holdings": "Direct Inheritance",
+    "integrate_foreign_traditions": "Integrate Foreign Traditions",
+    "integrated_electors_policy": "Integrated Electors",
+    "internal_mission_policy": "Internal Mission",
+    "introduce_gaituguiliu_policy": "The Gǎitǔguīliú System",
+    "invisible_church": "Invisible Church",
+    "ismaili_policy": "Ismā'īlī Jurisprudence",
+    "issue_great_warnings_decree": "Issue Great Warnings",
+    "issue_letter_of_marque_policy": "Letters of Marque",
+    "italian_adelantamiento_policy": "Adelantamiento of Italy",
+    "italian_catepanate_policy": "Catepanate of Italy",
+    "italian_direct_rule_policy": "Direct Rule",
+    "italian_imperial_fiefs_policy": "Italian Imperial Fiefs",
+    "italian_local_autonomy_policy": "Local Autonomy",
+    "italian_ordonnances_royales_policy": "Ordonnances Royales",
+    "italian_tribute_system_policy": "Tribute System",
+    "itinerant_court_policy": "Itinerant Court",
+    "jafari_policy": "Ja'farī Jurisprudence",
+    "jagir_taxation": "Jāgir Taxation",
+    "jansenism_no_formal_law": "No Formal Law",
+    "jap_buke_shohatto_enforced": "Enforced Buke Shohatto",
+    "jap_buke_shohatto_guidelines": "Buke Shohatto Guidelines",
+    "jesuits_allowed": "Jesuits Allowed",
+    "jesuits_not_allowed": "Not Allowed",
+    "jinyiwei_policy": "Jǐnyīwèi",
+    "jodou_shinshuu_policy": "Jōdo Shinshū",
+    "jonang_policy": "Jonang School",
+    "joseon_code_policy": "Joseon Code",
+    "jurchen_council": "Jurchen Group Council",
+    "kadam_policy": "Kadam School",
+    "kagyu_policy": "Kagyu School",
+    "kaisertum_policy": "Kaisertum",
+    "khalsa_fauj": "Khalsa Fauj",
+    "khmer_buddhism_policy": "Khmer Buddhism",
+    "kilwan_merchant_navy": "Kilwan Merchant Navy",
+    "kirat_karo": "Kirat Karō",
+    "komnenian_formalization": "Komnénian Prónoia",
+    "kor_barter_economy": "Barter Economy",
+    "kor_chinese_currency": "Chinese Currency",
+    "kor_jeohwa": "Jeohwa",
+    "kor_metal_coinage": "Metal Coinage",
+    "land_acquisition": "Land Acquisition",
+    "landfriede_policy": "Institute the Landfriede",
+    "landfriede_rank_2_policy": "Expand the Landfriede",
+    "landfriede_rank_3_policy": "Empower the Landfriede",
+    "landfriede_rank_4_policy": "Ewiger Landfriede",
+    "landholders": "Landholders",
+    "langar_community": "Langar Community",
+    "language_of_pleading_common": "Common Language",
+    "language_of_pleading_court": "Court Language",
+    "lankavong_policy": "Lankavong",
+    "large_army_policy": "A Large Standing Army",
+    "lat_limited_conversion_efforts": "Limited Reconversion Efforts",
+    "lat_papal_sanctioned_conversion_efforts": "Sanctioned Reconversion Efforts",
+    "lat_tolerance_orthodox_faith": "Tolerance of the Orthodox Faith",
+    "law_of_the_pious_emperor": "Law of the Pious Emperor",
+    "laws_of_burgos": "Laws of Burgos",
+    "lenient_taxation": "Lenient Taxation",
+    "levee_en_masse_policy": "Mass Army Policy",
+    "leyes_de_toro_policy": "Leyes de Toro",
+    "lifan_yuan_policy": "Lǐfān Yuàn",
+    "limit_chinese_influence_policy": "Limit Chinese Court Influence",
+    "limit_chinese_traditions": "Limit Chinese Traditions",
+    "limit_the_han_powers": "Expel from Bureaucracy",
+    "limited_censorship": "Limited Censorship",
+    "limited_curia_oversight": "Limited Curia Access",
+    "limited_electors_policy": "Limited Electors",
+    "limited_indulgences": "Cum Postquam",
+    "limited_veneration": "Licet ad Colenda",
+    "lip_service_policy": "Lip Service",
+    "lit_casimir_code_policy": "Sudebnik of Lithuania",
+    "local_courts": "Local Courts",
+    "local_courts_administration": "Local Courts",
+    "local_traditions_and_rites": "Local Rites",
+    "lockean_proviso_policy": "Lockean Proviso",
+    "longbow_competitions": "Longbow Competitions",
+    "lordship_of_ireland_rule_ascendancy_policy": "Religious Ascendancy",
+    "lordship_of_ireland_rule_laudabiliter_policy": "Laudabiliter",
+    "lordship_of_ireland_rule_statutes_of_kilkenny_policy": "Statutes of Kilkenny",
+    "low_christology": "Low Christology",
+    "loyal_pirate_crews": "Loyal Privateer Crews",
+    "luxurious_harem_policy": "Extravagant Harem",
+    "machiavellian_rule_policy": "Machiavellian Reign",
+    "mahavihara_policy": "Mahāvihāra",
+    "maiestas_carolina": "Maiestas Carolina",
+    "maintain_status_quo_in_han_policies": "Promote Chinese Group Bureaucracy",
+    "maj_office_of_the_mahapatih": "Office of the Mahapatih",
+    "maliki_policy": "Mālikī Jurisprudence",
+    "mall_akhara": "Mall Akhāṛā",
+    "mam_fluid_system": "Fluid",
+    "mam_rigid_system": "Rigid",
+    "mamalik_al_umara": "Mamālik al-Umarā'",
+    "mandate_of_ofen": "Mandate of Ofen",
+    "mandatory_impressment": "Mandatory Impressment",
+    "mansabdar_system": "Manṣabdār Organization",
+    "mansabdari_system_policy": "Mansabdari System",
+    "mantra_school_policy": "Mantra School",
+    "maritime_society": "Maritime Society",
+    "martial_society": "Martial Society",
+    "martyrdom": "Martyrdom",
+    "masand_system": "Masand System",
+    "matrilineal_customary_law_policy": "Matrilineal Customary Law",
+    "mch_green_standard_army": "Green Standard Army",
+    "meditation_school_policy": "Meditation School",
+    "mercenary_army_policy": "Mercenary Army",
+    "merchant_navy": "Merchant Navy",
+    "merindad_policy": "Merindad Division",
+    "merit_basis": "Merit Basis",
+    "meritocratic_leadership_policy": "Meritocratic Leadership",
+    "meritocratic_recruitment_policy": "Meritocratic Recruitment",
+    "meritocratic_rule_policy": "Meritocratic Rule",
+    "military_court_policy": "Military Court",
+    "military_examination": "Introduce Martial Examination",
+    "military_principle": "Military Principle",
+    "military_rulership_policy": "Military Rulership",
+    "military_settlements_policy": "Military Settlements",
+    "ministry_of_justice": "Ministry of Justice",
+    "ministry_of_personnel": "Ministry of Personnel",
+    "ministry_of_revenue": "Ministry of Revenue",
+    "ministry_of_rites": "Ministry of Rites",
+    "ministry_of_war": "Ministry of War",
+    "ministry_of_works": "Ministry of Works",
+    "miri_piri": "Mīrī Pīrī",
+    "mission_of_protection_policy": "Mission of Protection",
+    "mission_on_the_high_seas_policy": "Mission on the High Seas",
+    "mission_to_civilize_policy": "Mission to Civilize",
+    "mixed_institutions": "Mixed Institutions",
+    "modernize_into_monarchy_policy": "Modernize into a Monarchy",
+    "modernize_into_republic_policy": "Modernize into a Republic",
+    "modernize_into_theocracy_policy": "Modernize into a Theocracy",
+    "monastic_order": "Monastic Order",
+    "mongol_law_policy": "Mongol Law",
+    "mongol_script_policy": "Mongolian Script",
+    "monogamous_marriage": "Monogamous Marriage",
+    "moral_principle": "Moral Principle",
+    "most_holy_synod_policy": "The Most Holy Synod",
+    "mulasarvastivada_policy": "Mūlasarvāstivāda",
+    "multi_lingual_court": "Multi-Lingual Court",
+    "muslim_marriage": "Nikāḥ",
+    "musok_policy": "Musok",
+    "naam_japo": "Nām Japō",
+    "namestnik_policy": "Namestnik Office",
+    "nasaq": "Nasaq System",
+    "native_integration": "Integration",
+    "native_subjugation": "Subjugation",
+    "native_trade": "Trade",
+    "nature_guardian": "Nature Guardian",
+    "nav_maritime_code": "Navarrese Maritime Code",
+    "navy_audits": "Navy Audits",
+    "new_corpus_juris_civilis": "Corpus Juris Civilis",
+    "new_keju_formats_policy": "New Kējǔ Formats",
+    "new_laws_indies": "Leyes Nuevas",
+    "new_men_policy": "New Men",
+    "new_model_army_policy": "New Model Army",
+    "nichiren_policy": "Nichiren",
+    "no_censorship": "No Censorship",
+    "no_court_etiquette_policy": "No Court Etiquette",
+    "no_defense_policy": "No Defense",
+    "no_embassies_policy": "No Embassies",
+    "no_emperor_allegiance_policy": "Unprotected Free Cities",
+    "no_financial_indulgences": "Etsi Dominici Gregis",
+    "no_five_percent_tax": "Only for Peasants",
+    "no_free_cities_policy": "Free Cities Abolished",
+    "no_golden_bull_policy": "Uncodified Electoral Order",
+    "no_imperial_circles": "No Imperial Circles",
+    "no_imperial_diet_policy": "Traditional Diet",
+    "no_landfriede_policy": "Absence of Landfriede",
+    "no_legal_framework_policy": "No Legal Framework",
+    "no_military_contribution": "No Military Contribution",
+    "no_monetary_contribution": "No Taxation",
+    "no_offense_policy": "No Offense",
+    "no_perpetual_diet_policy": "Traveling Diet",
+    "no_restriction_on_alcohol": "No Restrictions on Alcohol",
+    "no_tax_obligations_policy": "No Tax Obligations",
+    "no_vajrayana_policy": "No Tantric Practices",
+    "no_veneration": "Ubi Moyses Ascendit",
+    "noble_cadets_policy": "Noble Cadets",
+    "noble_command_policy": "Noble Command",
+    "noble_levies": "Noble Levies",
+    "noble_levies_policy": "A Noble Army",
+    "nobles_electorate_policy": "Nobility Electorate",
+    "nobles_mining_law": "Nobility-Controlled Mining Operations",
+    "nobles_of_the_robe_policy": "Nobility of the Robe",
+    "non_possessors": "Non-Possessors",
+    "norwegian_sailors": "NOR Sailors",
+    "not_maintained": "Not Maintained",
+    "novgorod_judicial_charter_policy": "Novgorod Judicial Charter",
+    "novo_brdo_mining_law": "Novo Brdo Code",
+    "nueva_recopilacion_policy": "Nueva Recopilación",
+    "nyigma_policy": "Nyingma School",
+    "offensive_stance": "Offensive Stance",
+    "only_emperor_payment": "Direct Taxation",
+    "only_imperial_religion_group_policy": "Only Imperial Religion Group",
+    "only_imperial_religion_policy": "Only Imperial Religion",
+    "only_treasury_payment": "Treasury Taxation",
+    "open_borders_law": "Open Borders",
+    "oprichnik_policy": "Oprichnik",
+    "oral_tradition_education": "Oral Tradition",
+    "ordenamiento_de_alcala_policy": "Ordenamiento de Alcalá",
+    "ordinance_sea": "Ordinance of the Sea",
+    "ordinances_of_justice": "Ordinances of Justice",
+    "organize_our_faith_policy": "Organize Our Faith",
+    "origin_basis": "Origin Basis",
+    "ottoman_war_slave_tax": "Pençik Tax",
+    "outlaw_internal_warfare_policy": "Outlaw Internal Warfare",
+    "paik_system": "Paik System",
+    "palaeologan_hereditary_transition": "Palaiológian Hereditary Prónoia",
+    "papal_control": "Papal Control",
+    "patriarchate_reform": "Patriarchate",
+    "pause_on_fouage_collection": "Rescinded Levying of the Fouage Tax",
+    "peasant_controlled_amber_gathering": "Gathering by the Peasants Estate",
+    "peasant_levies": "Peasant Levies",
+    "peasants_mining_law": "Commoner-Controlled Mining Operations",
+    "permanent_settlement_policy": "Permanent Settlement",
+    "permanent_tax": "Permanent Tax",
+    "perpetual_diet_policy": "Perpetual Diet",
+    "personal_religious_education": "Personal Religious Education",
+    "pietism_society": "Prussian Virtues",
+    "piotrokow_wislica_statutes": "Piotrków-Wiślica Statutes",
+    "plc_sarmatism": "Sarmatism",
+    "poligar_system_policy": "Palaiyakkarars",
+    "political_dynasties_policy": "Political Dynasties",
+    "political_principle": "Political Principle",
+    "polygyny": "Polygyny",
+    "por_estudo_in_coimbra": "Estudo Geral in Coimbra",
+    "por_estudo_in_lisbon": "Estudo Geral in Lisbon",
+    "por_lei_mental": "Lei Mental",
+    "port_logs": "Port Logs",
+    "portuguese_colonial_captains": "POR Captaincies",
+    "portuguese_governorate_general": "POR Governorate General",
+    "portuguese_marines": "POR Marines",
+    "possessors": "Possessors",
+    "possible_defense_policy": "Possible Defense",
+    "possible_offense_policy": "Possible Offense",
+    "powerful_harem_policy": "Powerful Harem",
+    "priest_marriage_allowed": "Qualis est Pastor",
+    "priest_marriage_not_allowed": "In Rito Romano",
+    "priest_marriage_partially_allowed": "Non in Solo Pane",
+    "princely_bishopric_electorate_policy": "Traditional Electorate",
+    "promote_chinese_traditions": "Promote Chinese Traditions",
+    "pronoia_system": "Prónoia System",
+    "protect_trade_routes": "Protect Trade Routes",
+    "protection_of_the_poor": "Protection of the Poor",
+    "protection_principle": "Protection Principle",
+    "protestant_tolerance": "Edict of Lutheran Tolerance",
+    "pskov_judicial_charter_policy": "Pskov Judicial Charter",
+    "public_harem_policy": "Public Harem",
+    "pure_land_school_policy": "Pure Land Buddhism",
+    "pursuit_of_knowledge_policy": "Pursuit of Knowledge",
+    "pyatina_policy": "Pyatina Division",
+    "pyrenean_law_policy": "Pyrenean Law",
+    "quadrillas_organization": "Quadrillas Organization",
+    "queue_hair_status_quo": "Adoption of the Hànfú",
+    "rajya_policy": "Rajya",
+    "reduced_trade_regulations": "Reduced Mercantile Regulations",
+    "reformed_hussite_armies_policy": "Reformed Hussite Tactics",
+    "reformed_pronoia_system": "Reformed Prónoia System",
+    "reformist_tolerance": "Edict of Religious Tolerance",
+    "refuse_recognition": "Refuse Recognition",
+    "regulated_gold_export": "Regulated Export",
+    "regulations_of_the_royal_court": "Regulations of the Royal Court",
+    "reinforce_fortifications_decree": "Reinforce Fortifications",
+    "reliance_on_local_tribes": "Reliance on Local Tribes",
+    "religious_tribe_policy": "Religious Tribe",
+    "religious_values_policy": "Religious Values",
+    "renovatio_policy": "Renovatio Imperii",
+    "rentekammer_policy": "Rentekammeret",
+    "republicanism_policy": "Republicanism",
+    "resist_persecution": "Resist Persecution",
+    "restrict_the_tianxia_policy": "Restrict the Tiānxià",
+    "revert_to_the_crown": "Distributed by the Ruler",
+    "revise_the_jakun_gusa_policy": "Revise the Jakūn Gūsa",
+    "revoke_privilegia_policy": "Revoke Privilegia",
+    "rice_based_tax": "Rice-Based Tax",
+    "right_of_possesion": "Right of Possession",
+    "rotating_emperorship_policy": "Rotating Emperorship",
+    "royal_charter_policy": "Royal Charters",
+    "royal_fifth_law": "Royal Fifth",
+    "rule_by_the_public_policy": "Rule by the Public",
+    "ruler_general_policy": "Ruler General",
+    "rural_nobles_authority_policy": "Rural Noble Authority",
+    "russkaya_pravda_policy": "Russkaya Pravda",
+    "safeguard_holy_sites_policy": "Safeguard Holy Sites",
+    "sakoku_disabled": "Opened the Country",
+    "sakoku_enabled": "Sakoku",
+    "sakya_policy": "Sakya School",
+    "sangat_equality": "Sangat Equality",
+    "sankin_kotai_policy": "Sankin-kōtai",
+    "sc_alliance": "Swiss Alliance",
+    "sc_allow_internal_wars": "Allow Internal Wars",
+    "sc_biyearly_elections": "Biyearly Elections",
+    "sc_canton_representative": "Canton Representative",
+    "sc_councillor_representative": "Councillor Representative",
+    "sc_defensive_pact": "Defensive Pact",
+    "sc_direct_vote": "Direct Vote",
+    "sc_eight_yearly_elections": "8-yearly Elections",
+    "sc_enforcing_religious_unity": "Enforce Religious Unity",
+    "sc_forbid_internal_wars": "Forbid Internal Wars",
+    "sc_found_swiss_monarchy": "Found the Swiss Monarchy",
+    "sc_found_swiss_republic": "Found the Swiss Republic",
+    "sc_found_swiss_theocracy": "Found the Swiss Theocracy",
+    "sc_four_yearly_elections": "4-yearly Elections",
+    "sc_frequent_policy_proposals": "Frequent Policy Proposals",
+    "sc_just_swiss_culture": "Swiss Culture",
+    "sc_leave_the_hre": "Leave the Empire",
+    "sc_lifelong": "Lifelong",
+    "sc_lottery": "Lottery",
+    "sc_mending_schism": "Mending the Schism",
+    "sc_moderate_policy_proposals": "Moderate Policy Proposals",
+    "sc_remain_in_the_hre": "Remain in the Empire",
+    "sc_rotation": "Rotation",
+    "sc_sovereign_absolute_power": "Absolute Power",
+    "sc_sovereign_religious_power": "Religious Power",
+    "sc_sovereign_representative_power": "Representative Power",
+    "sc_swiss_culture_and_geography": "Native Swiss Only",
+    "sc_swiss_or_swiss_relative": "Relatives of the Swiss",
+    "sc_timed": "Timed",
+    "sc_united_war_efforts": "United War Efforts",
+    "sco_colonial_administration": "Experienced Colonial Administration",
+    "sco_limited_colonial_ventures": "Limited Colonial Ventures",
+    "sco_no_colonial_affairs": "No Colonial Ventures",
+    "scottish_civil_law": "Scottish Civil Law",
+    "scottish_noble_education": "Compulsory Education for Nobility",
+    "scottish_presbyterian_education": "Presbyterian Education",
+    "scripture_hymns": "Scripture Hymns",
+    "sea_beggars_policy": "Sea Beggars",
+    "seasonal_travel_policy": "Seasonal Travel",
+    "secluded_harem_policy": "Secluded Harem",
+    "secret_police_policy": "Secret Police",
+    "secretnoye_byuro_policy": "Secretnoye Byuro",
+    "secular_education": "Secular Education",
+    "secularized_electors_policy": "Secularized Electorate",
+    "separate_clergy_from_state_policy": "Secularization of the State",
+    "separate_nature": "Separate Nature",
+    "separated_patriarchate_policy": "Separated Patriarchy",
+    "settled_colonies": "Settled Colonies",
+    "shafii_policy": "Shāfi'ī Jurisprudence",
+    "shaivism": "Shaivism",
+    "shaktism": "Shaktism",
+    "shared_crops_policy": "Shared Crops",
+    "sharia_law_policy": "Sharī'ah Law",
+    "sheikh_ul_islam_policy": "Šayḵ al-Islām",
+    "ship_boarding": "Ship Boarding",
+    "shipwright_standard_regulation": "Shipwright Standard Regulation",
+    "shugendo_policy": "Shugendō",
+    "siete_partidas_law": "Siete Partidas",
+    "sikh_pluralism": "Sikhism Pluralism",
+    "silver_coins": "Silver Coins Only",
+    "single_nature": "Single Nature",
+    "single_whip_policy": "Single Whip Policy",
+    "sinicized_administration_policy": "Sinicized Administration",
+    "sinicized_cabinet_policy": "Sinicized Cabinet",
+    "sinicized_court_etiquette_policy": "Sinicized Court Etiquette",
+    "sinicized_legal_framework_policy": "Sinicized Legal Framework",
+    "sinicized_script_policy": "Sinicized Writing",
+    "six_livres_policy": "Les Six Livres de la République",
+    "slavery_allowed": "Slave Trade Allowed",
+    "slavery_outlawed": "Slave Trade Banned",
+    "slavophiles": "Slavophiles",
+    "smartism": "Smartism",
+    "smugglers_haven": "Smugglers' Haven",
+    "sobornoye_ulozheniye_policy": "Sobornoye Ulozheniye",
+    "society_of_jesus_allowed": "Regimini Militantis Ecclesiae",
+    "society_of_jesus_not_allowed": "Dominus Ac Redemptor Noster",
+    "spa_inquisition_policy": "Spanish Inquisition",
+    "spy_office_policy": "Spy Office",
+    "state_controlled_amber_gathering": "State-Controlled Gathering",
+    "state_inquisitors": "State Inquisitors",
+    "state_of_faith_policy": "State of Faith",
+    "state_patriarchate_policy": "State Patriarchy",
+    "state_piracy_policy": "State Piracy",
+    "state_press_only": "State Press Only",
+    "statutes_of_lithuania_policy": "Statutes of LIT",
+    "stavraton_coin_policy": "Stavraton Coins",
+    "steppe_warbands_policy": "Steppe Warbands",
+    "strengthen_burghers_rights_policy": "Strengthen Rights of the Burghers",
+    "strengthen_clergy_rights_policy": "Strengthen Rights of the Clergy",
+    "strengthen_nobles_rights_policy": "Strengthen Rights of the Nobility",
+    "strengthen_peasants_rights_policy": "Strengthen Rights of the Commoners",
+    "strict_censorship": "Strict Censorship",
+    "strong_community_customs_policy": "Strong Community Customs",
+    "strong_guilds_policy": "Strong Guilds",
+    "sump_law_tradition": "Tradition",
+    "sump_law_warrior_culture": "Warrior Culture",
+    "superior_firepower_policy": "Superior Firepower",
+    "sustained_discipline_policy": "Sustained Discipline",
+    "the_leviathan_policy": "Leviathan",
+    "the_liberty_of_ancients_vs_moderns_policy": "Liberty of the Ancients vs. the Moderns",
+    "the_papacy": "The Papacy",
+    "the_social_contract_policy": "The Social Contract",
+    "theocratic_education": "Devout Education",
+    "tiantai_policy": "Lotus School",
+    "timurid_court_policy": "Timurid Court",
+    "tolerated_simony": "Beatior Ist Largitas",
+    "ton_ta_jon_ta_ni_woro": "Ton-ta-jon-ta-ni-woro",
+    "tongues_policy": "Tongues Division",
+    "trade_colonies": "Trade Colonies",
+    "trade_tax": "Trade Taxation",
+    "trade_unions_allowed": "Allowed",
+    "trade_unions_prohibited": "Prohibited",
+    "traditional_law_policy": "Traditional Law",
+    "traditional_tax": "Traditional Taxation",
+    "treat_the_sick": "Treat the Sick",
+    "tribal_administration_policy": "Tribal Administration",
+    "tribal_identity_policy": "Tribal Identity",
+    "tur_kanum_i_osmani": "kanun‐i Osmani",
+    "two_treatises_of_government_policy": "Two Treatises of Government",
+    "ultramontanism": "Ultramontanism",
+    "unchanging_writing": "Unchanging Writing",
+    "uneducated_masses_education": "Uneducated Masses",
+    "unexpected_knowledge": "Unexpected Knowledge",
+    "unigenitus_codified": "Unigenitus Decree",
+    "union_aligned_legislature_policy": "Aligned Legislature",
+    "union_assured_offense_policy": "Assured Offense",
+    "union_automatic_offense_policy": "Duty for Offense",
+    "union_cooperative_investment_policy": "Cooperative Investment",
+    "union_crown_unification_policy": "Unification of Crowns",
+    "union_establish_seniority_policy": "Establish Seniority",
+    "union_federal_legislature_policy": "Federal Legislature",
+    "union_federal_union_policy": "Federal Union",
+    "union_maintain_federal_status_policy": "Maintain Federal Status",
+    "union_organized_diplomats_policy": "Organized Diplomats",
+    "union_possible_offense_policy": "Possible Offense",
+    "union_rapid_crown_unification_policy": "Rapid Unification of Crowns",
+    "union_senior_succession_law": "Unified Succession Law",
+    "union_sovereign_succession_law": "Sovereign Succession Law",
+    "union_swift_crown_unification_policy": "Swift Unification of Crowns",
+    "union_unified_external_diplomacy_policy": "Unified External Diplomacy",
+    "union_unified_treasury_policy": "Unified Treasury",
+    "unitary_administration": "Unitary Administration",
+    "unlimited_gold_export": "Unlimited Export",
+    "unlimited_indulgences": "Unigenitus Dei Filius",
+    "unlimited_veneration": "Sunt in Regno Dei",
+    "unregulated_conditions": "Unregulated Conditions",
+    "urbanization_projects": "Urbanization Projects",
+    "vaishnavism": "Vaishnavism",
+    "vajrayana_policy": "Tantric Practices",
+    "valide_sultan_court_policy": "Valide Sultan",
+    "valladolid_las_casas": "Las Casas",
+    "valladolid_sepulveda": "Sepúlveda",
+    "vand_chhako": "Vaṇḍ Chakō",
+    "vedic_education": "Vedic Education",
+    "vegvar_system": "Végvár System",
+    "venetian_first": "VEN First, Christian Second",
+    "venetian_galleys": "VEN Galleys",
+    "venetian_oarsmen_conscription": "VEN Oarsmen Conscription",
+    "virtues_of_politeia_policy": "Virtues of Politeia",
+    "vlach_law_policy": "Vlach Law",
+    "war_economy_policy": "War Economy",
+    "westernizers": "Westernizers",
+    "witchcraft_aknowledged": "Summis Desiderantes",
+    "witchcraft_banned": "Banned",
+    "witchcraft_ignored": "Ignored",
+    "witchcraft_not_aknowledged": "Sicut Malefici Aegyptii",
+    "wooden_wall": "Wooden Wall",
+    "word_of_a_sikh": "Word of a Sikhism",
+    "yassa_decree_policy": "Yassa Decree",
+    "yorkist_tradition_policy": "Yorkist Tradition",
+    "young_humility": "Young Humility",
+    "zabiti": "Zabiti System",
+    "zabt_system_policy": "Zabt System",
+    "zahiri_policy": "Ẓāhirī Jurisprudence",
+    "zaidi_policy": "Zaydī Jurisprudence",
+    "zamanitchka_voyska": "Zamanička Vojska",
+    "zimbabwe_mining_law": "Direct Control of the Ruler",
+    "zongdu_policy": "Zǒngdū"
+  },
+  "privileges": {
+    "access_to_royal_and_ecclesiastical_courts": {
+      "name": "Access to Royal & Ecclesiastical Courts",
+      "estate": "peasants_estate"
+    },
+    "allow_hunting": {
+      "name": "Hunting Permits",
+      "estate": "peasants_estate"
+    },
+    "allow_trade_center_sponsorship": {
+      "name": "Allow Trade Center Sponsorship",
+      "estate": "burghers_estate"
+    },
+    "amenokal_salt_traders": {
+      "name": "Amenokal Salt Traders",
+      "estate": "burghers_estate"
+    },
+    "apostolic_tax_privilege": {
+      "name": "Apostolic Tax",
+      "estate": "clergy_estate"
+    },
+    "appoint_ecclesiastical_offices": {
+      "name": "Appoint Ecclesiastical Offices",
+      "estate": "nobles_estate"
+    },
+    "ara_sindicat_ara_remenca": {
+      "name": "Sindicat Remença",
+      "estate": "peasants_estate"
+    },
+    "arte_della_lana": {
+      "name": "Arte della Lana",
+      "estate": "burghers_estate"
+    },
+    "austere_monastic_life": {
+      "name": "Austere Monastic Life",
+      "estate": "clergy_estate"
+    },
+    "austrian_monastery_reform_melk": {
+      "name": "Monastery Reform of Melk",
+      "estate": "clergy_estate"
+    },
+    "autonomous_kadiluks": {
+      "name": "Autonomous Kadiluks",
+      "estate": "clergy_estate"
+    },
+    "autonomous_local_commanders": {
+      "name": "Autonomous Local Commanders",
+      "estate": "nobles_estate"
+    },
+    "autonomous_scottish_clans": {
+      "name": "Autonomous Scottish Group Clans",
+      "estate": "nobles_estate"
+    },
+    "autonomous_tribes_scotland_gaelic_heritage": {
+      "name": "Autonomous United Scottish Group Heritage",
+      "estate": "tribes_estate"
+    },
+    "auxilium_et_consilium": {
+      "name": "Auxilium et Consilium",
+      "estate": "nobles_estate"
+    },
+    "avogadoria_de_comun": {
+      "name": "Avogadoria de Comùn",
+      "estate": "nobles_estate"
+    },
+    "ayans_privilege": {
+      "name": "Ayan Notables",
+      "estate": "nobles_estate"
+    },
+    "ayuntamientos": {
+      "name": "Ayuntamientos",
+      "estate": "peasants_estate"
+    },
+    "banal_lordship": {
+      "name": "Banal Lordship",
+      "estate": "nobles_estate"
+    },
+    "bashtinas_and_pronijas_grants": {
+      "name": "Baština Grants",
+      "estate": "nobles_estate"
+    },
+    "bavarian_share_of_land": {
+      "name": "BAV Land Division",
+      "estate": "nobles_estate"
+    },
+    "bra_kreditwerk": {
+      "name": "Kreditwerk",
+      "estate": "burghers_estate"
+    },
+    "bra_kreditwerk_reformed": {
+      "name": "Reformed Kreditwerk",
+      "estate": "burghers_estate"
+    },
+    "building_rights": {
+      "name": "Building Rights",
+      "estate": "burghers_estate"
+    },
+    "building_roads_rights": {
+      "name": "Building Roads Rights",
+      "estate": "burghers_estate"
+    },
+    "burghers_land_rights": {
+      "name": "Burghers Land Rights",
+      "estate": "burghers_estate"
+    },
+    "burghers_protected_faith": {
+      "name": "Protected Faith of the Wealthy",
+      "estate": "burghers_estate"
+    },
+    "burghers_royal_burgh_commissioners": {
+      "name": "Royal Burgh Commissioners",
+      "estate": "burghers_estate"
+    },
+    "cardinal_lead_guilds": {
+      "name": "Cardinal-Lead Guilds",
+      "estate": "burghers_estate"
+    },
+    "cas_caballeros_villanos": {
+      "name": "Caballeros Villanos",
+      "estate": "peasants_estate"
+    },
+    "cas_fuero_viejo": {
+      "name": "Fuero Viejo de Castilla",
+      "estate": "nobles_estate"
+    },
+    "cas_mita_system": {
+      "name": "Mit'a System",
+      "estate": "burghers_estate"
+    },
+    "cas_regimiento": {
+      "name": "Regimiento",
+      "estate": "nobles_estate"
+    },
+    "ceremonial_tax_exemptions": {
+      "name": "Ceremonial Tax Exemptions",
+      "estate": "burghers_estate"
+    },
+    "chancellor_nobles": {
+      "name": "Chancellor Nobles",
+      "estate": "nobles_estate"
+    },
+    "charter_of_the_nobility": {
+      "name": "Charter of the Nobility",
+      "estate": "nobles_estate"
+    },
+    "clergy_enforced_unity": {
+      "name": "Enforced Religious Unity",
+      "estate": "clergy_estate"
+    },
+    "clergy_in_administration": {
+      "name": "Clergy in Administration",
+      "estate": "clergy_estate"
+    },
+    "clergy_land_rights": {
+      "name": "Religious Land Rights",
+      "estate": "clergy_estate"
+    },
+    "clergy_lecture_oaths": {
+      "name": "Lecture Oaths",
+      "estate": "clergy_estate"
+    },
+    "clergy_literacy_rights": {
+      "name": "Religious Literacy Rights",
+      "estate": "clergy_estate"
+    },
+    "clergy_military_orders": {
+      "name": "Military Orders",
+      "estate": "clergy_estate"
+    },
+    "clergy_papal_emissary": {
+      "name": "Papal Emissary",
+      "estate": "clergy_estate"
+    },
+    "clergy_powerful_dioceses": {
+      "name": "Powerful Dioceses",
+      "estate": "clergy_estate"
+    },
+    "clergy_protected_faith": {
+      "name": "Protected Faith of the Religious",
+      "estate": "clergy_estate"
+    },
+    "clergy_religious_state": {
+      "name": "Religious Administration",
+      "estate": "clergy_estate"
+    },
+    "clergy_strengthen_faith": {
+      "name": "Strengthened Faith",
+      "estate": "clergy_estate"
+    },
+    "clerical_advisory_council": {
+      "name": "Religious Advisory Council",
+      "estate": "clergy_estate"
+    },
+    "coign_and_livery_privilege": {
+      "name": "Coign and Livery",
+      "estate": "nobles_estate"
+    },
+    "commercial_advisory_council": {
+      "name": "Commercial Advisory Council",
+      "estate": "burghers_estate"
+    },
+    "commons_petition": {
+      "name": "Commons Petition",
+      "estate": "clergy_estate"
+    },
+    "communal_lands": {
+      "name": "Communal Lands",
+      "estate": "peasants_estate"
+    },
+    "consolidated_corruption_of_the_burghers": {
+      "name": "Consolidated Corruption of the Wealthy",
+      "estate": "burghers_estate"
+    },
+    "consolidated_corruption_of_the_clergy": {
+      "name": "Consolidated Corruption of the Faith",
+      "estate": "clergy_estate"
+    },
+    "consolidated_corruption_of_the_nobles": {
+      "name": "Consolidated Corruption of the Elites",
+      "estate": "nobles_estate"
+    },
+    "consolidated_corruption_of_the_peasants": {
+      "name": "Consolidated Corruption of the Common People",
+      "estate": "peasants_estate"
+    },
+    "control_of_the_borderlands": {
+      "name": "Control of the Borderlands",
+      "estate": "nobles_estate"
+    },
+    "control_over_monetary_policy": {
+      "name": "Control over Monetary Policy",
+      "estate": "burghers_estate"
+    },
+    "control_over_the_coinage": {
+      "name": "Control over the Coinage",
+      "estate": "burghers_estate"
+    },
+    "cossack_identity": {
+      "name": "Cossack Identity",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_allowed_free_roaming": {
+      "name": "Allowed Free Roaming",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_colonization": {
+      "name": "Colonization by the Cossacks",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_explorers": {
+      "name": "Exploration by the Cossacks",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_government_positions": {
+      "name": "Cossack Government Positions",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_land_rights": {
+      "name": "Cossack Land Rights",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_military_service": {
+      "name": "Cossack Military Service",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_protected_faith": {
+      "name": "Protected Faith of the Cossacks",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_rada_autonomy": {
+      "name": "Rada Autonomy",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_register": {
+      "name": "Registered Cossacks",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_respected_traditions": {
+      "name": "Respected Cossack Traditions",
+      "estate": "cossacks_estate"
+    },
+    "cossacks_sanctioned_atamans": {
+      "name": "Sanctioned Atamans",
+      "estate": "cossacks_estate"
+    },
+    "creaghts_privilege": {
+      "name": "Creaghts",
+      "estate": "peasants_estate"
+    },
+    "dedicated_merchant_courts": {
+      "name": "Dedicated Merchant Courts",
+      "estate": "burghers_estate"
+    },
+    "dharmic_dhimmi_communities": {
+      "name": "Dharmic Ḏimmī Communities",
+      "estate": "clergy_estate"
+    },
+    "dhimmi_abrahamic_communities": {
+      "name": "Abrahamic Communities",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_administrative_posts": {
+      "name": "Grant Administrative Posts",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_in_administration": {
+      "name": "Ḏimmī Bureaucrats",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_land_rights": {
+      "name": "Guarantee Local Land Rights",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_legal_autonomy": {
+      "name": "Legal Autonomy",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_lighter_taxes": {
+      "name": "Lighter Taxation",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_mazalim_court": {
+      "name": "Maẓālim Courts",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_military_service": {
+      "name": "Allow Military Service",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_pact_of_umar": {
+      "name": "Pact of Umar",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_promote_dhimmi_hierarchy": {
+      "name": "Promote Local Hierarchy",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_promote_tolerance": {
+      "name": "Promote Tolerance",
+      "estate": "dhimmi_estate"
+    },
+    "dhimmi_traditions": {
+      "name": "Preserve Local Traditions",
+      "estate": "dhimmi_estate"
+    },
+    "district_paving_privilege": {
+      "name": "District Taxation",
+      "estate": "nobles_estate"
+    },
+    "double_sabbath": {
+      "name": "Both Days Sabbath",
+      "estate": "peasants_estate"
+    },
+    "elaborate_court_ceremonies": {
+      "name": "Elaborate Court Life",
+      "estate": "nobles_estate"
+    },
+    "embellish_great_works_of_faith": {
+      "name": "Embellish Great Works of Faith",
+      "estate": "clergy_estate"
+    },
+    "expansionist_zealotry": {
+      "name": "Expansionist Zealotry",
+      "estate": "clergy_estate"
+    },
+    "feudal_mercenary_contracts": {
+      "name": "Feudal Mercenary Contracts",
+      "estate": "nobles_estate"
+    },
+    "florence_guilds": {
+      "name": "FLO Guilds",
+      "estate": "burghers_estate"
+    },
+    "formal_guilds": {
+      "name": "Formal Guilds",
+      "estate": "burghers_estate"
+    },
+    "formalized_oath": {
+      "name": "Formalized Oath of Loyalty",
+      "estate": "nobles_estate"
+    },
+    "fra_leadership_of_marcel": {
+      "name": "Leadership of Étienne Marcel",
+      "estate": "burghers_estate"
+    },
+    "fra_marcel_compromise_ordinance": {
+      "name": "Compromise Great Ordinance",
+      "estate": "burghers_estate"
+    },
+    "fra_marcel_great_ordinance": {
+      "name": "The Great Ordinance",
+      "estate": "burghers_estate"
+    },
+    "fra_papacy_pragmatic_sanctions": {
+      "name": "Pragmatic Sanction of Bourges",
+      "estate": "clergy_estate"
+    },
+    "freedom_of_interpretation": {
+      "name": "Freedom of Interpretation",
+      "estate": "clergy_estate"
+    },
+    "french_cardinals": {
+      "name": "French Group Cardinals",
+      "estate": "clergy_estate"
+    },
+    "fund_karimi": {
+      "name": "Fund the Karimi Merchants",
+      "estate": "burghers_estate"
+    },
+    "general_privilege": {
+      "name": "General Privilege of ARA",
+      "estate": "nobles_estate"
+    },
+    "ghazi_privilege": {
+      "name": "Ghazi Lords",
+      "estate": "nobles_estate"
+    },
+    "golden_bull_of_1222": {
+      "name": "Golden Bull of 1222",
+      "estate": "nobles_estate"
+    },
+    "golden_liberty": {
+      "name": "Golden Liberty",
+      "estate": "nobles_estate"
+    },
+    "gradozadanje_and_gradobljudenlje_rights": {
+      "name": "Gradozidanije and Gradobljudenije",
+      "estate": "peasants_estate"
+    },
+    "great_offices_of_the_crown_of_france": {
+      "name": "Great Offices of the Crown of FRA",
+      "estate": "nobles_estate"
+    },
+    "guild_investments": {
+      "name": "Guild Investments",
+      "estate": "burghers_estate"
+    },
+    "hab_tractatus_incorporalibus": {
+      "name": "Tractatus de Iuribus Incorporalibus",
+      "estate": "peasants_estate"
+    },
+    "habshi_advisors_privilege": {
+      "name": "Ḥabshī Advisors",
+      "estate": "dhimmi_estate"
+    },
+    "haudenosaunee_labor_division": {
+      "name": "Haudenosaunee Labor Division",
+      "estate": "peasants_estate"
+    },
+    "heritable_iqta": {
+      "name": "Heritable Iqta Law",
+      "estate": "nobles_estate"
+    },
+    "hurin_qusqu_privilege": {
+      "name": "Hurin Qusqu High Priesthood",
+      "estate": "clergy_estate"
+    },
+    "inaugural_diplomas": {
+      "name": "Inaugural Diplomas",
+      "estate": "nobles_estate"
+    },
+    "increased_civic_engagement": {
+      "name": "Increased Civic Engagement",
+      "estate": "nobles_estate"
+    },
+    "inherited_offices": {
+      "name": "Inherited Offices",
+      "estate": "nobles_estate"
+    },
+    "invite_german_settlers": {
+      "name": "Invite German Group Settlers",
+      "estate": "peasants_estate"
+    },
+    "ira_clerical_aristocracy": {
+      "name": "Clerical Aristocracy",
+      "estate": "clergy_estate"
+    },
+    "ira_iranian_art_patronage": {
+      "name": "Iranian Group Art Patronage",
+      "estate": "burghers_estate"
+    },
+    "ius_teutonicum": {
+      "name": "Ius Teutonicum",
+      "estate": "peasants_estate"
+    },
+    "jain_banking_rights": {
+      "name": "Jain Banking Rights",
+      "estate": "burghers_estate"
+    },
+    "jain_scholars": {
+      "name": "Jain Scholars",
+      "estate": "burghers_estate"
+    },
+    "jaysh_armies": {
+      "name": "Jaysh Armies",
+      "estate": "tribes_estate"
+    },
+    "joint_assembly_decrees": {
+      "name": "Joint Assembly Decrees",
+      "estate": "nobles_estate"
+    },
+    "justicia_de_aragon": {
+      "name": "Justicia de Aragón",
+      "estate": "nobles_estate"
+    },
+    "kannada_literature_aid": {
+      "name": "Kannada Language Literature Aid",
+      "estate": "burghers_estate"
+    },
+    "kbo_cima": {
+      "name": "Cima Fiefs",
+      "estate": "nobles_estate"
+    },
+    "kbo_kaigama": {
+      "name": "Kaigama",
+      "estate": "nobles_estate"
+    },
+    "kbo_lake_chad_trade_privilege": {
+      "name": "Control of Lake Chad",
+      "estate": "burghers_estate"
+    },
+    "kbo_serfdom_economy": {
+      "name": "Serfdom Economy",
+      "estate": "burghers_estate"
+    },
+    "kbo_yerima": {
+      "name": "Yerima",
+      "estate": "nobles_estate"
+    },
+    "kormlenije": {
+      "name": "Kormlenije",
+      "estate": "nobles_estate"
+    },
+    "kulm_law": {
+      "name": "Kulm Law",
+      "estate": "burghers_estate"
+    },
+    "land_of_commerce": {
+      "name": "Land of Commerce",
+      "estate": "burghers_estate"
+    },
+    "land_owning_farmers": {
+      "name": "Land-Owning Peasants",
+      "estate": "peasants_estate"
+    },
+    "lat_compromise_with_greek_populace": {
+      "name": "Compromise with the Greek Culture people",
+      "estate": "peasants_estate"
+    },
+    "lat_latin_crusader_elite": {
+      "name": "Crusader Elite",
+      "estate": "nobles_estate"
+    },
+    "lat_protector_of_the_constantinople_patriarchate": {
+      "name": "Protector of the Patriarchate of Constantinople",
+      "estate": "clergy_estate"
+    },
+    "liberum_veto": {
+      "name": "Liberum Veto",
+      "estate": "nobles_estate"
+    },
+    "libro_d_argento": {
+      "name": "Libro d'Argento",
+      "estate": "burghers_estate"
+    },
+    "libro_d_oro": {
+      "name": "Libro d'Oro",
+      "estate": "nobles_estate"
+    },
+    "lit_equal_status_of_orthodox_nobility": {
+      "name": "Protection of Orthodox Nobility",
+      "estate": "nobles_estate"
+    },
+    "lit_integrated_ruthenian_laws": {
+      "name": "Integrated Ruthenian Laws",
+      "estate": "nobles_estate"
+    },
+    "liturgical_mural_art": {
+      "name": "Liturgical Mural Art",
+      "estate": "clergy_estate"
+    },
+    "local_tribal_strongholds": {
+      "name": "Tribal Strongholds",
+      "estate": "tribes_estate"
+    },
+    "magdeburg_rights": {
+      "name": "Magdeburg Rights",
+      "estate": "burghers_estate"
+    },
+    "maintain_clerical_proceedings": {
+      "name": "Maintain Clerical Proceedings",
+      "estate": "clergy_estate"
+    },
+    "mam_muhtasibs": {
+      "name": "Muḥtasib Inspectors",
+      "estate": "burghers_estate"
+    },
+    "mam_refined_furusiyya": {
+      "name": "Refined Furūsiyya",
+      "estate": "nobles_estate"
+    },
+    "mandatory_clerical_donations": {
+      "name": "Mandatory Clerical Donations",
+      "estate": "clergy_estate"
+    },
+    "manifesto_of_freedom": {
+      "name": "Manifesto of Freedom",
+      "estate": "nobles_estate"
+    },
+    "manorial_courts": {
+      "name": "Manorial Courts",
+      "estate": "nobles_estate"
+    },
+    "market_fairs": {
+      "name": "Market Fairs",
+      "estate": "burghers_estate"
+    },
+    "masaniellos_fight": {
+      "name": "Masaniello's Fight",
+      "estate": "peasants_estate"
+    },
+    "mch_tribal_favor": {
+      "name": "Tribal Favor",
+      "estate": "tribes_estate"
+    },
+    "milanese_cloth_guilds_privileges": {
+      "name": "Milanese Cloth Guilds",
+      "estate": "burghers_estate"
+    },
+    "mita_system": {
+      "name": "Mit'a System",
+      "estate": "peasants_estate"
+    },
+    "monetary_fiefs": {
+      "name": "Monetary Fiefs",
+      "estate": "nobles_estate"
+    },
+    "nieszawa_privileges": {
+      "name": "Statutes of Nieszawa",
+      "estate": "nobles_estate"
+    },
+    "nihil_novi": {
+      "name": "Nihil Novi",
+      "estate": "nobles_estate"
+    },
+    "no_labor_sunday": {
+      "name": "No Labor on Sunday",
+      "estate": "peasants_estate"
+    },
+    "nobility_council": {
+      "name": "Elite Council",
+      "estate": "nobles_estate"
+    },
+    "noble_armies": {
+      "name": "Noble Armies",
+      "estate": "nobles_estate"
+    },
+    "noble_fortification_licenses": {
+      "name": "Fortification Licenses",
+      "estate": "nobles_estate"
+    },
+    "noble_leaders_only": {
+      "name": "Only Nobility as Leaders",
+      "estate": "nobles_estate"
+    },
+    "noble_marriage_rights": {
+      "name": "Royal Marriage Rights",
+      "estate": "nobles_estate"
+    },
+    "noble_patronage": {
+      "name": "Elite Patronage",
+      "estate": "burghers_estate"
+    },
+    "noble_patronage_of_the_arts": {
+      "name": "Noble Patronage of the Arts",
+      "estate": "nobles_estate"
+    },
+    "noble_serfdom_rights": {
+      "name": "Nobility Controlled Serfdom",
+      "estate": "nobles_estate"
+    },
+    "noble_sponsored_navy": {
+      "name": "Noble Navy",
+      "estate": "nobles_estate"
+    },
+    "nobles_land_rights": {
+      "name": "Land Rights",
+      "estate": "nobles_estate"
+    },
+    "nobles_offensive_military_doctrine": {
+      "name": "Offensive Military Doctrine",
+      "estate": "nobles_estate"
+    },
+    "nobles_protected_faith": {
+      "name": "Protected Faith of the Elites",
+      "estate": "nobles_estate"
+    },
+    "novgorod_ivans_hundred": {
+      "name": "Ivan's Hundred",
+      "estate": "burghers_estate"
+    },
+    "novi_fori": {
+      "name": "Novi Fori",
+      "estate": "burghers_estate"
+    },
+    "office_of_the_farima_soura_privilege": {
+      "name": "Office of the Farima-Soura",
+      "estate": "nobles_estate"
+    },
+    "office_of_the_sankar_zouma_privilege": {
+      "name": "Office of the Sankar-Zouma",
+      "estate": "nobles_estate"
+    },
+    "ordinance_of_laborers": {
+      "name": "Ordinance of Laborers",
+      "estate": "nobles_estate"
+    },
+    "pacta_conventa": {
+      "name": "Pacta Conventa",
+      "estate": "nobles_estate"
+    },
+    "partial_yield": {
+      "name": "Partial Yield",
+      "estate": "peasants_estate"
+    },
+    "peasant_owns_their_food": {
+      "name": "Means of Production",
+      "estate": "peasants_estate"
+    },
+    "peasants_allowed_weapons_privilege": {
+      "name": "Common Militias",
+      "estate": "peasants_estate"
+    },
+    "peasants_autonomous_villages": {
+      "name": "Autonomous Villages",
+      "estate": "peasants_estate"
+    },
+    "peasants_fewer_levies": {
+      "name": "Fewer Levies",
+      "estate": "peasants_estate"
+    },
+    "peasants_free_peasantry": {
+      "name": "Free Mobility for the Common People",
+      "estate": "peasants_estate"
+    },
+    "peasants_in_administration": {
+      "name": "Commoners in the Administration",
+      "estate": "peasants_estate"
+    },
+    "peasants_no_poll_tax_privilege": {
+      "name": "Exempt from Poll Tax",
+      "estate": "peasants_estate"
+    },
+    "peasants_protected_faith": {
+      "name": "Protected Faith of the Common People",
+      "estate": "peasants_estate"
+    },
+    "peasants_represented_in_parliament": {
+      "name": "Represented in Parliament",
+      "estate": "peasants_estate"
+    },
+    "peasants_yeomanry": {
+      "name": "Yeomanry",
+      "estate": "peasants_estate"
+    },
+    "permanent_residence_in_versailles": {
+      "name": "Permanent Residence in Versailles",
+      "estate": "nobles_estate"
+    },
+    "petty_bureaucracy": {
+      "name": "Petty Bureaucracy",
+      "estate": "burghers_estate"
+    },
+    "plc_cossack_treaty_of_hadiach": {
+      "name": "Treaty of Hadiach",
+      "estate": "cossacks_estate"
+    },
+    "plc_empower_orthodox_nobility": {
+      "name": "Empower Orthodox Nobility",
+      "estate": "nobles_estate"
+    },
+    "polish_merchant_seal": {
+      "name": "POL Merchant Seal",
+      "estate": "burghers_estate"
+    },
+    "powerful_italian_families": {
+      "name": "Powerful Italian Group Families",
+      "estate": "nobles_estate"
+    },
+    "primacy_of_nobility": {
+      "name": "Primacy of Nobility",
+      "estate": "nobles_estate"
+    },
+    "privateer_contracts": {
+      "name": "Privateer Contracts",
+      "estate": "burghers_estate"
+    },
+    "privilege_of_koszyce": {
+      "name": "Privilege of Koszyce",
+      "estate": "nobles_estate"
+    },
+    "promote_cultural_unity": {
+      "name": "Promote Cultural Unity",
+      "estate": "clergy_estate"
+    },
+    "promotion_of_muslim_scholars": {
+      "name": "Promotion of Muslim Scholars",
+      "estate": "clergy_estate"
+    },
+    "rajput_society": {
+      "name": "Rajput Society",
+      "estate": "nobles_estate"
+    },
+    "recognized_communes": {
+      "name": "Recognized Communes",
+      "estate": "nobles_estate"
+    },
+    "reduced_from_military_obligations": {
+      "name": "Reduced Military Obligations",
+      "estate": "clergy_estate"
+    },
+    "reduced_responsibilities_for_the_nobles": {
+      "name": "Reduced Responsibilities for the Elites",
+      "estate": "nobles_estate"
+    },
+    "reduced_taxation_for_the_nobles": {
+      "name": "Reduced Taxation for the Elites",
+      "estate": "nobles_estate"
+    },
+    "religious_diplomats": {
+      "name": "Religious Diplomats",
+      "estate": "clergy_estate"
+    },
+    "residence_in_versailles": {
+      "name": "Residence in Versailles",
+      "estate": "nobles_estate"
+    },
+    "right_to_inherit": {
+      "name": "Right to Inherit",
+      "estate": "nobles_estate"
+    },
+    "royal_factories_privilege": {
+      "name": "Royal Factories",
+      "estate": "burghers_estate"
+    },
+    "salt_tax_exemption": {
+      "name": "Salt Tax Exemption",
+      "estate": "peasants_estate"
+    },
+    "scholar_officials": {
+      "name": "Scholar Officials",
+      "estate": "nobles_estate"
+    },
+    "sco_statutes_of_iona": {
+      "name": "Statutes of Iona",
+      "estate": "nobles_estate"
+    },
+    "scottish_clans": {
+      "name": "Scottish Group Clans",
+      "estate": "nobles_estate"
+    },
+    "share_of_the_spoils": {
+      "name": "Share of the Spoils",
+      "estate": "nobles_estate"
+    },
+    "shipwright_contracts": {
+      "name": "Shipwright Contracts",
+      "estate": "burghers_estate"
+    },
+    "shooting_societies": {
+      "name": "Shooting Societies",
+      "estate": "burghers_estate"
+    },
+    "signoria_council": {
+      "name": "Signoria Council",
+      "estate": "nobles_estate"
+    },
+    "sponsor_maritime_contracts": {
+      "name": "Sponsored Maritime Contracts",
+      "estate": "burghers_estate"
+    },
+    "sponsor_printing_of_religious_texts": {
+      "name": "Sponsor Printing of Religious Texts",
+      "estate": "clergy_estate"
+    },
+    "state_official_oaths": {
+      "name": "State Official Oaths",
+      "estate": "clergy_estate"
+    },
+    "statutes_of_piotrkow": {
+      "name": "Statutes of Piotrkow",
+      "estate": "nobles_estate"
+    },
+    "tax_exemption": {
+      "name": "Tax Exemption",
+      "estate": "clergy_estate"
+    },
+    "the_ryad_privilege": {
+      "name": "The Ryad",
+      "estate": "nobles_estate"
+    },
+    "toll_and_tariff_exemptions": {
+      "name": "Toll & Tariff Exemptions",
+      "estate": "burghers_estate"
+    },
+    "trade_monopolies": {
+      "name": "Trade Monopolies",
+      "estate": "burghers_estate"
+    },
+    "treasury_rights": {
+      "name": "Treasury Rights",
+      "estate": "burghers_estate"
+    },
+    "tribal_autonomy": {
+      "name": "Tribal Autonomy",
+      "estate": "nobles_estate"
+    },
+    "tribal_host": {
+      "name": "Tribal Host",
+      "estate": "nobles_estate"
+    },
+    "tribes_allow_gatherings": {
+      "name": "Allow Gatherings",
+      "estate": "tribes_estate"
+    },
+    "tribes_creach": {
+      "name": "Creach",
+      "estate": "tribes_estate"
+    },
+    "tribes_fosterage": {
+      "name": "Fosterage",
+      "estate": "tribes_estate"
+    },
+    "tribes_in_administration": {
+      "name": "Tribal Cabinet",
+      "estate": "tribes_estate"
+    },
+    "tribes_land_rights": {
+      "name": "Tribal Land Rights",
+      "estate": "tribes_estate"
+    },
+    "tribes_manrent": {
+      "name": "Manrent",
+      "estate": "tribes_estate"
+    },
+    "tribes_pasture_access": {
+      "name": "Pasture Access",
+      "estate": "tribes_estate"
+    },
+    "tribes_protected_faith": {
+      "name": "Protected Tribal Faith",
+      "estate": "tribes_estate"
+    },
+    "tribes_respect_tribal_traditions": {
+      "name": "Respected Tribal Traditions",
+      "estate": "tribes_estate"
+    },
+    "tribes_scotland_gaelic_heritage": {
+      "name": "United Scottish Group Heritage",
+      "estate": "tribes_estate"
+    },
+    "tribes_tribal_levies": {
+      "name": "Allow Tribal Levies",
+      "estate": "tribes_estate"
+    },
+    "tribes_tribal_registry": {
+      "name": "Expanded Registry",
+      "estate": "tribes_estate"
+    },
+    "trunk_road_to_erzurum_privilege": {
+      "name": "Trunk Road to Erzurum",
+      "estate": "burghers_estate"
+    },
+    "tur_banned_weaponry_for_peasants": {
+      "name": "Banned Weapons for Peasants Estate",
+      "estate": "nobles_estate"
+    },
+    "tysiatskii_privilege": {
+      "name": "Tysiatskii Office",
+      "estate": "nobles_estate"
+    },
+    "ukr_kholop_protection": {
+      "name": "Kholop Protection Rights",
+      "estate": "peasants_estate"
+    },
+    "union_privilege": {
+      "name": "Privilege of the Union",
+      "estate": "nobles_estate"
+    },
+    "unity_brethren_privilege": {
+      "name": "Unity of Brethren",
+      "estate": "clergy_estate"
+    },
+    "urban_development_grants": {
+      "name": "Urban Development Grants",
+      "estate": "burghers_estate"
+    },
+    "vienna_concordat_privilege": {
+      "name": "Concordat of Vienna",
+      "estate": "clergy_estate"
+    },
+    "vij_allowance_of_religious_practices": {
+      "name": "Allow Religious Practices",
+      "estate": "burghers_estate"
+    },
+    "vij_patronization_of_local_gods": {
+      "name": "Patronization Rights of Minor Deities",
+      "estate": "clergy_estate"
+    },
+    "vij_tamil_trading_rights": {
+      "name": "Tamil Trading Rights",
+      "estate": "burghers_estate"
+    },
+    "villes_franches": {
+      "name": "Villes Franches",
+      "estate": "burghers_estate"
+    },
+    "visconti_city_states": {
+      "name": "Visconti City States",
+      "estate": "nobles_estate"
+    },
+    "vlastele_krayishnik": {
+      "name": "Krajiška Vlastela",
+      "estate": "nobles_estate"
+    },
+    "waqf_payments": {
+      "name": "Waqf Payments",
+      "estate": "clergy_estate"
+    },
+    "warrior_tribunal": {
+      "name": "Warrior Tribunal",
+      "estate": "clergy_estate"
+    },
+    "zamindar_tax_privilege": {
+      "name": "Zamindar Tax Privilege",
+      "estate": "nobles_estate"
+    },
+    "zontas": {
+      "name": "Zonta",
+      "estate": "nobles_estate"
+    },
+    "zupa_districts": {
+      "name": "Župa Districts",
+      "estate": "nobles_estate"
+    }
+  },
+  "estates": {
+    "burghers_estate": "Burghers",
+    "clergy_estate": "Clergy",
+    "cossacks_estate": "Cossacks",
+    "crown_estate": "Crown",
+    "dhimmi_estate": "Dhimmi",
+    "nobles_estate": "Nobility",
+    "peasants_estate": "Commoners",
+    "tribes_estate": "Tribes"
+  },
+  "popTypes": {
+    "burghers": "Burghers",
+    "clergy": "Clerics",
+    "laborers": "Laborers",
+    "nobles": "Nobles",
+    "peasants": "Peasants",
+    "slaves": "Slaves",
+    "soldiers": "Soldiers",
+    "tribesmen": "Tribesmen"
+  },
+  "subjectTypes": {
+    "appanage": "Appanage",
+    "colonial_nation": "Colonial Nation",
+    "conquistador": "Conquistador",
+    "direct_imperial_free_city": "Direct Imperial Free City",
+    "dominion": "Dominion",
+    "fiefdom": "Fiefdom",
+    "hanseatic_member": "Member of the Hansa",
+    "imperial_free_city": "Imperial Free City",
+    "maha_samanta": "Mahā-Sāmanta",
+    "march": "March",
+    "pradhana_maha_samanta": "Pradhāna-Mahā-Sāmanta",
+    "pronoia": "Prónoia",
+    "samanta": "Sāmanta",
+    "secessionists": "Secessionists",
+    "state_bank": "State Bank",
+    "trade_company": "Trade Company",
+    "tributary": "Tributary",
+    "tusi": "Tǔsī",
+    "uc_bey": "Uç Bey",
+    "vassal": "Vassal"
+  }
+}

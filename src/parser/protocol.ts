@@ -81,8 +81,10 @@ export interface ErrorMessage {
 export interface LoadWarning {
   /** "unknown-tokens": binary tokens the melter couldn't name (015).
    * "unrecognized-values": a parsed field held a value the adapter doesn't
-   * know (constitution II — surfaced, never silently dropped; 019). */
-  kind: "unknown-tokens" | "unrecognized-values";
+   * know (constitution II — surfaced, never silently dropped; 019).
+   * "skipped-entries": malformed save entries (e.g. a loan with no
+   * borrower) the adapter couldn't store (018). */
+  kind: "unknown-tokens" | "unrecognized-values" | "skipped-entries";
   count: number;
   message: string;
 }

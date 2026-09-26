@@ -210,6 +210,15 @@ export async function loadSave(
     });
     signal.throwIfAborted();
     if (summary.warnings) warnings.push(...summary.warnings);
+    const skippedTotal = summary.skipped.reduce((n, s) => n + s.count, 0);
+    if (skippedTotal > 0) {
+      const detail = summary.skipped.map((s) => `${s.count} ${s.section}`).join(", ");
+      warnings.push({
+        kind: "skipped-entries",
+        count: skippedTotal,
+        message: `Some entries in this save were incomplete and were left out (${detail}).`,
+      });
+    }
 
     // Close before signaling ready — see this function's doc comment.
     await closeSaveDatabase(db);

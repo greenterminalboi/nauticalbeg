@@ -1,0 +1,222 @@
+.government-tab__heading {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--color-on-surface);
+  margin: 0 0 var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+  padding-bottom: var(--space-xs);
+}
+
+.government-tab__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  background: var(--color-vellum);
+}
+
+.government-tab__table th {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  text-align: left;
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 2px solid var(--color-outline-variant);
+}
+
+.government-tab__table td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.government-tab__table tbody tr:nth-child(even) {
+  background: var(--color-surface-container-low);
+}
+
+.government-tab__date {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+}
+
+/* The Effects side panel is off by default (the Modifiers column shows
+   the same thing); when turned on it sits beside the tables, stays in view
+   while scrolling, and drops below them on a narrow screen. */
+.government-tab {
+  display: block;
+}
+
+.government-tab--with-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.government-tab__lists {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+.government-tab__effects {
+  position: sticky;
+  top: var(--space-md);
+  background: var(--color-vellum);
+  border: 1px solid var(--color-outline-variant);
+  padding: var(--space-sm) var(--space-md);
+}
+
+@media (max-width: 60rem) {
+  .government-tab--with-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .government-tab__effects {
+    position: static;
+  }
+}
+
+.government-tab__item {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline dotted var(--color-outline);
+  text-underline-offset: 3px;
+}
+
+.government-tab__item:hover,
+.government-tab__item:focus-visible {
+  color: var(--color-primary-deep);
+}
+
+.government-tab__item--selected {
+  font-weight: 600;
+  color: var(--color-primary-deep);
+  text-decoration: underline solid;
+}
+
+.government-tab__hint {
+  font-style: italic;
+  color: var(--color-on-surface-variant);
+  margin: 0;
+}
+
+.government-tab__effects-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0 0 var(--space-xs);
+}
+
+.government-tab__effect-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-family: var(--font-body);
+}
+
+/* Owner request 2026-09-26: green/red like the game. Two shade pairs,
+   one for the light Effects panel and one for the dark tooltip, each
+   readable on its own background. */
+.government-tab__effect--good {
+  color: #1f7a36;
+}
+
+.government-tab__effect--bad {
+  color: #b3261e;
+}
+
+.government-tab__effect-list--tooltip {
+  padding-left: 0.9rem;
+  white-space: normal;
+}
+
+.government-tab__effect-list--tooltip .government-tab__effect--good {
+  color: #86d993;
+}
+
+.government-tab__effect-list--tooltip .government-tab__effect--bad {
+  color: #ff8a80;
+}
+
+/* Read by screen readers, not shown: the "helps"/"hurts" meaning of an
+   effect's color. */
+.government-tab__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Policies / Estate Privileges sub-tabs, styled like the Leaderboard's
+   Graph/Ranking toggle. */
+.government-tab__views {
+  display: inline-flex;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: var(--space-md);
+}
+
+.government-tab__view {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.9rem;
+  background: var(--color-vellum);
+  color: var(--color-on-surface-variant);
+  border: none;
+  cursor: pointer;
+}
+
+.government-tab__view + .government-tab__view {
+  border-left: 1px solid var(--color-outline-variant);
+}
+
+.government-tab__view--active {
+  background: var(--color-primary-deep);
+  color: var(--color-on-primary);
+}
+
+/* The Modifiers column: one effect per line, no bullets. */
+.government-tab__table .government-tab__effect-list {
+  list-style: none;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.government-tab__table td {
+  vertical-align: top;
+}
+
+/* Estate Privileges: one row group per estate, its name spanning the
+   group, a heavier rule between estates. Zebra striping is off here so
+   the groups read as blocks. */
+.government-tab__estate-group {
+  border-top: 2px solid var(--color-outline);
+}
+
+.government-tab__estate-group tr:nth-child(even) {
+  background: none;
+}
+
+.government-tab__estate-cell {
+  vertical-align: top;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-surface-container-low);
+  border-bottom: 1px solid var(--color-outline-variant);
+  white-space: nowrap;
+}

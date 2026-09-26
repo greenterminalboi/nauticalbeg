@@ -14,6 +14,7 @@
     "schema-map": "tsx tools/schema-mapping/generate.ts",
     "generate:encyclopedia": "tsx tools/encyclopedia-scraping/generate.ts",
     "generate:ruler-names": "tsx tools/ruler-names-scraping/generate.ts",
+    "generate:country-names": "tsx tools/country-names/generate.ts",
     "postinstall": "patch-package",
     "check:dist": "tsx tools/check-dist/check-dist.ts dist",
     "build:melter": "bash tools/eu5-melter/build.sh",

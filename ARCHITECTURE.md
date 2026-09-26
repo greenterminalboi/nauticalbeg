@@ -2068,6 +2068,105 @@ Links:
 - the sharer's delete keys live in `localStorage` (`src/share/shareLinks.ts`)
 
 
+## Country Factbook Tabs (018): a nine-tab country dossier, built and checked one tab at a time (2026-09-26)
+
+Factbook → Countries went from two working tabs (a six-stat Overview and a
+name/development Provinces list) to nine: Overview, History, Provinces,
+Locations, Military, Government, Estates, Values, Subjects. Trade is gone,
+Diplomacy became Subjects, and Economy, Building Registry and Characters
+show the Coming Soon page. Details: `specs/018-country-factbook-tabs/`.
+Every tab was checked by the owner against the real Russia save before the
+next was started.
+
+**Three new save sections, found by grepping the real save** (never the
+fixture, per the 011 rule):
+- `loan_manager` → `loans`. `borrower` is a country idx; government bonds
+  (`bond=yes`) count as debt. Total debt is a query-time sum.
+- `estate_manager` → `nation_estates`. It holds a record per estate type for
+  every country; only `existence=yes` ones are real. The crown record has
+  satisfaction only, so its economic columns stay NULL ("Not tracked").
+- `diplomacy_manager.dependency` → `subject_relations`
+  (`first` = overlord, `second` = subject, type in the `subject_type` named
+  target). This **overturned 014's "subject relations aren't in the save"**:
+  that spike only looked for overlord keys on the country record. 195
+  relations in the reference save, 6 of them nested. Kept out of
+  `diplomatic_relations` so 013's chord chart is unchanged.
+- Plus three `nations` columns: `government_power` (legitimacy, republican
+  tradition, devotion, horde unity or tribal cohesion, labeled by
+  government type), `prestige`, and `monthly_income` (`economy.income`, the
+  owner's "wealth"; no wealth field exists).
+
+A malformed loan or dependency is skipped and reported as a new
+`skipped-entries` load warning, not dropped silently. The shared fixture
+stays well-formed; the tests inject malformed entries themselves.
+
+**Old kept saves and old share links** get the new tables empty. Each new
+section checks `EXISTS (SELECT 1 FROM <table>)` (014's pattern) and says
+"Not in this save's data — reload the save file" instead of a zero.
+`tests/share/pre-018-snapshot.test.ts` forges a pre-018 share link to prove it.
+
+**Game-file data, generated once** (`tools/country-names/generate.ts`,
+`npm run generate:country-names -- --install <game>`):
+- `countryNames.json` (86KB): law, policy, privilege, estate, pop type and
+  subject type names, and each government type's power label. Policy names
+  aren't in the 008 encyclopedia data; they come from
+  `laws_and_policies_l_english.yml`. `$key$` references and script calls
+  like `[GetCharacter('x')...]` are resolved or made readable.
+- `countryModifiers.json` (160KB, loaded only when Government opens, so it's
+  its own build chunk): each policy's and privilege's `country_modifier`,
+  named constants resolved from `script_values` (e.g.
+  `small_privilege_target_satisfaction = 0.025`), `*_tt` tooltip keys
+  resolved to text, and each modifier type's name
+  (`MODIFIER_TYPE_NAME_<key>`) and format (`percent`, `already_percent`,
+  `boolean`, `decimals`, `color`). `in_game/common/script_values/eu4_conversions.txt`
+  doesn't parse and is skipped with a warning.
+
+Effects are colored the game's way: a modifier with no color setting is
+better when higher, `color=bad` better when lower (so +100% Nobles Power is
+red), `color=neutral` never colored. Sign plus screen-reader "helps/hurts"
+text back up the color.
+
+**Reuse over rebuild:**
+- Overview literacy and pies use the same pop set as 014's Country Literacy
+  map mode (pops in the nation's own locations).
+- Provinces and Locations share the map's SQL: `POP_TOTALS_CTE` and
+  `PROVINCE_TOTALS_CTE` are now constants used by `listMapLocationsArrow`
+  too, so a table can't disagree with the map. Both tables build Perspective
+  from an explicit schema (`usePerspectiveRows`), so an all-empty column for
+  a small nation still gets the right type.
+- History reuses `LeaderboardChart`; `RulerHistoryChart` gained an optional
+  controlled `selectedIdxs`.
+- Military: Firepower's per-nation assembly moved into `firepowerData.ts`
+  (`loadArmyProfiles`, `loadNavyProfiles`, `buildDoctrinePoints`), shared by
+  Firepower and the new tab. Firepower had no tests of its own;
+  `firepowerProfiles.test.ts` now covers the shared code.
+
+**Owner-driven changes during the build:**
+- Estate and social-class pies use the game's named colors (`02_map.txt`
+  `pop_*`/`estate_*`) and list every group; religion and culture fold
+  slices under 2% into "Other".
+- Military's doctrine chart is 16rem tall there only (scoped CSS);
+  Firepower keeps its size.
+- Government: Policies and Estate Privileges sub-tabs, each a table with a
+  Modifiers column; privileges are grouped into one row group per estate.
+  The earlier hover tooltip and pinned Effects panel are kept behind
+  `interactiveEffects` (default off). `HoverTooltip` now accepts markup.
+- Every Countries tab uses the full content width
+  (`FULL_WIDTH_COUNTRY_TABS` in FileLoader).
+- Subjects is a nested list of buttons, not an ARIA tree (a real tree needs
+  arrow-key handling).
+
+**Dropped: a Cabinet tab.** The owner asked for time spent per cabinet
+action. `cabinet_manager` only holds each country's current actions (one
+entry per slot, at most 9 per country) with their start dates; there's no
+history anywhere in the save.
+
+**Known limit: the real save can't be parsed in Node tests.** Running
+`parseAndStore` on the 642MB save under the Node DuckDB-Wasm bindings fails
+inside DuckDB ("Invalid bitmask for FixedSizeAllocator") on a
+`nation_history` insert, a table 018 doesn't touch. Real-save checks were
+done in the browser by the owner, plus direct greps of the save.
+
 ## Battle Simulator (019): a save-independent engine, a generated rules table, and an uncertainty ledger (2026-09-26)
 
 A new top-level **Battle Simulator** section plays out one EU5 land battle

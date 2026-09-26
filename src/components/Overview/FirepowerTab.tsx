@@ -2,19 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { SaveDatabase } from "../../storage/db";
 import { computeDefaultSelection, loadLeaderboardCountries, type LeaderboardCountry } from "./leaderboardData";
 import { decodeSocietalValuesByNation } from "./societalValuesData";
-import { MilitaryDoctrineChart, type MilitaryDoctrineAxis, type MilitaryDoctrinePoint } from "./MilitaryDoctrineChart";
+import { MilitaryDoctrineChart, type MilitaryDoctrinePoint } from "./MilitaryDoctrineChart";
 import { ArmyStatsTable, type ArmyStatsTableRow } from "./ArmyStatsTable";
 import { NavyStatsTable, type NavyStatsTableRow } from "./NavyStatsTable";
 import { HeadToHeadTable } from "./HeadToHeadTable";
 import { buildArmyHeadToHeadRows, buildNavyHeadToHeadRows } from "./headToHeadRows";
-import { computeArmyStats, computeNavyStats, type NationSocietalValueRow } from "./armyNavyStats";
-import {
-  loadAdvanceSources,
-  loadGovernanceSources,
-  loadMilitaryScalars,
-  loadNavyDamage,
-  loadRegimentSummary,
-} from "./firepowerData";
+import { buildDoctrinePoints, loadArmyProfiles, loadNavyProfiles, toSocietalValueRows } from "./firepowerData";
 import { AddCountryInput } from "./AddCountryInput";
 import { CountrySelect } from "./CountrySelect";
 import { ArmyCompositionView, type ArmyCompositionRow } from "./ArmyCompositionView";
@@ -31,25 +24,6 @@ interface FirepowerTabProps {
   /** specs/019-battle-simulator US4: send two selected countries to the
    * Battle Simulator. Omitted → no "Simulate a battle" bar. */
   onSimulateBattle?: (matchup: BattleMatchup) => void;
-}
-
-const MILITARY_DOCTRINE_AXES: MilitaryDoctrineAxis[] = [
-  "land_vs_naval",
-  "offensive_vs_defensive",
-  "quality_vs_quantity",
-];
-
-/** Flattens axisReadings' per-nation reading lists into the flat row
- * shape computeArmyStats expects — shared by the Army Stats and Army
- * Composition effects below rather than duplicated. */
-function toSocietalValueRows(axisReadings: Map<number, { axis: string; value: number }[]>): NationSocietalValueRow[] {
-  const rows: NationSocietalValueRow[] = [];
-  for (const [nationIdx, readings] of axisReadings) {
-    for (const reading of readings) {
-      rows.push({ nationIdx, axis: reading.axis, value: reading.value });
-    }
-  }
-  return rows;
 }
 
 /**
@@ -120,26 +94,9 @@ export function FirepowerTab({ db, activeView, onSimulateBattle }: FirepowerTabP
     setArmyStats(null);
     setArmyStatsError(null);
 
-    const societalValueRows = toSocietalValueRows(axisReadings);
-
-    Promise.all([
-      loadRegimentSummary(db, selectedIdxs),
-      loadAdvanceSources(db, selectedIdxs),
-      loadGovernanceSources(db, selectedIdxs),
-      loadMilitaryScalars(db, selectedIdxs),
-    ])
-      .then(([regimentRows, advanceRows, governanceRows, scalarRows]) => {
-        if (cancelled) return;
-        const summaries = computeArmyStats(regimentRows, advanceRows, governanceRows, societalValueRows, scalarRows);
-        const countryByIdx = new Map(countries.map((c) => [c.idx, c]));
-        const rows: ArmyStatsTableRow[] = summaries
-          .map((summary) => {
-            const country = countryByIdx.get(summary.nationIdx);
-            if (!country) return null;
-            return { ...summary, tag: country.tag, name: country.name ?? country.tag, colorRgb: country.color };
-          })
-          .filter((r): r is ArmyStatsTableRow => r !== null);
-        setArmyStats(rows);
+    loadArmyProfiles(db, selectedIdxs, countries, toSocietalValueRows(axisReadings))
+      .then((rows) => {
+        if (!cancelled) setArmyStats(rows);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -162,24 +119,9 @@ export function FirepowerTab({ db, activeView, onSimulateBattle }: FirepowerTabP
     setNavyStats(null);
     setNavyStatsError(null);
 
-    Promise.all([
-      loadRegimentSummary(db, selectedIdxs),
-      loadAdvanceSources(db, selectedIdxs),
-      loadMilitaryScalars(db, selectedIdxs),
-      loadNavyDamage(db, selectedIdxs),
-    ])
-      .then(([regimentRows, advanceRows, scalarRows, damageRows]) => {
-        if (cancelled) return;
-        const summaries = computeNavyStats(regimentRows, advanceRows, scalarRows, damageRows);
-        const countryByIdx = new Map(countries.map((c) => [c.idx, c]));
-        const rows: NavyStatsTableRow[] = summaries
-          .map((summary) => {
-            const country = countryByIdx.get(summary.nationIdx);
-            if (!country) return null;
-            return { ...summary, tag: country.tag, name: country.name ?? country.tag, colorRgb: country.color };
-          })
-          .filter((r): r is NavyStatsTableRow => r !== null);
-        setNavyStats(rows);
+    loadNavyProfiles(db, selectedIdxs, countries)
+      .then((rows) => {
+        if (!cancelled) setNavyStats(rows);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -203,27 +145,9 @@ export function FirepowerTab({ db, activeView, onSimulateBattle }: FirepowerTabP
     setCompositionStats(null);
     setCompositionError(null);
 
-    const societalValueRows = toSocietalValueRows(axisReadings);
-    const idxs = [compositionIdx];
-
-    Promise.all([
-      loadRegimentSummary(db, idxs),
-      loadAdvanceSources(db, idxs),
-      loadGovernanceSources(db, idxs),
-      loadMilitaryScalars(db, idxs),
-    ])
-      .then(([regimentRows, advanceRows, governanceRows, scalarRows]) => {
-        if (cancelled) return;
-        const summaries = computeArmyStats(regimentRows, advanceRows, governanceRows, societalValueRows, scalarRows);
-        const countryByIdx = new Map(countries.map((c) => [c.idx, c]));
-        const rows: ArmyCompositionRow[] = summaries
-          .map((summary) => {
-            const country = countryByIdx.get(summary.nationIdx);
-            if (!country) return null;
-            return { ...summary, tag: country.tag, name: country.name ?? country.tag, colorRgb: country.color };
-          })
-          .filter((r): r is ArmyCompositionRow => r !== null);
-        setCompositionStats(rows);
+    loadArmyProfiles(db, [compositionIdx], countries, toSocietalValueRows(axisReadings))
+      .then((rows) => {
+        if (!cancelled) setCompositionStats(rows);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -240,32 +164,10 @@ export function FirepowerTab({ db, activeView, onSimulateBattle }: FirepowerTabP
     setSelectedIdxs((current) => (current.includes(idx) ? current.filter((i) => i !== idx) : [...current, idx]));
   }
 
-  const doctrinePoints = useMemo<MilitaryDoctrinePoint[]>(() => {
-    if (!countries || !axisReadings) return [];
-    const countryByIdx = new Map(countries.map((c) => [c.idx, c]));
-    const points: MilitaryDoctrinePoint[] = [];
-    for (const idx of selectedIdxs) {
-      const country = countryByIdx.get(idx);
-      if (!country) continue;
-      const readings = axisReadings.get(idx) ?? [];
-      const axes = MILITARY_DOCTRINE_AXES.map((axis) => ({
-        axis,
-        value: readings.find((r) => r.axis === axis)?.value ?? null,
-      }));
-      // A country with none of the three military-doctrine axes
-      // applicable is excluded entirely, never plotted at a fabricated
-      // centrist position on every track.
-      if (axes.every((a) => a.value === null)) continue;
-      points.push({
-        nationIdx: country.idx,
-        tag: country.tag,
-        name: country.name ?? country.tag,
-        colorRgb: country.color,
-        axes,
-      });
-    }
-    return points;
-  }, [countries, axisReadings, selectedIdxs]);
+  const doctrinePoints = useMemo<MilitaryDoctrinePoint[]>(
+    () => (countries && axisReadings ? buildDoctrinePoints(selectedIdxs, countries, axisReadings) : []),
+    [countries, axisReadings, selectedIdxs],
+  );
 
   if (error) {
     return <p role="alert">{error}</p>;

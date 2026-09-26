@@ -89,6 +89,30 @@ describe("RulerHistoryChart", () => {
     });
   });
 
+  // specs/018 (Countries → History): the page owns the selection.
+  it("shows exactly the nations it is given, without its own search, when controlled", async () => {
+    vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue([
+      country(1, "RUS", true),
+      country(2, "FRA", false),
+    ]);
+    vi.spyOn(leaderboardData, "loadRulerHistory").mockResolvedValue(
+      new Map([[2, [point(1337, 250)]]]),
+    );
+    const selected = [2];
+
+    render(<RulerHistoryChart db={fakeDb} selectedIdxs={selected} />);
+
+    await waitFor(() =>
+      expect(leaderboardData.loadRulerHistory).toHaveBeenCalledWith(fakeDb, [2]),
+    );
+    expect(leaderboardData.loadRulerHistory).not.toHaveBeenCalledWith(fakeDb, [1]);
+    expect(screen.queryByPlaceholderText("Search countries…")).not.toBeInTheDocument();
+    await waitFor(() => {
+      const props = vi.mocked(LeaderboardChart).mock.calls.at(-1)![0];
+      expect(props.series.map((s) => s.label)).toEqual(["FRA"]);
+    });
+  });
+
   it("falls back to a non-empty default when no country is human-played (spec FR-008)", async () => {
     vi.spyOn(leaderboardData, "loadLeaderboardCountries").mockResolvedValue([
       country(1, "RUS", false),
