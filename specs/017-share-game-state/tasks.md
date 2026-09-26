@@ -39,6 +39,15 @@ description: "Task list for Share Game State by Link"
   - a "Your shared links" list in the dialog (US4)
   - `.wrangler/` in `.gitignore`
   - `db.ts`'s Arrow test seam now carries `tableFromIPC` and `Table`
+- **T004 done by the owner (2026-09-26)**: KV IDs `SHARE_LIMITS` = 3857be37c08c425081f601b086916f5f and `SHARE_LIMITS_PREVIEW` = 61aa9cc66a2343fab4fae78315725871 are in `wrangler.toml`.
+- **T026 on PR #1's preview (`https://337d0162.nauticalbeg.pages.dev`, run 36234525418, 2026-09-26)**:
+  - `check` and `deploy` passed, and the bot posted the preview comment. **This also closes 016's deferred T031.**
+  - **Real Cloudflare passes the stored Brotli bytes through untouched**: `content-encoding: br`, content-length 300,792 (the stored size), and `curl --compressed` returned bytes identical to the original. That was the one assumption only production could confirm.
+  - `/s/<id>` fallback: 200 text/html.
+  - Rate limit on real KV: shares 1–5 got 201; the 6th got 429 `rate_limited` with `Retry-After: 2743`.
+  - Expiry (preview TTL 120s): a link created at 10:14:01 returned 410 `expired` at 10:17:33, and again after the data was deleted (via the ID timestamp).
+  - The owner tried the preview in the browser and reported "it works!".
+  - Failure path (run 36235364230, commit c66f4c2, a deliberately failing test): `check` failed at Tests, `deploy` was **skipped**, and the preview comment stayed on the last good build. **This closes 016's deferred T027.** The test was removed and the preview TTL restored to 604800 in the next commit.
 - **Found in passing, not fixed**: `tests/fixtures/rus-1628-minimal.eu5` has no player nation, so the *app* shows "No player nation found" if you load it in the browser. Unit tests are unaffected. It's a fixture limitation, noted for later.
 
 **Tests**: Included where the design depends on them:
@@ -210,7 +219,7 @@ UI is verified in a real browser per quickstart.md.
 
   Call them in `onRequestPost` as contract checks 3–4 (`429 rate_limited` + `Retry-After`, `503 busy`), counting only after a successful put. A KV failure on the *read* path fails closed (`503 busy`); a failure on the *counter write* is ignored. Tests: pure logic plus handler cases in `tests/share/functions.test.ts`.
 - [X] T025 [US3] Apply the size precheck in `ShareDialog`, before upload: show "{X} MB compressed; limit 40 MB" with no request made (FR-015, US3 #4). Show the rate-limited message with minutes rounded up (US3 #5).
-- [ ] T026 [US3] Deploy to a **preview** (open this feature's PR; this also covers 016's deferred T027/T031) with `SHARE_TTL_SECONDS=120` set for Preview only. Run quickstart C6 (open before 2 minutes, "expired" after), C8 (the sixth share in an hour is refused), C9 (a mistyped link shows "not found"; cancelling mid-upload leaves no object), and C11 (a PR comment appears; a deliberately failing test blocks deploy). Then restore preview's `SHARE_TTL_SECONDS` to 604800.
+- [X] T026 [US3] Deploy to a **preview** (open this feature's PR; this also covers 016's deferred T027/T031) with `SHARE_TTL_SECONDS=120` set for Preview only. Run quickstart C6 (open before 2 minutes, "expired" after), C8 (the sixth share in an hour is refused), C9 (a mistyped link shows "not found"; cancelling mid-upload leaves no object), and C11 (a PR comment appears; a deliberately failing test blocks deploy). Then restore preview's `SHARE_TTL_SECONDS` to 604800.
 
 ---
 

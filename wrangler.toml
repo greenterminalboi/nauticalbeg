@@ -34,6 +34,4 @@ binding = "SHARE_LIMITS"
 id = "61aa9cc66a2343fab4fae78315725871"
 
 [env.preview.vars]
-# TEMPORARY for 017's T026 expiry test: preview links expire after 2 minutes.
-# Must be back to "604800" before this branch merges.
-SHARE_TTL_SECONDS = "120"
+SHARE_TTL_SECONDS = "604800"
