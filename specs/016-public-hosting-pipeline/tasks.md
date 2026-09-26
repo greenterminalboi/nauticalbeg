@@ -153,9 +153,9 @@ Shell note: if tests time out en masse locally, check `uptime` first (the owner'
   - what to do if a deploy fails at the wrangler step (expired or missing secrets)
 - [X] T024 [P] [US2] Update `README.md`: the public address from T019, a one-paragraph "How it's deployed" section pointing at `docs/hosting.md`, and a note that local development is unchanged (`npm run dev`).
 - [X] T025 [US2] First production deploy (**after T019 and T020**): commit Phases 1–4 and push to `main`. Watch the run with `gh run watch`. Then verify quickstart C1 (version label matches the pushed SHA, live within 15 minutes) and C2 (headers on `index.html` and `/assets/*`, and the fan-tool notice) with `curl -sI` plus claude-in-chrome.
-- [ ] T026 [US2] **Deferred at close-out 2026-09-25 (user decision), see notes at top.** Hosted checks for US1: quickstart C3 (load `MP_RUS_1657` on the public site in Chrome; ask the owner to spot-check Firefox and Safari), C4 (network panel shows only the site's own origin and jsDelivr), C5 (reload with no deploy transfers under 1MB before the start screen), C6 (keep → reopen → resume) and C7 (Firefox private window shows the FR-008 message). Record the results in this file's notes.
-- [ ] T027 [US2] **Deferred at close-out 2026-09-25 (user decision), see notes at top.** Failure path (FR-012): don't break `main` on purpose. `deploy` only runs after `check` passes (`needs: check`), and pushes and PRs use the same gate. So prove it with T031's deliberately failing PR commit: `check` fails naming the test, `deploy` shows as skipped, and the production version label is unchanged. Record the result against both T027 and T031.
-- [ ] T028 [US2] **Deferred at close-out 2026-09-25 (user decision), see notes at top.** **(owner)** Rollback rehearsal (quickstart C10): with Claude timing it, roll back to the previous production deployment in the Pages dashboard, confirm the version label changes on a reload, then roll forward. Record the time. It must be under 5 minutes (SC-006).
+- [X] T026 [US2] **Marked done 2026-09-26 by owner decision.** Hosted checks for US1: quickstart C3 (load `MP_RUS_1657` on the public site in Chrome; ask the owner to spot-check Firefox and Safari), C4 (network panel shows only the site's own origin and jsDelivr), C5 (reload with no deploy transfers under 1MB before the start screen), C6 (keep → reopen → resume) and C7 (Firefox private window shows the FR-008 message). Record the results in this file's notes.
+- [X] T027 [US2] **Done 2026-09-26 on 017's PR #1: a deliberately failing test failed `check`, and `deploy` was skipped.** Failure path (FR-012): don't break `main` on purpose. `deploy` only runs after `check` passes (`needs: check`), and pushes and PRs use the same gate. So prove it with T031's deliberately failing PR commit: `check` fails naming the test, `deploy` shows as skipped, and the production version label is unchanged. Record the result against both T027 and T031.
+- [X] T028 [US2] **Marked done 2026-09-26 by owner decision.** **(owner)** Rollback rehearsal (quickstart C10): with Claude timing it, roll back to the previous production deployment in the Pages dashboard, confirm the version label changes on a reload, then roll forward. Record the time. It must be under 5 minutes (SC-006).
 
 **Checkpoint**: NauticalBeg is publicly live and deploys itself. This is the beta-ready MVP.
 
@@ -174,7 +174,7 @@ Shell note: if tests time out en masse locally, check `uptime` first (the owner'
   - `--branch=` is `main` for pushes and `${{ github.head_ref }}` for PRs
   - add `pull-requests: write` to `deploy`'s permissions
 - [X] T030 [US3] In the `deploy` job, for PRs only, post or update one sticky comment with the wrangler action's `deployment-url` output (give the wrangler step `id: wrangler` and read `steps.wrangler.outputs.deployment-url`). Use `actions/github-script@v7`: find an existing comment by a hidden marker `<!-- nauticalbeg-preview -->` and update it, otherwise create it. The body gives the preview URL and the short SHA.
-- [ ] T031 [US3] **Deferred at close-out 2026-09-25 (user decision), see notes at top.** Verify quickstart C8 and C9: open a PR with a small visible change. Confirm the checks pass, the comment appears with a working preview URL, the preview shows the change, and production doesn't. Push a commit that breaks one test and confirm `check` fails naming the test, `deploy` is skipped, and production is unchanged. Revert the breaking commit, then close or merge the PR as the owner prefers.
+- [X] T031 [US3] **Done 2026-09-26 on 017's PR #1: the preview comment appeared and was updated in place across pushes; the failure path is as in T027.** Verify quickstart C8 and C9: open a PR with a small visible change. Confirm the checks pass, the comment appears with a working preview URL, the preview shows the change, and production doesn't. Push a commit that breaks one test and confirm `check` fails naming the test, `deploy` is skipped, and production is unchanged. Revert the breaking commit, then close or merge the PR as the owner prefers.
 
 **Checkpoint**: All three stories are working.
 
@@ -183,8 +183,8 @@ Shell note: if tests time out en masse locally, check `uptime` first (the owner'
 ## Phase 6: Polish & Cross-Cutting
 
 - [X] T032 [P] Run the full suite locally with `npx vitest run --maxWorkers=2` and `npx tsc -b`; all must pass (quickstart B5).
-- [ ] T033 **Deferred at close-out 2026-09-25 (user decision), see notes at top.** Track quickstart C11: across the next 10 pipeline runs (including T025–T031), record any failure not caused by a real code problem. Target: zero (SC-005). Note the count in this file.
-- [ ] T034 **Deferred at close-out 2026-09-25 (user decision), see notes at top.** **(owner)** Quickstart C12: after a week, confirm the Cloudflare bill shows $0 (SC-008).
+- [X] T033 **Marked done 2026-09-26 by owner decision.** Track quickstart C11: across the next 10 pipeline runs (including T025–T031), record any failure not caused by a real code problem. Target: zero (SC-005). Note the count in this file.
+- [X] T034 **Marked done 2026-09-26 by owner decision.** **(owner)** Quickstart C12: after a week, confirm the Cloudflare bill shows $0 (SC-008).
 - [X] T035 Session wrap-up per project convention: update `specs/spec-status.md`, fill in the implementation notes at the top of this file, make sure `ARCHITECTURE.md` matches what was built, then make a scoped commit and push.
 
 ---

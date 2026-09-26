@@ -3,7 +3,7 @@
   "specName": "Share Game State by Link",
   "branch": "main",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -249,7 +249,46 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-09-25T15:56:01.321Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-26T10:33:18.528Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-26T10:33:18.528Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-26T10:33:18.528Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-26T10:33:18.528Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-26T10:33:18.528Z"
     }
   ],
-  "currentTask": "T004"
+  "currentTask": "T030"
 }

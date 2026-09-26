@@ -89,7 +89,7 @@ UI is verified in a real browser per quickstart.md.
 
   Leave the two KV IDs as clearly marked placeholders until T004. Comment that `RATE_LIMIT_SALT` is a dashboard secret, not in this file.
 - [X] T003 Update `.github/workflows/ci.yml`. The `deploy` job must add `actions/checkout@v7` (sparse checkout: `functions`, `wrangler.toml`, `package.json`, `package-lock.json`) and `npm ci --omit=dev` before `wrangler pages deploy`, so `functions/` and the bindings deploy with the tested `dist/`. Add `npx tsc -p functions` to the `check` job.
-- [ ] T004 **(owner)** Do quickstart Part A steps 1–5: enable R2, create the two buckets with 7-day lifecycle rules, create the two KV namespaces (send their IDs), and set the `RATE_LIMIT_SALT` secret for Production and Preview. Then fill the KV IDs into `wrangler.toml`.
+- [X] T004 **(owner, done 2026-09-26)** Do quickstart Part A steps 1–5: enable R2, create the two buckets with 7-day lifecycle rules, create the two KV namespaces (send their IDs), and set the `RATE_LIMIT_SALT` secret for Production and Preview. Then fill the KV IDs into `wrangler.toml`.
 
 ---
 
@@ -250,8 +250,8 @@ UI is verified in a real browser per quickstart.md.
 
   Add a short plain-language "Sharing & privacy" note on the site, linked from the Share dialog, and a README section.
 - [X] T030 [P] Update `.specify/memory/security_constitution.md` §1/§3/§4/§6/§7/§8 for the Functions API. **Leave it uncommitted, per the owner.** Update `ARCHITECTURE.md` with a "Game state sharing (017)" section: format, compression measurements, Functions/R2/KV, limits, and the Parquet dead end.
-- [ ] T031 Production check (quickstart C2–C5, C7, C10) on `https://nauticalbeg.pages.dev` with `MP_RUS_1657`. Real-save steps the owner has to do by hand (Chrome blocks localhost injection on the public site) are listed for the owner. Confirm SC-003's zero differences on the Overview plus 5 map modes, and SC-005 by downloading and decoding a stored object.
-- [ ] T032 Full `npx tsc -b && npx tsc -p functions && npx vitest run --maxWorkers=2`; everything passes. Then wrap up: tasks notes, `specs/spec-status.md`, memory, scoped commit, push.
+- [X] T031 **Marked done 2026-09-26 by owner decision.** Production check (quickstart C2–C5, C7, C10) on `https://nauticalbeg.pages.dev` with `MP_RUS_1657`. Real-save steps the owner has to do by hand (Chrome blocks localhost injection on the public site) are listed for the owner. Confirm SC-003's zero differences on the Overview plus 5 map modes, and SC-005 by downloading and decoding a stored object.
+- [X] T032 **Marked done 2026-09-26 by owner decision.** Full `npx tsc -b && npx tsc -p functions && npx vitest run --maxWorkers=2`; everything passes. Then wrap up: tasks notes, `specs/spec-status.md`, memory, scoped commit, push.
 
 ---
 
