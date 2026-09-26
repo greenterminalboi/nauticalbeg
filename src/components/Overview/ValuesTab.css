@@ -1,0 +1,86 @@
+.values-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Full-width tab (owner request 2026-09-26): the sliders fill the page in
+   columns rather than stretching one slider across it. */
+.values-tab__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+  gap: var(--space-md) var(--space-xl);
+}
+
+.values-tab__poles {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--space-sm);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  margin-bottom: 0.3rem;
+}
+
+.values-tab__poles > :last-child {
+  text-align: right;
+}
+
+.values-tab__reading {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+}
+
+/* -100 on the left, +100 on the right, a tick at the midpoint. */
+.values-tab__track {
+  position: relative;
+  height: 0.6rem;
+  background: var(--color-surface-container-high);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 3px;
+}
+
+.values-tab__center {
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--color-outline);
+}
+
+.values-tab__marker {
+  position: absolute;
+  top: 50%;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-left: -0.45rem;
+  margin-top: -0.45rem;
+  border-radius: 50%;
+  background: var(--color-primary-deep);
+  box-shadow: 0 0 0 2px var(--color-vellum);
+}
+
+.values-tab__heading {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-xs);
+}
+
+.values-tab__not-applicable ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-family: var(--font-body);
+}
+
+.values-tab__hint {
+  font-style: italic;
+  color: var(--color-on-surface-variant);
+}

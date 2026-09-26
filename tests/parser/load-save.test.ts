@@ -80,6 +80,28 @@ describe("loadSave", () => {
     expect(nonNull.at(-1)).toBe(100);
   });
 
+  // specs/018: entries the adapter had to skip reach the player as one
+  // non-blocking warning, never a silent drop (constitution II).
+  it("warns about skipped save entries, and stays silent for a clean save", async () => {
+    const clean = makeCallbacks();
+    await loadSave(new File([fixtureBuffer], "clean.eu5"), clean, new AbortController().signal);
+    expect(clean.onReady.mock.calls[0][0].warnings).toBeUndefined();
+
+    const malformed = fixtureBuffer
+      .toString("utf-8")
+      .replace("loan_manager={\n\tdatabase={\n", "loan_manager={\n\tdatabase={\n\t\t9={\n\t\t\tborrower=1141\n\t\t}\n");
+    const callbacks = makeCallbacks();
+    await loadSave(new File([malformed], "malformed.eu5"), callbacks, new AbortController().signal);
+    expect(callbacks.onError).not.toHaveBeenCalled();
+    expect(callbacks.onReady.mock.calls[0][0].warnings).toEqual([
+      {
+        kind: "skipped-entries",
+        count: 1,
+        message: "Some entries in this save were incomplete and were left out (1 loans).",
+      },
+    ]);
+  });
+
   it("reports not-a-save for a file with no recognizable header", async () => {
     const file = new File(["this is not a save file"], "random.txt");
     const callbacks = makeCallbacks();

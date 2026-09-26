@@ -1,0 +1,23 @@
+.military-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.military-tab__heading {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--color-on-surface);
+  margin: 0 0 var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
+  padding-bottom: var(--space-xs);
+}
+
+/* One country's doctrine needs far less height than Firepower's
+   many-country comparison (owner request 2026-09-26). Scoped to this tab:
+   Firepower's Military Doctrine chart keeps its own size. */
+.military-tab .military-doctrine-chart__canvas {
+  height: 16rem;
+  min-height: 0;
+}

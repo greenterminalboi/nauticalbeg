@@ -56,6 +56,10 @@ describe("buildSaveInventory against the committed fixture", () => {
         // to the fixture for the Diplomacy chord diagram's own
         // extraction tests.
         "diplomacy_manager",
+        // specs/018-country-factbook-tabs: loan_manager/estate_manager
+        // added to the fixture for total debt and the Estates tab.
+        "loan_manager",
+        "estate_manager",
         // specs/014-country-province-map-modes: work_of_art_manager added
         // to the fixture for the Works of Art map layer's own extraction
         // tests.

@@ -79,7 +79,9 @@ export interface ErrorMessage {
 
 /** A non-blocking notice attached to a successful load (015 FR-009). */
 export interface LoadWarning {
-  kind: "unknown-tokens";
+  /** "skipped-entries": specs/018, malformed save entries (e.g. a loan
+   * with no borrower) the adapter couldn't store. */
+  kind: "unknown-tokens" | "skipped-entries";
   count: number;
   message: string;
 }

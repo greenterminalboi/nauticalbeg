@@ -1,5 +1,5 @@
 # Spec-Driven Development Status
-<!-- spec-status: project=nauticalbeg commit=55fa68634d62467792a94d140db4d9128752168a updated=2026-09-25T12:45:16Z -->
+<!-- spec-status: project=nauticalbeg commit=055157aafdf7d039c19159cd032d41406d7d351b updated=2026-09-26T12:41:09Z -->
 
 | Feature                        | Specify | Plan | Tasks | Implement |
 |--------------------------------|---------|------|-------|-----------|
@@ -20,6 +20,7 @@
 | 015-save-format-support        | ✓       | ✓    | ✓     | ● 35/36 (97%) |
 | 016-public-hosting-pipeline    | ✓       | ✓    | ✓     | ✓ Complete |
 | 017-share-game-state           | ✓       | ✓    | ✓     | ✓ Complete |
+| 018-country-factbook-tabs      | -       | ✓    | ✓     | ✓ Complete |
 
 <!-- feature: 001-save-import-overview has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=46 tasks_completed=46 checklist_files=requirements.md -->
 <!-- feature: 002-db-technology-migration has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=86 tasks_completed=19 checklist_files=requirements.md -->
@@ -35,6 +36,7 @@
 <!-- feature: 012-firepower-tab has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=34 tasks_completed=34 checklist_files=requirements.md -->
 <!-- feature: 013-diplomatic-relations-chord has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=32 tasks_completed=32 checklist_files=requirements.md -->
 <!-- feature: 014-country-province-map-modes has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=53 tasks_completed=49 checklist_files=requirements.md -->
-<!-- feature: 017-share-game-state has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=32 tasks_completed=32 checklist_files=requirements.md -->
-<!-- feature: 016-public-hosting-pipeline has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=35 tasks_completed=35 checklist_files=requirements.md -->
 <!-- feature: 015-save-format-support has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=36 tasks_completed=35 checklist_files=requirements.md -->
+<!-- feature: 016-public-hosting-pipeline has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=35 tasks_completed=35 checklist_files=requirements.md -->
+<!-- feature: 017-share-game-state has_spec=true has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=true has_contracts=true has_checklists=true tasks_total=32 tasks_completed=32 checklist_files=requirements.md -->
+<!-- feature: 018-country-factbook-tabs has_spec=false has_plan=true has_tasks=true has_research=true has_data_model=true has_quickstart=false has_contracts=true has_checklists=true tasks_total=62 tasks_completed=62 checklist_files=requirements.md -->

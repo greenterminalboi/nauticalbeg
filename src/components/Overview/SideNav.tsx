@@ -8,12 +8,15 @@ interface SideNavProps {
 
 const NAV_ITEMS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Overview" },
+  { id: "history", label: "History" },
   { id: "provinces", label: "Provinces" },
+  { id: "locations", label: "Locations" },
   { id: "military", label: "Military" },
   { id: "government", label: "Government" },
+  { id: "estates", label: "Estates" },
+  { id: "values", label: "Values" },
+  { id: "subjects", label: "Subjects" },
   { id: "economy", label: "Economy" },
-  { id: "diplomacy", label: "Diplomacy" },
-  { id: "trade", label: "Trade" },
   { id: "buildings", label: "Building Registry" },
   { id: "characters", label: "Characters" },
 ];

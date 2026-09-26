@@ -3,21 +3,24 @@ import { render, screen } from "@testing-library/react";
 import { SideNav } from "../../src/components/Overview/SideNav";
 
 describe("SideNav", () => {
-  it("lists every data category (FR-001; AI Agent/Map moved to the top-level app nav — decision 2026-09-18)", () => {
+  it("lists the Countries tabs in order, without Trade or Diplomacy (specs/018 FR-001/FR-002)", () => {
     render(<SideNav activeTab="overview" onSelectTab={vi.fn()} />);
-    for (const label of [
+    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([
       "Overview",
+      "History",
       "Provinces",
+      "Locations",
       "Military",
       "Government",
+      "Estates",
+      "Values",
+      "Subjects",
       "Economy",
-      "Diplomacy",
-      "Trade",
       "Building Registry",
       "Characters",
-    ]) {
-      expect(screen.getByRole("button", { name: new RegExp(label) })).toBeInTheDocument();
-    }
+    ]);
+    expect(screen.queryByRole("button", { name: /Trade/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Diplomacy/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /AI Agent/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Map$/ })).not.toBeInTheDocument();
   });
@@ -27,6 +30,8 @@ describe("SideNav", () => {
     render(<SideNav activeTab="overview" onSelectTab={onSelectTab} />);
     screen.getByRole("button", { name: /^Provinces/ }).click();
     expect(onSelectTab).toHaveBeenCalledWith("provinces");
+    screen.getByRole("button", { name: /^Subjects/ }).click();
+    expect(onSelectTab).toHaveBeenCalledWith("subjects");
   });
 
   it("marks the active tab distinctly (aria-current)", () => {

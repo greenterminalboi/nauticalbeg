@@ -283,37 +283,6 @@ export async function forgetKeptSave(saveId: string): Promise<void> {
 }
 
 /**
- * FR-004 (Provinces tab): reuses 001's existing `locations`/`provinces`
- * tables verbatim — no new schema (data-model.md's "Provinces tab: no
- * new schema" section). `locations` itself has no `name` column (see
- * `schema.sql`), so the display name comes from `provinces.name` (the
- * adapter's `province_definition` string) via a join on `province_idx`,
- * falling back to a synthetic label if a location has no matching
- * province row (the `COALESCE`) — corrected against the real schema
- * during US2 implementation (contracts/tab-data-contract.md has the
- * note).
- *
- * Returns every one of the nation's provinces as a single Arrow IPC
- * buffer (decision 2026-09-18: table tabs render via Perspective, whose
- * `<perspective-viewer>` virtualizes and paginates rows itself — no
- * `LIMIT`/`OFFSET` needed here, unlike the plain-HTML-table version this
- * replaced).
- */
-export async function listProvincesArrow(db: SaveDatabase, nationIdx: number): Promise<ArrayBuffer> {
-  return queryArrowIPC(
-    db,
-    `SELECT locations.idx as idx,
-            COALESCE(provinces.name, 'Location ' || locations.idx) as name,
-            locations.development as development
-     FROM locations
-     LEFT JOIN provinces ON provinces.idx = locations.province_idx
-     WHERE locations.owner_idx = ?1
-     ORDER BY locations.idx`,
-    [nationIdx],
-  );
-}
-
-/**
  * Encyclopedia's Wars tab: every war in the save (not scoped to a
  * selected nation — a war belongs to no single country, per the
  * decision to make "Wars" a peer of "Countries," not nested under it).
@@ -352,6 +321,31 @@ export async function listWarsArrow(db: SaveDatabase): Promise<ArrayBuffer> {
      ORDER BY wars.start_date DESC`,
   );
 }
+
+// specs/018-country-factbook-tabs: the per-location population and
+// per-province totals are shared by the map (listMapLocationsArrow) and
+// the Countries tab's Provinces/Locations tables, so the two can never
+// disagree about what a province's population or tax base is.
+const POP_TOTALS_CTE = `pop_totals AS (
+       SELECT location_pops.location_idx as location_idx,
+              SUM(population.size) as total_population
+       FROM location_pops
+       JOIN population ON population.idx = location_pops.pop_idx
+       GROUP BY location_pops.location_idx
+     )`;
+
+const PROVINCE_TOTALS_CTE = `province_totals AS (
+       SELECT locations.province_idx as province_idx,
+              SUM(locations.development) as development,
+              SUM(locations.possible_tax) as tax_base,
+              SUM(locations.soldiers) as soldiers,
+              SUM(CASE WHEN locations.development IS NOT NULL
+                       THEN COALESCE(pop_totals.total_population, 0) END) as population
+       FROM locations
+       LEFT JOIN pop_totals ON pop_totals.location_idx = locations.idx
+       WHERE locations.province_idx IS NOT NULL
+       GROUP BY locations.province_idx
+     )`;
 
 /**
  * specs/005-map-visualization: every location in the save, with
@@ -403,13 +397,7 @@ export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuff
   return queryArrowIPC(
     db,
     `WITH
-     pop_totals AS (
-       SELECT location_pops.location_idx as location_idx,
-              SUM(population.size) as total_population
-       FROM location_pops
-       JOIN population ON population.idx = location_pops.pop_idx
-       GROUP BY location_pops.location_idx
-     ),
+     ${POP_TOTALS_CTE},
      live_owners AS (
        SELECT DISTINCT owner_idx FROM locations WHERE owner_idx IS NOT NULL
      ),
@@ -446,18 +434,7 @@ export async function listMapLocationsArrow(db: SaveDatabase): Promise<ArrayBuff
        SELECT EXISTS (SELECT 1 FROM nation_advances) as advances_ok,
               EXISTS (SELECT 1 FROM works_of_art) as art_ok
      ),
-     province_totals AS (
-       SELECT locations.province_idx as province_idx,
-              SUM(locations.development) as development,
-              SUM(locations.possible_tax) as tax_base,
-              SUM(locations.soldiers) as soldiers,
-              SUM(CASE WHEN locations.development IS NOT NULL
-                       THEN COALESCE(pop_totals.total_population, 0) END) as population
-       FROM locations
-       LEFT JOIN pop_totals ON pop_totals.location_idx = locations.idx
-       WHERE locations.province_idx IS NOT NULL
-       GROUP BY locations.province_idx
-     )
+     ${PROVINCE_TOTALS_CTE}
      SELECT
        locations.idx as idx,
        locations.name as name,
@@ -1128,4 +1105,404 @@ export async function listRelationTrustArrow(
        AND target_nation_idx IN (${targetPlaceholders})`,
     [...nationIdxs, ...nationIdxs],
   );
+}
+
+// ---------------------------------------------------------------------
+// specs/018-country-factbook-tabs: Factbook → Countries tab queries
+// (contracts/queries.md). Every function takes one nation idx, except
+// listSubjectRelations, which returns the whole (small) relation set so
+// the Subjects tree can walk any depth.
+// ---------------------------------------------------------------------
+
+/** The pops living in the nation's own locations: the same set the
+ * Country Literacy map mode uses (014 research §7, 018 research R4). */
+const OWNED_POPS_CTE = `owned_pops AS (
+       SELECT population.*
+       FROM location_pops
+       JOIN locations ON locations.idx = location_pops.location_idx
+       JOIN population ON population.idx = location_pops.pop_idx
+       WHERE locations.owner_idx = ?1 AND population.size > 0
+     )`;
+
+function numberOrNull(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  return Number(value);
+}
+
+function stringOrNull(value: unknown): string | null {
+  return value === null || value === undefined ? null : String(value);
+}
+
+function rgbOrNull(r: unknown, g: unknown, b: unknown): [number, number, number] | null {
+  return r === null || g === null || b === null || r === undefined ? null : [Number(r), Number(g), Number(b)];
+}
+
+export interface CountryCard {
+  idx: number;
+  tag: string;
+  name: string;
+  governmentType: string | null;
+  treasury: number | null;
+  stability: number | null;
+  /** Legitimacy / republican tradition / devotion etc.; labeled in the UI. */
+  governmentPower: number | null;
+  prestige: number | null;
+  /** economy.income: the owner's "wealth" (spec Assumptions). */
+  monthlyIncome: number | null;
+  economicBase: number | null;
+  literacy: number | null;
+  locationCount: number;
+  /** null when the save has no works-of-art data at all. */
+  worksOfArt: number | null;
+  /** 0 = confirmed no loans; null = the save has no loan data at all. */
+  totalDebt: number | null;
+  available: { loans: boolean; worksOfArt: boolean };
+  derived: Set<keyof CountryCard>;
+}
+
+export async function getCountryCard(db: SaveDatabase, nationIdx: number): Promise<CountryCard> {
+  const [row] = await queryRows(
+    db,
+    `WITH ${OWNED_POPS_CTE}
+     SELECT nations.idx, nations.tag, nations.name, nations.government_type,
+            nations.treasury, nations.stability, nations.government_power,
+            nations.prestige, nations.monthly_income,
+            (SELECT arg_max(value, year) FROM nation_history
+              WHERE nation_idx = ?1 AND metric = 'economical_base') as economic_base,
+            (SELECT SUM(size * literacy) / NULLIF(SUM(size), 0) FROM owned_pops
+              WHERE literacy IS NOT NULL) as literacy,
+            (SELECT COUNT(*) FROM locations WHERE owner_idx = ?1) as location_count,
+            (SELECT COUNT(*) FROM works_of_art
+              WHERE owner_idx = ?1 AND destroyed_date IS NULL) as works_of_art,
+            (SELECT COALESCE(SUM(amount), 0) FROM loans WHERE borrower_idx = ?1) as total_debt,
+            EXISTS (SELECT 1 FROM loans) as loans_ok,
+            EXISTS (SELECT 1 FROM works_of_art) as art_ok
+     FROM nations WHERE nations.idx = ?1`,
+    [nationIdx],
+  );
+  if (!row) {
+    throw new Error(`No nation found with idx ${nationIdx}`);
+  }
+  const loansOk = Boolean(row.loans_ok);
+  const artOk = Boolean(row.art_ok);
+  return {
+    idx: Number(row.idx),
+    tag: String(row.tag),
+    name: row.name === null ? String(row.tag) : String(row.name),
+    governmentType: stringOrNull(row.government_type),
+    treasury: numberOrNull(row.treasury),
+    stability: numberOrNull(row.stability),
+    governmentPower: numberOrNull(row.government_power),
+    prestige: numberOrNull(row.prestige),
+    monthlyIncome: numberOrNull(row.monthly_income),
+    economicBase: numberOrNull(row.economic_base),
+    literacy: numberOrNull(row.literacy),
+    locationCount: Number(row.location_count),
+    worksOfArt: artOk ? Number(row.works_of_art) : null,
+    totalDebt: loansOk ? Number(row.total_debt) : null,
+    available: { loans: loansOk, worksOfArt: artOk },
+    derived: new Set(["economicBase", "literacy", "locationCount", "worksOfArt", "totalDebt"]),
+  };
+}
+
+export interface PopulationSlice {
+  /** The raw key: a culture/religion idx as text, an estate or pop type key. */
+  key: string;
+  /** Save-stored name (cultures/religions only), else null. */
+  name: string | null;
+  color: [number, number, number] | null;
+  size: number;
+}
+
+export interface PopulationMakeup {
+  religion: PopulationSlice[];
+  culture: PopulationSlice[];
+  estate: PopulationSlice[];
+  socialClass: PopulationSlice[];
+}
+
+/** The nation's population split four ways, each slice summing pop size
+ * (research R4). Largest slice first. */
+export async function getPopulationMakeup(db: SaveDatabase, nationIdx: number): Promise<PopulationMakeup> {
+  const rows = await queryRows(
+    db,
+    `WITH ${OWNED_POPS_CTE}
+     SELECT 'religion' as dim, CAST(owned_pops.religion AS VARCHAR) as key, religions.name as name,
+            religions.color_r as r, religions.color_g as g, religions.color_b as b, SUM(size) as size
+       FROM owned_pops LEFT JOIN religions ON religions.idx = owned_pops.religion
+       GROUP BY owned_pops.religion, religions.name, religions.color_r, religions.color_g, religions.color_b
+     UNION ALL
+     SELECT 'culture', CAST(owned_pops.culture AS VARCHAR), cultures.name,
+            cultures.color_r, cultures.color_g, cultures.color_b, SUM(size)
+       FROM owned_pops LEFT JOIN cultures ON cultures.idx = owned_pops.culture
+       GROUP BY owned_pops.culture, cultures.name, cultures.color_r, cultures.color_g, cultures.color_b
+     UNION ALL
+     SELECT 'estate', estate, NULL, NULL, NULL, NULL, SUM(size) FROM owned_pops GROUP BY estate
+     UNION ALL
+     SELECT 'socialClass', pop_type, NULL, NULL, NULL, NULL, SUM(size) FROM owned_pops GROUP BY pop_type
+     ORDER BY dim, size DESC, key`,
+    [nationIdx],
+  );
+  const makeup: PopulationMakeup = { religion: [], culture: [], estate: [], socialClass: [] };
+  for (const row of rows) {
+    makeup[String(row.dim) as keyof PopulationMakeup].push({
+      key: row.key === null ? "unknown" : String(row.key),
+      name: stringOrNull(row.name),
+      color: rgbOrNull(row.r, row.g, row.b),
+      size: Number(row.size),
+    });
+  }
+  return makeup;
+}
+
+/** Provinces where the nation owns at least one location. The totals are
+ * the whole province's, exactly as the Province map modes show them;
+ * location_count is how many of its locations this nation owns. */
+export async function listNationProvincesArrow(db: SaveDatabase, nationIdx: number): Promise<ArrayBuffer> {
+  return queryArrowIPC(
+    db,
+    `WITH
+     owned AS (
+       SELECT province_idx, COUNT(*) as location_count
+       FROM locations
+       WHERE owner_idx = ?1 AND province_idx IS NOT NULL
+       GROUP BY province_idx
+     ),
+     ${POP_TOTALS_CTE},
+     ${PROVINCE_TOTALS_CTE}
+     SELECT owned.province_idx as idx,
+            COALESCE(provinces.name, 'Province ' || owned.province_idx) as name,
+            province_totals.development as development,
+            province_totals.tax_base as tax_base,
+            province_totals.soldiers as soldiers,
+            province_totals.population as population,
+            owned.location_count as location_count
+     FROM owned
+     LEFT JOIN provinces ON provinces.idx = owned.province_idx
+     LEFT JOIN province_totals ON province_totals.province_idx = owned.province_idx
+     ORDER BY province_totals.development DESC NULLS LAST, owned.province_idx`,
+    [nationIdx],
+  );
+}
+
+export interface LocationRow {
+  idx: number;
+  name: string | null;
+  provinceName: string | null;
+  controllerName: string | null;
+  control: number | null;
+  rawMaterial: string | null;
+  population: number;
+  development: number | null;
+  rank: string | null;
+  marketName: string | null;
+  taxBase: number | null;
+  soldiers: number | null;
+  cultureName: string | null;
+  religionName: string | null;
+}
+
+/** Every location the nation owns, with the location-level values the
+ * map modes show (same joins as listMapLocationsArrow). Terrain comes
+ * from the static lookup in the component, as it does on the map. */
+export async function listNationLocations(db: SaveDatabase, nationIdx: number): Promise<LocationRow[]> {
+  const rows = await queryRows(
+    db,
+    `WITH ${POP_TOTALS_CTE}
+     SELECT locations.idx as idx,
+            locations.name as name,
+            CASE WHEN locations.province_idx IS NULL THEN NULL
+                 ELSE COALESCE(province.name, 'Province ' || locations.province_idx) END as province_name,
+            COALESCE(controller.name, controller.tag, 'Unknown') as controller_name,
+            locations.control as control,
+            locations.raw_material as raw_material,
+            COALESCE(pop_totals.total_population, 0) as population,
+            locations.development as development,
+            locations.rank as rank,
+            COALESCE(market_center.name, 'Location ' || market_center.idx, 'Market ' || market.idx) as market_name,
+            locations.possible_tax as tax_base,
+            locations.soldiers as soldiers,
+            culture.name as culture_name,
+            religion.name as religion_name
+     FROM locations
+     LEFT JOIN nations controller ON controller.idx = locations.controller_idx
+     LEFT JOIN cultures culture ON culture.idx = locations.culture_idx
+     LEFT JOIN religions religion ON religion.idx = locations.religion_idx
+     LEFT JOIN markets market ON market.idx = locations.market_idx
+     LEFT JOIN locations market_center ON market_center.idx = market.center_location_idx
+     LEFT JOIN pop_totals ON pop_totals.location_idx = locations.idx
+     LEFT JOIN provinces province ON province.idx = locations.province_idx
+     WHERE locations.owner_idx = ?1
+     ORDER BY locations.idx`,
+    [nationIdx],
+  );
+  return rows.map((row) => ({
+    idx: Number(row.idx),
+    name: stringOrNull(row.name),
+    provinceName: stringOrNull(row.province_name),
+    controllerName: stringOrNull(row.controller_name),
+    control: numberOrNull(row.control),
+    rawMaterial: stringOrNull(row.raw_material),
+    population: Number(row.population),
+    development: numberOrNull(row.development),
+    rank: stringOrNull(row.rank),
+    marketName: stringOrNull(row.market_name),
+    taxBase: numberOrNull(row.tax_base),
+    soldiers: numberOrNull(row.soldiers),
+    cultureName: stringOrNull(row.culture_name),
+    religionName: stringOrNull(row.religion_name),
+  }));
+}
+
+export interface NationLaw {
+  lawCategory: string;
+  object: string;
+  date: string | null;
+}
+
+export async function listNationLaws(db: SaveDatabase, nationIdx: number): Promise<NationLaw[]> {
+  const rows = await queryRows(
+    db,
+    "SELECT law_category, object, date FROM nation_laws WHERE nation_idx = ?1 ORDER BY law_category",
+    [nationIdx],
+  );
+  return rows.map((row) => ({
+    lawCategory: String(row.law_category),
+    object: String(row.object),
+    date: stringOrNull(row.date),
+  }));
+}
+
+export interface NationPrivilege {
+  object: string;
+  date: string | null;
+}
+
+export async function listNationPrivileges(db: SaveDatabase, nationIdx: number): Promise<NationPrivilege[]> {
+  const rows = await queryRows(
+    db,
+    "SELECT object, date FROM nation_privileges WHERE nation_idx = ?1 ORDER BY date, object",
+    [nationIdx],
+  );
+  return rows.map((row) => ({ object: String(row.object), date: stringOrNull(row.date) }));
+}
+
+const ESTATE_LAST_MONTH_COLUMNS = {
+  taxableIncome: "taxable_income",
+  uncontrolledIncome: "uncontrolled_income",
+  cityIncome: "city_income",
+  tradeIncome: "trade_income",
+  foodIncome: "food_income",
+  paidTaxes: "paid_taxes",
+  popExpense: "pop_expense",
+  buildingExpense: "building_expense",
+  rebelExpense: "rebel_expense",
+  investExpense: "invest_expense",
+  infraExpense: "infra_expense",
+} as const;
+
+export type EstateLastMonth = Record<keyof typeof ESTATE_LAST_MONTH_COLUMNS, number | null>;
+
+export interface EstateRow {
+  estateType: string;
+  satisfaction: number | null;
+  taxRate: number | null;
+  gold: number | null;
+  balance: number | null;
+  wealthImpact: number | null;
+  lastMonth: EstateLastMonth;
+  /** Share of the nation's pops (0..1) in this estate; null with no pops. */
+  populationShare: number | null;
+}
+
+/** The game's own estate order; anything else sorts after, by key. */
+const ESTATE_ORDER = [
+  "crown_estate",
+  "nobles_estate",
+  "clergy_estate",
+  "burghers_estate",
+  "peasants_estate",
+  "dhimmi_estate",
+  "tribes_estate",
+  "cossacks_estate",
+];
+
+export async function listNationEstates(
+  db: SaveDatabase,
+  nationIdx: number,
+): Promise<{ available: boolean; rows: EstateRow[] }> {
+  const [flag] = await queryRows(db, "SELECT EXISTS (SELECT 1 FROM nation_estates) as ok");
+  if (!flag?.ok) return { available: false, rows: [] };
+  const rows = await queryRows(
+    db,
+    `WITH ${OWNED_POPS_CTE},
+     total AS (SELECT SUM(size) as t FROM owned_pops),
+     by_estate AS (SELECT estate, SUM(size) as s FROM owned_pops GROUP BY estate)
+     SELECT nation_estates.*,
+            CASE WHEN total.t IS NULL THEN NULL ELSE COALESCE(by_estate.s, 0) / total.t END as population_share
+     FROM nation_estates
+     CROSS JOIN total
+     LEFT JOIN by_estate ON by_estate.estate = nation_estates.estate_type
+     WHERE nation_estates.nation_idx = ?1`,
+    [nationIdx],
+  );
+  const order = (key: string) => {
+    const i = ESTATE_ORDER.indexOf(key);
+    return i === -1 ? ESTATE_ORDER.length : i;
+  };
+  return {
+    available: true,
+    rows: rows
+      .map((row) => ({
+        estateType: String(row.estate_type),
+        satisfaction: numberOrNull(row.satisfaction),
+        taxRate: numberOrNull(row.tax_rate),
+        gold: numberOrNull(row.gold),
+        balance: numberOrNull(row.balance),
+        wealthImpact: numberOrNull(row.wealth_impact),
+        lastMonth: Object.fromEntries(
+          Object.entries(ESTATE_LAST_MONTH_COLUMNS).map(([field, column]) => [field, numberOrNull(row[column])]),
+        ) as EstateLastMonth,
+        populationShare: numberOrNull(row.population_share),
+      }))
+      .sort((a, b) => order(a.estateType) - order(b.estateType) || a.estateType.localeCompare(b.estateType)),
+  };
+}
+
+export interface SubjectRelation {
+  overlordIdx: number;
+  subjectIdx: number;
+  /** The subject's tag and display name (name falls back to the tag),
+   * joined here because a subject needn't be in the nation selector. */
+  subjectTag: string | null;
+  subjectName: string | null;
+  subjectType: string | null;
+  startDate: string | null;
+}
+
+/** Every overlord → subject link in the save (195 on a large real save),
+ * so the Subjects tree can follow subjects of subjects to any depth. */
+export async function listSubjectRelations(
+  db: SaveDatabase,
+): Promise<{ available: boolean; rows: SubjectRelation[] }> {
+  const rows = await queryRows(
+    db,
+    `SELECT subject_relations.overlord_idx, subject_relations.subject_idx, subject_relations.subject_type,
+            subject_relations.start_date, nations.tag as subject_tag,
+            COALESCE(nations.name, nations.tag) as subject_name
+     FROM subject_relations
+     LEFT JOIN nations ON nations.idx = subject_relations.subject_idx
+     ORDER BY subject_relations.overlord_idx, subject_relations.subject_idx`,
+  );
+  return {
+    available: rows.length > 0,
+    rows: rows.map((row) => ({
+      overlordIdx: Number(row.overlord_idx),
+      subjectIdx: Number(row.subject_idx),
+      subjectTag: stringOrNull(row.subject_tag),
+      subjectName: stringOrNull(row.subject_name),
+      subjectType: stringOrNull(row.subject_type),
+      startDate: stringOrNull(row.start_date),
+    })),
+  };
 }

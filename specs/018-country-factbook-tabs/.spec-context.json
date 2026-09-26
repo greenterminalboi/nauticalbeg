@@ -1,0 +1,1309 @@
+{
+  "workflow": "companion",
+  "specName": "Country Factbook Tabs",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-26T10:55:32.463Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-26T10:57:36.102Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-26T10:58:20.856Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:01:33.591Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:02:43.838Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:03:20.063Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-26T11:04:22.213Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:06:15.894Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:06:31.660Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-26T11:07:03.707Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:08:51.331Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:09:24.993Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:09:38.197Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:10:23.108Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:10:29.757Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:11:04.582Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:11:52.177Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:13:09.068Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:13:09.182Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:14:31.048Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:14:50.653Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:18:15.321Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:20:06.657Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:21:11.338Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:26:00.624Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:26:28.034Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:27:04.958Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:27:54.916Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:28:24.109Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:44:18.873Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:44:18.994Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:46:23.558Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:46:55.326Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:47:35.407Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:47:46.790Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:48:51.296Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:50:06.177Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:50:52.492Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:51:25.549Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:51:40.724Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:51:40.840Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:53:57.881Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T033",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:53:58.009Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T034",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:56:06.492Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T035",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:57:09.405Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T036",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:57:09.532Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T037",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:57:35.335Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T038",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:57:35.506Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T039",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T11:59:31.858Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T040",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:01:18.396Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T042",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:01:18.576Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T041",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:01:18.747Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T043",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:01:54.736Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T044",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:01:54.860Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T045",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:12:56.857Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T046",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:13:17.776Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T047",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:14:00.560Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T048",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:14:00.675Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T049",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:15:02.177Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T050",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:15:27.488Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T051",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:16:04.868Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T052",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:16:04.999Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T053",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:17:45.628Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T054",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:18:24.815Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T055",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:18:24.990Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T056",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:19:34.782Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T057",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:19:34.896Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T058",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:19:35.006Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T059",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:33:50.577Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T060",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:34:23.205Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T061",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:40:08.665Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T062",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:41:08.346Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-26T12:41:08.369Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "The Countries side nav MUST list, in order: Overview, History, Provinces, Locations, Military, Government, Estates, Values, Subjects, Economy, Building Registry, Characters.",
+      "tasks": "T005,T011"
+    },
+    "FR-002": {
+      "title": "The Countries side nav MUST NOT show Trade or Diplomacy.",
+      "tasks": "T005,T011"
+    },
+    "FR-003": {
+      "title": "Economy, Building Registry and Characters MUST show the app's Coming Soon page.",
+      "tasks": "T014"
+    },
+    "FR-004": {
+      "title": "Every tab MUST show data for the nation picked in the Countries nation selector and update when that selection changes.",
+      "tasks": "T014,T017,T022"
+    },
+    "FR-005": {
+      "title": "Overview MUST show government type, treasury, economic base, stability, government power, prestige, works of art, literacy rate, number of locations, total debt and monthly income for the selected nation.",
+      "tasks": "T013,T019"
+    },
+    "FR-006": {
+      "title": "The government power stat MUST be labeled with the name the game uses for the nation's government type (for example Legitimacy for a monarchy).",
+      "tasks": "T010,T019"
+    },
+    "FR-007": {
+      "title": "Economic base MUST be the nation's most recent recorded economic base value.",
+      "tasks": "T008,T013"
+    },
+    "FR-008": {
+      "title": "Literacy rate MUST be the average literacy of the nation's population, weighted by population size.",
+      "tasks": "T008,T013"
+    },
+    "FR-009": {
+      "title": "Total debt MUST be the sum of every outstanding loan the nation has borrowed.",
+      "tasks": "T002,T007,T012,T013"
+    },
+    "FR-010": {
+      "title": "Works of art MUST count the works the nation owns that are not destroyed.",
+      "tasks": "T013"
+    },
+    "FR-011": {
+      "title": "Overview MUST show four pie charts of the nation's population, by religion, by culture, by estate and by social class, each slice sized by population.",
+      "tasks": "T016,T018,T019"
+    },
+    "FR-012": {
+      "title": "Stats that are computed from several save values, not read from one, MUST be marked as computed, in text and not by color alone.",
+      "tasks": "T017,T019"
+    },
+    "FR-013": {
+      "title": "History MUST show population, economic base, tax base and ruler history charts on one page.",
+      "tasks": "T022,T024"
+    },
+    "FR-014": {
+      "title": "History MUST open with only the selected nation shown and MUST let the player add other nations to compare.",
+      "tasks": "T023,T024"
+    },
+    "FR-015": {
+      "title": "Provinces MUST add a column for each province-level value the map modes show.",
+      "tasks": "T027,T028"
+    },
+    "FR-016": {
+      "title": "Locations MUST list every location the selected nation owns, one row each, with a column for each location-level value the map modes show.",
+      "tasks": "T030,T031"
+    },
+    "FR-017": {
+      "title": "Every column in Provinces and Locations MUST be sortable.",
+      "tasks": "T027,T028,T030,T031"
+    },
+    "FR-018": {
+      "title": "Military MUST show the selected nation's army composition with the same content as the Firepower army composition view.",
+      "tasks": "T034,T037"
+    },
+    "FR-019": {
+      "title": "Military MUST show the selected nation's naval composition, grouping its ships by type.",
+      "tasks": "T035,T037"
+    },
+    "FR-020": {
+      "title": "Military MUST show the military doctrine chart for the selected nation only.",
+      "tasks": "T036,T037"
+    },
+    "FR-021": {
+      "title": "Government MUST list the selected nation's laws in force (Policies) and granted estate privileges (Estate Privileges) under separate headings, by readable name.",
+      "tasks": "T040,T042,T043"
+    },
+    "FR-022": {
+      "title": "Estates MUST show, for each estate the nation has: satisfaction, tax rate, population share, gold, monthly balance, wealth impact, and last month's income and expenses.",
+      "tasks": "T046,T047"
+    },
+    "FR-023": {
+      "title": "Values MUST show the societal values of the selected nation only.",
+      "tasks": "T050,T051"
+    },
+    "FR-024": {
+      "title": "Subjects MUST show a tree rooted at the selected nation, with each subject nested under its overlord, down every level.",
+      "tasks": "T054,T056,T057"
+    },
+    "FR-025": {
+      "title": "Each subject node MUST show the subject's name and subject type.",
+      "tasks": "T057"
+    },
+    "FR-026": {
+      "title": "Clicking a live subject MUST select that nation in the nation selector and open its Overview tab.",
+      "tasks": "T014,T055,T058"
+    },
+    "FR-027": {
+      "title": "Any value the save does not have for a nation MUST be labeled as not available, never shown as zero.",
+      "tasks": "T013,T046,T060"
+    },
+    "FR-028": {
+      "title": "Every table, chart and tree in this feature MUST be keyboard-operable and must not rely on color alone to carry meaning.",
+      "tasks": "T011,T055,T061"
+    },
+    "FR-029": {
+      "title": "Hover details MUST use the app's styled hover tooltip, not the browser's native tooltip.",
+      "tasks": "T018,T061"
+    },
+    "FR-030": {
+      "title": "Each policy and estate privilege on the Government tab MUST show its in-game effects on hover and when selected",
+      "tasks": "T043",
+      "tests": "tests/components/GovernmentTab.test.tsx"
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 35,
+    "projectedTasks": 60,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "Economy, Building Registry, Characters tabs beyond a Coming Soon page",
+    "Trade tab (removed for now)",
+    "Showing a nation's own overlord in Subjects"
+  ],
+  "context": [
+    "area: src/components/Overview (Countries side nav, OverviewCard, ProvincesTab, Firepower, Leaderboard, SocietalCompass)",
+    "area: src/storage/schema.sql + queries.ts (population, works_of_art, nation_laws, nation_privileges, nation_history, ruler_history, regiments)",
+    "area: save parser: new loan_manager, estate_manager, diplomacy_manager dependency extraction",
+    "constraint: fields verified against the real Russia save, not the minimized fixture",
+    "constraint: HoverTooltip, never native title="
+  ],
+  "intent": "Turn Factbook → Countries into a per-nation dossier, built tab by tab starting with Overview",
+  "decisions": [
+    {
+      "decision": "Legitimacy = currency_data.government_power, label by government type from government_types.json",
+      "why": "EU5 uses one currency for all 5 government powers",
+      "rejected": "separate per-type fields (none exist)"
+    },
+    {
+      "decision": "New loans table; total debt = SUM(amount) by borrower, bonds included",
+      "why": "keeps per-loan detail cheaply",
+      "rejected": "pre-summed nations.total_debt"
+    },
+    {
+      "decision": "Pop set for literacy and pies = location ownership (location_pops -> locations.owner_idx)",
+      "why": "matches 014 Country Literacy map mode",
+      "rejected": "population.owner_idx"
+    },
+    {
+      "decision": "New nation_estates table from estate_manager with existence=yes, tax rate from economy.tax_rates",
+      "why": "real shape confirmed; crown has only satisfaction",
+      "rejected": "child table for last_month lines"
+    },
+    {
+      "decision": "New subject_relations table from diplomacy_manager dependency blocks, tree built client-side",
+      "why": "195 rows, 6 nested, direction verified",
+      "rejected": "reusing diplomatic_relations (would change 013 chord)"
+    },
+    {
+      "decision": "Policy names generated from laws_and_policies_l_english.yml into policyNames.json",
+      "why": "encyclopedia laws.json lacks policy names",
+      "rejected": "humanized keys only"
+    },
+    {
+      "decision": "History tab reuses LeaderboardChart + controlled RulerHistoryChart with one shared selection",
+      "why": "exact charts owner asked for",
+      "rejected": "embedding LeaderboardTab"
+    },
+    {
+      "decision": "Extract loadMilitaryProfiles shared by Firepower and Military",
+      "why": "one code path for military numbers",
+      "rejected": "duplicating FirepowerTab logic"
+    },
+    {
+      "decision": "Old kept saves/share links: EXISTS availability flag per new table",
+      "why": "014 precedent; import accepts subset snapshots",
+      "rejected": "schema-version marker"
+    },
+    {
+      "decision": "Estate and social-class pie colors come from the game file named colors (02_map.txt pop_*/estate_*), clergy estate uses pop_clergy",
+      "why": "owner wants pies to match in-game colors; owner chose game-file values over eyeballed icon art",
+      "rejected": "validated dataviz categorical palette; hand-picked peach for clergy"
+    },
+    {
+      "decision": "Estate and social-class pies never fold into Other",
+      "why": "owner: list every group; both are fixed sets of at most 8",
+      "rejected": "<2% folding for all four pies"
+    },
+    {
+      "decision": "Policy/privilege effects generated from game files into a lazy-loaded countryModifiers.json (467 modifier types, script values and _tt tooltip keys resolved, game formatting flags kept)",
+      "why": "owner asked to see exact modifiers on hover or selection; keeps the main bundle unchanged",
+      "rejected": "bundling into countryNames.json; parsing modifiers at runtime"
+    },
+    {
+      "decision": "Effects shown in a HoverTooltip and pinned in an Effects panel on click/Enter",
+      "why": "hover alone is not keyboard accessible; owner asked for hover or selection",
+      "rejected": "hover-only"
+    },
+    {
+      "decision": "Effects colored green/red by the game rule: no color setting = higher is better, color=bad = lower is better, color=neutral and text effects uncolored; sign + screen-reader helps/hurts text keep color from being the only cue",
+      "why": "owner asked for green/red like the game",
+      "rejected": "coloring by sign alone (would paint +100% Nobles Power green)"
+    },
+    {
+      "decision": "Subjects shown as nested lists of buttons in a named region, not an ARIA tree",
+      "why": "a real ARIA tree needs arrow-key navigation; nested buttons are keyboard-reachable with Tab and simpler",
+      "rejected": "role=tree without keyboard support"
+    },
+    {
+      "decision": "Government split into Policies and Estate Privileges sub-tabs; both are 4-column tables with a Modifiers column (Law|Policy|Modifiers|Enacted, Estate|Privilege|Modifiers|Granted)",
+      "why": "owner request",
+      "rejected": "single page with privileges as estate cards"
+    },
+    {
+      "decision": "Hover tooltip + Effects panel kept behind interactiveEffects prop, default off",
+      "why": "owner: turn them off, do not remove; Modifiers column shows the same",
+      "rejected": "deleting the code"
+    },
+    {
+      "decision": "Cabinet sub-tab dropped",
+      "why": "save has only current cabinet actions (cabinet_manager: one entry per slot, max 9 per country, no history); owner chose to drop it rather than chart current-action durations",
+      "rejected": "bar chart of how long each current action has run"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan for 9 Countries tabs built in nav order; 3 new parsed sections, 3 nation columns, heavy reuse of Leaderboard/Firepower/map queries",
+      "key_finding": "Share links are DB snapshots: new tables ride along automatically, and pre-018 links import with them empty, so availability flags are required"
+    },
+    "tasks": {
+      "summary": "62 tasks: setup, foundational data layer (T002-T015), 9 sequential tab phases, polish"
+    },
+    "implement": {
+      "summary": "Factbook → Countries rebuilt as a 9-tab country dossier (Overview, History, Provinces, Locations, Military, Government, Estates, Values, Subjects) with 3 new parsed save sections; all 62 tasks done, owner-verified on the real save"
+    }
+  },
+  "approach": "Parse loans, estates and subject relations plus three nation fields in the 1.3.11 adapter; expose per-nation queries in queries.ts; build each Countries tab in nav order reusing Leaderboard charts, Firepower military views and the map's location definitions, verifying each against the real save with the owner.",
+  "concerns": [
+    {
+      "note": "CountryTabContent.tsx is edited by every tab phase (one route line each); tab phases therefore run sequentially, not fanned out"
+    },
+    {
+      "note": "Real 642MB save cannot be parsed under the Node DuckDB-Wasm test bindings (FixedSizeAllocator error in nation_history insert); real-save checks were done in the browser by the owner",
+      "step": "implement"
+    },
+    {
+      "note": "spec-status.md shows has_spec=false for 018 because the status script only recognises spec.md, not <short>.spec.md (same as 010/011)",
+      "step": "implement"
+    }
+  ],
+  "currentTask": "T062",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Baseline green: 92 files / 544 tests pass, build succeeds (chunk-size warning only)"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Fixture: RUS economy/tax_rates, loan_manager (bond, loan, FRA loan, malformed), estate_manager (crown, nobles, non-existing dhimmi), dependency chain RUS>KIE>AAA13 + malformed",
+      "files": [
+        "tests/fixtures/rus-1628-minimal.eu5"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Schema: 3 nation columns, loans, nation_estates, subject_relations + indexes",
+      "files": [
+        "src/storage/schema.sql"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "countryNames test written first (labels, names, fallbacks)",
+      "files": [
+        "tests/components/countryNames.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "TabId: 12 ids, trade and diplomacy removed",
+      "files": [
+        "src/components/Overview/tabs.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Regenerated bin/zip/ztext + derived fixtures via generate:save-fixtures; melt round-trips",
+      "files": [
+        "tests/fixtures/*.eu5"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "4 adapter tests (nation card cols, loans+skip, estates, subject relations+skip, chord untouched); fail as expected",
+      "files": [
+        "tests/parser/adapter.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "country-card.test.ts: card fields, derived set, confirmed-zero debt, unavailable loans, unknown nation, 4-way makeup, no-pops",
+      "files": [
+        "tests/storage/country-card.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "country-tables.test.ts: provinces/locations vs map query, laws, privileges, estates (+share, crown nulls, unavailable), subject relations",
+      "files": [
+        "tests/storage/country-tables.test.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "countryNames.ts + generated countryNames.json (5 gov powers, 196 laws, 822 policies, 261 privileges, 8 estates, 8 pop types, 20 subject types); generator resolves $key$ and script refs; 4/4 tests pass",
+      "files": [
+        "src/components/Overview/countryNames.ts",
+        "src/components/Overview/countryNames.json",
+        "tools/country-names/generate.ts",
+        "package.json"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "SideNav: 12 tabs in spec order, no Trade/Diplomacy; test updated, 4/4 pass",
+      "files": [
+        "src/components/Overview/SideNav.tsx",
+        "tests/components/SideNav.test.tsx"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Adapter parses 3 nation cols, loans, estates (existence=yes, tax rate from economy.tax_rates), dependency->subject_relations; skipped counts -> skipped-entries load warning; fixture kept well-formed, malformed entries injected in tests; parser suite 86/86",
+      "files": [
+        "src/parser/version-adapters/1.3.11.ts",
+        "src/parser/load-save.ts",
+        "src/parser/protocol.ts",
+        "tests/parser/adapter.test.ts",
+        "tests/parser/load-save.test.ts",
+        "tests/fixtures/*.eu5"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "queries.ts: getCountryCard, getPopulationMakeup, listNationProvincesArrow, listNationLocations, listNationLaws/Privileges, listNationEstates, listSubjectRelations; shared POP_TOTALS/PROVINCE_TOTALS CTEs with the map; 13/13 + map 9/9 pass",
+      "files": [
+        "src/storage/queries.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "CountryTabContent.tsx extracted from FileLoader; Coming Soon for economy/buildings/characters; handleSelectNation(idx, tab) + onOpenNation plumbed; tsc clean; 3/3 tests",
+      "files": [
+        "src/components/Overview/FileLoader.tsx",
+        "src/components/Overview/CountryTabContent.tsx",
+        "tests/components/CountryTabContent.test.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "PopulationPie test: <2% fold, max 8 slices, shares sum 1, legend names+share, empty state",
+      "files": [
+        "tests/components/PopulationPie.test.tsx"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "OverviewTab test: 11 stats, gov power label, zero debt vs unavailable, computed markers, 4 pies with labels, stale result discarded",
+      "files": [
+        "tests/components/OverviewTab.test.tsx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "PopulationPie: foldSlices (<2% and >8 into Other), ECharts donut w/ 2px gaps + tooltip, legend with names and shares, validated 8-slot palette; 7/7",
+      "files": [
+        "src/components/Overview/PopulationPie.tsx",
+        "src/components/Overview/PopulationPie.css"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "OverviewTab: 11-stat country card (gov power label, reload hint, computed badges w/ HoverTooltip), 4 PopulationPies with fixed estate/pop-type slots and game colors; stale results dropped; 6/6",
+      "files": [
+        "src/components/Overview/OverviewTab.tsx",
+        "src/components/Overview/OverviewTab.css"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Overview routed to OverviewTab; OverviewCard.tsx + its test removed (CSS moved to OverviewTab.css); unused overview prop dropped",
+      "files": [
+        "src/components/Overview/CountryTabContent.tsx",
+        "src/components/Overview/FileLoader.tsx",
+        "tests/components/CountryTabContent.test.tsx"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Owner loaded the real Russia save on localhost:5175; it loaded and Overview rendered. The 195 subject-relation count is confirmed by grep + adapter logic, not in-app (Node DuckDB bindings crash at full-save scale); in-app subject check deferred to T059"
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Owner confirmed Russia's Overview stats and pies look right on the real save; follow-up: estate/social-class pies switched to game-file colors (02_map.txt pop_*/estate_*) and list every group (no Other)",
+      "files": [
+        "src/components/Overview/OverviewTab.tsx",
+        "src/components/Overview/PopulationPie.tsx",
+        "src/components/Overview/PopulationPie.css",
+        "tests/components/PopulationPie.test.tsx"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "HistoryTab test: opens with selected nation only, compare adds to all 4 charts, nation change resets",
+      "files": [
+        "tests/components/HistoryTab.test.tsx"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "RulerHistoryChart: optional controlled selectedIdxs (hides own search); Leaderboard unchanged; controlled test added; 20/20 incl. LeaderboardTab",
+      "files": [
+        "src/components/Overview/RulerHistoryChart.tsx",
+        "tests/components/RulerHistoryChart.test.tsx"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "HistoryTab: one shared selection (starts/resets to selected nation) driving Population, Economic Base, Tax Base LeaderboardCharts + controlled RulerHistoryChart; full-width Countries tabs set in FileLoader; 3/3",
+      "files": [
+        "src/components/Overview/HistoryTab.tsx",
+        "src/components/Overview/HistoryTab.css",
+        "src/components/Overview/FileLoader.tsx"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Routed history -> HistoryTab",
+      "files": [
+        "src/components/Overview/CountryTabContent.tsx"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Owner verified History on the real save: 'looks amazing'"
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "ProvincesTab test rewritten: new query, schema + humanized rows, column order/sort, empty, refetch, error",
+      "files": [
+        "tests/components/ProvincesTab.test.tsx"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "ProvincesTab on listNationProvincesArrow via shared usePerspectiveRows (schema + humanized rows): province, development, tax_base, population, soldiers, locations; sorted by development; old listProvincesArrow + its test removed; 4/4",
+      "files": [
+        "src/components/Overview/ProvincesTab.tsx",
+        "src/components/Overview/usePerspectiveRows.ts",
+        "src/storage/queries.ts",
+        "tests/storage/provinces.test.ts"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "LocationsTab test: schema + readable rows incl. terrain and control %, nulls kept, empty state",
+      "files": [
+        "tests/components/LocationsTab.test.tsx"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "LocationsTab: Perspective table via usePerspectiveRows, 14 readable columns incl. terrain (static lookup) and control %; sorted by development; 3/3",
+      "files": [
+        "src/components/Overview/LocationsTab.tsx"
+      ]
+    },
+    "T032": {
+      "status": "DONE",
+      "did": "Routed locations -> LocationsTab",
+      "files": [
+        "src/components/Overview/CountryTabContent.tsx"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Owner verified Provinces on the real save"
+    },
+    "T033": {
+      "status": "DONE",
+      "did": "Owner verified Locations on the real save"
+    },
+    "T034": {
+      "status": "DONE",
+      "did": "Extracted loadArmyProfiles/loadNavyProfiles/buildDoctrinePoints/toSocietalValueRows into firepowerData.ts; FirepowerTab uses them (356->258 lines, tsc clean); no FirepowerTab test existed, so added firepowerProfiles.test.ts against the fixture (4/4) + existing army/doctrine tests pass",
+      "files": [
+        "src/components/Overview/firepowerData.ts",
+        "src/components/Overview/FirepowerTab.tsx",
+        "tests/components/firepowerProfiles.test.ts"
+      ]
+    },
+    "T035": {
+      "status": "DONE",
+      "did": "NavyCompositionView: fleet counts by class, sailors, tradition, damage, equipment ages, sortable ship table; no-ships state; 2/2",
+      "files": [
+        "src/components/Overview/NavyCompositionView.tsx",
+        "tests/components/NavyCompositionView.test.tsx"
+      ]
+    },
+    "T036": {
+      "status": "DONE",
+      "did": "MilitaryTab test: army/navy/doctrine each get only the selected nation; no-army/no-ships states; reload on nation change",
+      "files": [
+        "tests/components/MilitaryTab.test.tsx"
+      ]
+    },
+    "T037": {
+      "status": "DONE",
+      "did": "MilitaryTab: doctrine chart (one point), ArmyCompositionView, NavyCompositionView for the selected nation via shared firepowerData loaders; empty states; 3/3",
+      "files": [
+        "src/components/Overview/MilitaryTab.tsx",
+        "src/components/Overview/MilitaryTab.css"
+      ]
+    },
+    "T038": {
+      "status": "DONE",
+      "did": "Routed military -> MilitaryTab",
+      "files": [
+        "src/components/Overview/CountryTabContent.tsx"
+      ]
+    },
+    "T039": {
+      "status": "DONE",
+      "did": "Owner verified Military (army/navy/doctrine) and Firepower unchanged; follow-up: doctrine chart height capped at 16rem on the Military tab only (scoped CSS)",
+      "files": [
+        "src/components/Overview/MilitaryTab.css"
+      ]
+    },
+    "T040": {
+      "status": "DONE",
+      "did": "Policy names delivered by countryNames.json (T010): 822 policies"
+    },
+    "T042": {
+      "status": "DONE",
+      "did": "Real Russia save: all 71 law categories, 244 policies, 164 privileges in use resolve to game names (no humanized fallback)"
+    },
+    "T041": {
+      "status": "DONE",
+      "did": "GovernmentTab test: Policies table readable+sorted, privileges grouped by estate incl. Other, empty states",
+      "files": [
+        "tests/components/GovernmentTab.test.tsx"
+      ]
+    },
+    "T043": {
+      "status": "DONE",
+      "did": "GovernmentTab: Policies table (Law/Policy/Enacted, readable names, sorted) + Estate Privileges grouped by estate in game order with Other; empty states; 3/3",
+      "files": [
+        "src/components/Overview/GovernmentTab.tsx",
+        "src/components/Overview/GovernmentTab.css"
+      ]
+    },
+    "T044": {
+      "status": "DONE",
+      "did": "Routed government -> GovernmentTab",
+      "files": [
+        "src/components/Overview/CountryTabContent.tsx"
+      ]
+    },
+    "T045": {
+      "status": "DONE",
+      "did": "Owner verified Government (policies, privileges, hover/selected effects with game green/red coloring): 'looks amazing'"
+    },
+    "T046": {
+      "status": "DONE",
+      "did": "EstatesTab test: card per estate w/ satisfaction, tax, pop share, gold, balance, wealth impact, last-month lines; Not tracked for crown; unavailable + empty states",
+      "files": [
+        "tests/components/EstatesTab.test.tsx"
+      ]
+    },
+    "T047": {
+      "status": "DONE",
+      "did": "EstatesTab: card per estate (game color, satisfaction % + bar, tax rate, population share, gold, monthly balance, wealth impact, last-month income/expense ledger); Not tracked / reload / no-estates states; estate+pop colors moved to populationColors.ts; 4/4",
+      "files": [
+        "src/components/Overview/EstatesTab.tsx",
+        "src/components/Overview/EstatesTab.css",
+        "src/components/Overview/populationColors.ts",
+        "src/components/Overview/OverviewTab.tsx"
+      ]
+    },
+    "T048": {
+      "status": "DONE",
+      "did": "Routed estates -> EstatesTab",
+      "files": [
+        "src/components/Overview/CountryTabContent.tsx"
+      ]
+    },
+    "T049": {
+      "status": "DONE",
+      "did": "Owner verified Estates on the real save: 'looks amazing'"
+    },
+    "T050": {
+      "status": "DONE",
+      "did": "ValuesTab test: meters between poles with 'N toward pole', axis outside compass config, not-applicable list, empty state",
+      "files": [
+        "tests/components/ValuesTab.test.tsx"
+      ]
+    },
+    "T051": {
+      "status": "DONE",
+      "did": "ValuesTab: each applicable axis as a -100..+100 meter between its poles with 'N toward pole' text (poles from axisConfig or axis key), not-applicable list with gating notes, empty state; 3/3",
+      "files": [
+        "src/components/Overview/ValuesTab.tsx",
+        "src/components/Overview/ValuesTab.css"
+      ]
+    },
+    "T052": {
+      "status": "DONE",
+      "did": "Routed values -> ValuesTab",
+      "files": [
+        "src/components/Overview/CountryTabContent.tsx"
+      ]
+    },
+    "T053": {
+      "status": "DONE",
+      "did": "Owner verified Values; follow-up: Government, Estates, Values made full-width (FULL_WIDTH_COUNTRY_TABS, max-widths removed, Values sliders in a responsive grid)",
+      "files": [
+        "src/components/Overview/FileLoader.tsx",
+        "src/components/Overview/GovernmentTab.css",
+        "src/components/Overview/EstatesTab.css",
+        "src/components/Overview/ValuesTab.css"
+      ]
+    },
+    "T054": {
+      "status": "DONE",
+      "did": "subjectTree test: nesting any depth, cycle stop, clickable only if selectable, no-subjects",
+      "files": [
+        "tests/components/subjectTree.test.ts"
+      ]
+    },
+    "T055": {
+      "status": "DONE",
+      "did": "SubjectsTab test: nested tree w/ types and dates, non-selectable subject not a button, click -> onOpenNation, no-subjects, unavailable",
+      "files": [
+        "tests/components/SubjectsTab.test.tsx"
+      ]
+    },
+    "T056": {
+      "status": "DONE",
+      "did": "subjectTree.ts: nested subjects any depth, visited-set cycle guard, clickable = in nation selector; 4/4",
+      "files": [
+        "src/components/Overview/subjectTree.ts"
+      ]
+    },
+    "T057": {
+      "status": "DONE",
+      "did": "SubjectsTab: region 'Subjects of X' with nested lists, subject type w/ game color dot, since-date, sub-subject counts, buttons open Overview, dashed non-openable subjects; listSubjectRelations now joins subject tag/name; 4/4",
+      "files": [
+        "src/components/Overview/SubjectsTab.tsx",
+        "src/components/Overview/SubjectsTab.css",
+        "src/storage/queries.ts",
+        "tests/storage/country-tables.test.ts",
+        "specs/018-country-factbook-tabs/contracts/ui.md"
+      ]
+    },
+    "T058": {
+      "status": "DONE",
+      "did": "Routed subjects with onOpenNation (FileLoader handleSelectNation(idx,'overview')); removed interim placeholder default",
+      "files": [
+        "src/components/Overview/CountryTabContent.tsx"
+      ]
+    },
+    "T059": {
+      "status": "DONE",
+      "did": "Owner verified Subjects and the reworked Government tab on the real save: 'everything looks good'"
+    },
+    "T060": {
+      "status": "DONE",
+      "did": "pre-018 snapshot (no loans/nation_estates/subject_relations, no 3 nation columns) imports; card/estates/subjects report unavailable, old data intact",
+      "files": [
+        "tests/share/pre-018-snapshot.test.ts"
+      ]
+    },
+    "T061": {
+      "status": "DONE",
+      "did": "Full suite 108 files / 619 tests pass (exit 0); npm run build exit 0 (chunk-size warning only, countryModifiers split into its own chunk); check:dist ready"
+    },
+    "T062": {
+      "status": "DONE",
+      "did": "Docs: ARCHITECTURE.md 018 entry, research.md R15-R18, tasks.md Notes, spec-status.md regenerated",
+      "files": [
+        "ARCHITECTURE.md",
+        "specs/018-country-factbook-tabs/research.md",
+        "specs/018-country-factbook-tabs/tasks.md",
+        "specs/spec-status.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full test suite",
+      "command": "npx vitest run --maxWorkers=3 --testTimeout=60000",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 159.9,
+      "result": "Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package · Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package · Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package"
+    },
+    {
+      "what": "typecheck + production build",
+      "command": "npm run build",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.8,
+      "result": "- Using dynamic import() to code-split the application · - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting · - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit."
+    }
+  ],
+  "last_action": "all 62 tasks done; 108 files / 619 tests pass; build clean"
+}

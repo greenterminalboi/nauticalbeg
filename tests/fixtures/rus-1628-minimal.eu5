@@ -135,6 +135,18 @@ countries={
 			}
 			last_months_army_maintenance=12.4
 			last_months_navy_maintenance=8.1
+			economy={
+				tax_rates={
+					nobles_estate=0.35
+					clergy_estate=0.2
+					burghers_estate=0.4
+					peasants_estate=0.5
+				}
+				creditworthiness=0.62165
+				loan_capacity=16552.1
+				expense=889.72609
+				income=1024.17507
+			}
 			government={
 				type=monarchy
 				heir_selection=cognatic_primogeniture
@@ -786,6 +798,98 @@ diplomacy_manager={
 	royal_marriage={
 		first=2025
 		second=1961
+	}
+	dependency={
+		first=2025
+		second=1961
+		named_targets={
+			{
+				flag=subject_type
+				target={
+					type=subject_type
+					object=vassal
+				}
+			}
+		}
+		start_date=1601.3.2
+		seed=1234
+	}
+	dependency={
+		first=1961
+		second=50332944
+		named_targets={
+			{
+				flag=subject_type
+				target={
+					type=subject_type
+					object=fiefdom
+				}
+			}
+		}
+	}
+}
+loan_manager={
+	database={
+		1459617792={
+			amount=1000.5
+			interest=0.0434
+			borrower=2025
+			key="government_bond"
+			bond=yes
+		}
+		1358954497={
+			amount=250.25
+			interest=0.07166
+			month=59
+			borrower=2025
+		}
+		1577058306={
+			amount=99
+			interest=0.08477
+			month=59
+			borrower=1141
+		}
+	}
+}
+estate_manager={
+	database={
+		12608={
+			estate_type=crown_estate
+			country=2025
+			wealth_impact=0
+			satisfaction=1
+			existence=yes
+		}
+		12609={
+			estate_type=nobles_estate
+			country=2025
+			gold=36601.16471
+			balance=-95.92923
+			wealth_impact=1.12571
+			last_month={
+				taxable_income=733.68057
+				uncontrolled_income=865.22736
+				city_income=233.96776
+				trade_income=189.20538
+				food_income=5.64177
+				paid_taxes=311.83246
+				pop_expense=1020.2645
+				building_expense=181
+				rebel_expense=80.33361
+				invest_expense=96.25374
+				infra_expense=200
+			}
+			satisfaction=0.38433
+			existence=yes
+			culture=884
+			religion=12
+		}
+		12610={
+			estate_type=dhimmi_estate
+			country=2025
+			wealth_impact=0
+			satisfaction=0.8525
+		}
 	}
 }
 cheats={

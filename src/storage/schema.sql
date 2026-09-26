@@ -615,3 +615,61 @@ CREATE TABLE IF NOT EXISTS works_of_art (
   destroyed_date TEXT -- non-NULL = destroyed, excluded from every count
 );
 CREATE INDEX IF NOT EXISTS idx_works_of_art_owner ON works_of_art (owner_idx);
+
+-- specs/018-country-factbook-tabs: Overview card fields (research.md
+-- R1/R2). government_power is legitimacy / republican tradition /
+-- devotion / horde unity / tribal cohesion depending on government type;
+-- the label is chosen in the UI. NULL on data parsed before 018.
+ALTER TABLE nations ADD COLUMN IF NOT EXISTS government_power DOUBLE;
+ALTER TABLE nations ADD COLUMN IF NOT EXISTS prestige DOUBLE;
+ALTER TABLE nations ADD COLUMN IF NOT EXISTS monthly_income DOUBLE;
+
+-- specs/018-country-factbook-tabs: one row per loan_manager.database
+-- entry (research.md R3). borrower_idx is a country idx. Government bonds
+-- (bond=yes) count toward debt. idx is BIGINT: real loan ids reach ~1.6e9.
+CREATE TABLE IF NOT EXISTS loans (
+  idx BIGINT PRIMARY KEY,
+  borrower_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  amount DOUBLE NOT NULL,
+  interest DOUBLE,
+  is_bond INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_loans_borrower ON loans (borrower_idx);
+
+-- specs/018-country-factbook-tabs: one row per estate_manager.database
+-- record with existence=yes (research.md R6). Economic columns are NULL
+-- when the record doesn't carry them (the crown estate has only
+-- satisfaction). tax_rate comes from the owner's economy.tax_rates.
+CREATE TABLE IF NOT EXISTS nation_estates (
+  nation_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  estate_type TEXT NOT NULL, -- e.g. 'nobles_estate'
+  satisfaction DOUBLE, -- 0..1
+  tax_rate DOUBLE,
+  gold DOUBLE,
+  balance DOUBLE,
+  wealth_impact DOUBLE,
+  taxable_income DOUBLE,
+  uncontrolled_income DOUBLE,
+  city_income DOUBLE,
+  trade_income DOUBLE,
+  food_income DOUBLE,
+  paid_taxes DOUBLE,
+  pop_expense DOUBLE,
+  building_expense DOUBLE,
+  rebel_expense DOUBLE,
+  invest_expense DOUBLE,
+  infra_expense DOUBLE
+);
+CREATE INDEX IF NOT EXISTS idx_nation_estates_nation ON nation_estates (nation_idx);
+
+-- specs/018-country-factbook-tabs: one row per diplomacy_manager
+-- dependency block (research.md R7). first = overlord, second = subject,
+-- confirmed against real tags (POR -> colonial nation AAA63). Separate
+-- from diplomatic_relations so the 013 chord chart is unchanged.
+CREATE TABLE IF NOT EXISTS subject_relations (
+  overlord_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  subject_idx INTEGER NOT NULL, -- logically REFERENCES nations(idx)
+  subject_type TEXT, -- e.g. 'vassal', 'colonial_nation'
+  start_date TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_subject_relations_overlord ON subject_relations (overlord_idx);

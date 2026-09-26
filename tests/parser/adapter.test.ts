@@ -18,6 +18,20 @@ const FIXTURE_PATH = path.resolve(
 );
 const fixtureText = readFileSync(FIXTURE_PATH, "utf-8");
 
+// specs/018: the shared fixture stays well-formed (every other test loads
+// it without warnings); the skip-and-count paths get malformed entries
+// injected here instead: a loan with no amount, a dependency with no
+// subject.
+const fixtureWithMalformedEntries = fixtureText
+  .replace(
+    "loan_manager={\n\tdatabase={\n",
+    "loan_manager={\n\tdatabase={\n\t\t1577058307={\n\t\t\tinterest=0.08477\n\t\t\tborrower=1141\n\t\t}\n",
+  )
+  .replace(
+    "\tdependency={\n",
+    "\tdependency={\n\t\tfirst=1141\n\t}\n\tdependency={\n",
+  );
+
 async function queryAll(
   db: SaveDatabase,
   sql: string,
@@ -898,6 +912,122 @@ describe("version-adapters/1.3.11 parseAndStore", () => {
       last_months_navy_maintenance: 8.1,
       primary_culture_idx: 884,
     });
+  });
+
+  // specs/018-country-factbook-tabs research.md R1/R2: Overview card fields.
+  it("populates nations.government_power, prestige and monthly_income (specs/018)", async () => {
+    const database = await freshDb("adapter-018-nation-card.db");
+    await parseAndStore(database, "save-018-card", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(
+      database,
+      "SELECT idx, government_power, prestige, monthly_income FROM nations WHERE idx IN (3, 2025) ORDER BY idx",
+    );
+    expect(rows).toEqual([
+      // SCA has no economy block: income is NULL, never 0.
+      { idx: 3, government_power: 100, prestige: 23.06456, monthly_income: null },
+      { idx: 2025, government_power: 100, prestige: 68.51231, monthly_income: 1024.17507 },
+    ]);
+  });
+
+  // specs/018 research.md R3: loan_manager -> loans, bonds included, a loan
+  // with no amount skipped and counted (constitution II).
+  it("populates loans from loan_manager and reports the malformed one as skipped (specs/018)", async () => {
+    const database = await freshDb("adapter-018-loans.db");
+    const summary = await parseAndStore(database, "save-018-loans", "rus-1628-minimal.eu5", toBytes(fixtureWithMalformedEntries));
+
+    const rows = await queryAll(
+      database,
+      "SELECT idx, borrower_idx, amount, interest, is_bond FROM loans ORDER BY idx",
+    );
+    expect(rows).toEqual([
+      { idx: 1358954497, borrower_idx: 2025, amount: 250.25, interest: 0.07166, is_bond: 0 },
+      { idx: 1459617792, borrower_idx: 2025, amount: 1000.5, interest: 0.0434, is_bond: 1 },
+      { idx: 1577058306, borrower_idx: 1141, amount: 99, interest: 0.08477, is_bond: 0 },
+    ]);
+    expect(summary.skipped).toContainEqual({ section: "loans", count: 1 });
+  });
+
+  // specs/018 research.md R6: estate_manager -> nation_estates, only
+  // existence=yes records, tax rate from the owner's economy.tax_rates.
+  it("populates nation_estates for existing estates only, NULL where the record has no value (specs/018)", async () => {
+    const database = await freshDb("adapter-018-estates.db");
+    await parseAndStore(database, "save-018-estates", "rus-1628-minimal.eu5", toBytes(fixtureText));
+
+    const rows = await queryAll(
+      database,
+      "SELECT * FROM nation_estates WHERE nation_idx = 2025 ORDER BY estate_type",
+    );
+    expect(rows).toEqual([
+      {
+        nation_idx: 2025,
+        estate_type: "crown_estate",
+        satisfaction: 1,
+        tax_rate: null,
+        gold: null,
+        balance: null,
+        wealth_impact: 0,
+        taxable_income: null,
+        uncontrolled_income: null,
+        city_income: null,
+        trade_income: null,
+        food_income: null,
+        paid_taxes: null,
+        pop_expense: null,
+        building_expense: null,
+        rebel_expense: null,
+        invest_expense: null,
+        infra_expense: null,
+      },
+      {
+        nation_idx: 2025,
+        estate_type: "nobles_estate",
+        satisfaction: 0.38433,
+        tax_rate: 0.35,
+        gold: 36601.16471,
+        balance: -95.92923,
+        wealth_impact: 1.12571,
+        taxable_income: 733.68057,
+        uncontrolled_income: 865.22736,
+        city_income: 233.96776,
+        trade_income: 189.20538,
+        food_income: 5.64177,
+        paid_taxes: 311.83246,
+        pop_expense: 1020.2645,
+        building_expense: 181,
+        rebel_expense: 80.33361,
+        invest_expense: 96.25374,
+        infra_expense: 200,
+      },
+    ]);
+  });
+
+  // specs/018 research.md R7: dependency blocks -> subject_relations,
+  // first = overlord, second = subject; a block with no second is skipped
+  // and counted. KIE is both a subject (of RUS) and an overlord (of AAA13).
+  it("populates subject_relations from diplomacy_manager dependency blocks (specs/018)", async () => {
+    const database = await freshDb("adapter-018-subjects.db");
+    const summary = await parseAndStore(database, "save-018-subjects", "rus-1628-minimal.eu5", toBytes(fixtureWithMalformedEntries));
+
+    const rows = await queryAll(
+      database,
+      "SELECT overlord_idx, subject_idx, subject_type, start_date FROM subject_relations ORDER BY overlord_idx",
+    );
+    expect(rows).toEqual([
+      { overlord_idx: 1961, subject_idx: 50332944, subject_type: "fiefdom", start_date: null },
+      { overlord_idx: 2025, subject_idx: 1961, subject_type: "vassal", start_date: "1601.3.2" },
+    ]);
+    expect(summary.skipped).toContainEqual({ section: "subject relations", count: 1 });
+    await closeSaveDatabase(database);
+    const clean = await parseAndStore(await freshDb("adapter-018-clean.db"), "save-018-clean", "rus-1628-minimal.eu5", toBytes(fixtureText));
+    expect(clean.skipped).toEqual([]);
+
+    // The 013 chord data is untouched by subject relations.
+    const chord = await queryAll(
+      database,
+      "SELECT COUNT(*) AS n FROM diplomatic_relations WHERE relation_type IN ('vassal', 'fiefdom', 'tributary')",
+    );
+    expect(Number(chord[0].n)).toBe(0);
   });
 
   // specs/013-diplomatic-relations-chord: diplomacy_manager was

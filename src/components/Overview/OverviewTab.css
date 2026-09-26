@@ -2,7 +2,6 @@
    surface framed by a portolan-style multi-ruled border, sharp `0`
    corners throughout (design.md §Shapes), header as a lapis wash banner. */
 .overview-card {
-  max-width: 42rem;
   margin: var(--space-lg) 0;
   background: var(--color-vellum);
   border: 3px solid var(--color-on-surface);
@@ -96,4 +95,15 @@
 
 .overview-card__badge::after {
   content: " ]";
+}
+
+/* specs/018: Overview tab = the country card plus four population pies.
+   Full width (owner request 2026-09-26): the pies sit four across on a
+   wide screen and wrap as it narrows. */
+
+.overview-tab__pies {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }

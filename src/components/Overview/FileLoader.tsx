@@ -39,8 +39,7 @@ import { LoadWarningNotice } from "./LoadWarningNotice";
 import { MapTab } from "./MapTab";
 import { MarketsTab } from "./MarketsTab";
 import { MarketsSideNav, type MarketsView } from "./MarketsSideNav";
-import { OverviewCard } from "./OverviewCard";
-import { ProvincesTab } from "./ProvincesTab";
+import { CountryTabContent } from "./CountryTabContent";
 import { SocietalCompassPage } from "./SocietalCompassPage";
 import type { AppSection, EncyclopediaTab, TabId } from "./tabs";
 import { TopBar } from "./TopBar";
@@ -76,15 +75,19 @@ type ReadyStatus = {
   activeTab: TabId;
 };
 
-const UNBUILT_TAB_LABELS: Partial<Record<TabId, string>> = {
-  military: "Military",
-  government: "Government",
-  economy: "Economy",
-  diplomacy: "Diplomacy",
-  trade: "Trade",
-  buildings: "Building Registry",
-  characters: "Characters",
-};
+// specs/018: every real Countries tab uses the full content width, like
+// Leaderboard and Firepower (owner request 2026-09-26: no empty margins).
+const FULL_WIDTH_COUNTRY_TABS = new Set<TabId>([
+  "overview",
+  "history",
+  "provinces",
+  "locations",
+  "military",
+  "government",
+  "estates",
+  "values",
+  "subjects",
+]);
 
 type Status =
   | { kind: "idle" }
@@ -281,12 +284,14 @@ export function FileLoader() {
     }
   }
 
-  async function handleSelectNation(nationIdx: number): Promise<void> {
+  /** `tab` is set when another tab sends the player to a nation (the
+   * Subjects tree opens the subject's Overview, specs/018 FR-026). */
+  async function handleSelectNation(nationIdx: number, tab?: TabId): Promise<void> {
     const db = readDbRef.current;
     if (!db || status.kind !== "ready") return;
     try {
       const overview = await getNationOverview(db, nationIdx);
-      setStatus({ ...status, overview, selectedNationIdx: nationIdx });
+      setStatus({ ...status, overview, selectedNationIdx: nationIdx, ...(tab ? { activeTab: tab } : {}) });
     } catch (err) {
       setStatus({
         kind: "error",
@@ -429,7 +434,7 @@ export function FileLoader() {
   const isTableTab =
     (isFactbook && encyclopediaTab === "wars" && isReady) ||
     (isFactbook && encyclopediaTab === "markets" && isReady) ||
-    (showCountriesNav && status.kind === "ready" && status.activeTab === "provinces");
+    (showCountriesNav && status.kind === "ready" && FULL_WIDTH_COUNTRY_TABS.has(status.activeTab));
   // The Encyclopedia section (008) wants the full main content width too
   // — same reasoning as the table tabs above (a lot of browsable content,
   // not the bounded/centered default), even though it isn't
@@ -544,6 +549,7 @@ export function FileLoader() {
                   db={readDbRef.current}
                   onResumeKeptSave={handleResumeKeptSave}
                   onDismissKeptSaveOffer={handleDismissKeptSaveOffer}
+                  onOpenNation={(idx) => void handleSelectNation(idx, "overview")}
                 />
               )}
               {isFactbook && encyclopediaTab === "wars" && (
@@ -621,9 +627,11 @@ function StatusView({
   db,
   onResumeKeptSave,
   onDismissKeptSaveOffer,
+  onOpenNation,
 }: {
   status: Status;
   db: SaveDatabase | null;
+  onOpenNation: (nationIdx: number) => void;
   onResumeKeptSave: (saveId: string) => void;
   onDismissKeptSaveOffer: () => void;
 }) {
@@ -653,32 +661,22 @@ function StatusView({
       // over the full Status union.
       return null;
     case "ready":
-      return db ? <ActiveTabContent status={status} db={db} /> : null;
+      return db ? (
+        <CountryTabContent
+          db={db}
+          activeTab={status.activeTab}
+          nationIdx={status.selectedNationIdx}
+          nations={status.nations}
+          inGameDate={status.inGameDate}
+          onOpenNation={onOpenNation}
+        />
+      ) : null;
     case "error":
       return isShareErrorKind(status.errorKind) ? (
         <SharedLinkMessage kind={status.errorKind} />
       ) : (
         <ErrorMessage kind={status.errorKind} message={status.message} />
       );
-  }
-}
-
-function ActiveTabContent({ status, db }: { status: ReadyStatus; db: SaveDatabase }) {
-  switch (status.activeTab) {
-    case "overview":
-      return <OverviewCard overview={status.overview} inGameDate={status.inGameDate} />;
-    case "provinces":
-      return <ProvincesTab db={db} nationIdx={status.selectedNationIdx} />;
-    default: {
-      // Military through Characters: each gets its own real tab component
-      // in a later user story (US3-US9). Until then this is a bare,
-      // deliberately temporary placeholder — not the app-level
-      // ComingSoonPlaceholder (that's for NauticalBot/Map/Settings, whole
-      // sections that are permanently unbuilt); these tabs vary by save
-      // and will be filled in soon.
-      const label = UNBUILT_TAB_LABELS[status.activeTab] ?? status.activeTab;
-      return <p>{label} hasn't been implemented yet.</p>;
-    }
   }
 }
 
